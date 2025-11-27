@@ -1,0 +1,101 @@
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
+import { Claim, ClaimResponse } from "@/types/analysis";
+
+interface ClaimCardProps {
+  claimId: string;
+  claim: Claim;
+  response: ClaimResponse;
+}
+
+const resultConfig = {
+  Fake: {
+    label: "Falso",
+    icon: XCircle,
+    className: "bg-status-false/10 text-status-false border-status-false/20",
+  },
+  True: {
+    label: "Verdadeiro",
+    icon: CheckCircle2,
+    className: "bg-status-true/10 text-status-true border-status-true/20",
+  },
+  Misleading: {
+    label: "Enganoso",
+    icon: AlertTriangle,
+    className: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
+  },
+  Unknown: {
+    label: "Desconhecido",
+    icon: HelpCircle,
+    className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+  },
+};
+
+export const ClaimCard = ({ claimId, claim, response }: ClaimCardProps) => {
+  const config = resultConfig[response.Result];
+  const Icon = config.icon;
+
+  return (
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value={claimId} className="border rounded-lg px-4">
+        <AccordionTrigger className="hover:no-underline">
+          <div className="flex items-start gap-3 text-left w-full">
+            <Badge variant="outline" className={`${config.className} text-xs shrink-0`}>
+              <Icon className="h-3 w-3 mr-1" />
+              {config.label}
+            </Badge>
+            <span className="text-sm font-medium">{claim.text}</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-4 pt-4">
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Análise</h4>
+            <p className="text-sm text-muted-foreground">{response.reasoningText}</p>
+          </div>
+
+          {response.reasoningSources.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Fontes Consultadas</h4>
+              <div className="flex flex-wrap gap-2">
+                {response.reasoningSources.map((source, index) => (
+                  <a
+                    key={index}
+                    href={source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs bg-secondary hover:bg-secondary/80 px-2 py-1 rounded-md transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {new URL(source).hostname}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {claim.links.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Links da Afirmação</h4>
+              <div className="flex flex-wrap gap-2">
+                {claim.links.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs bg-muted hover:bg-muted/80 px-2 py-1 rounded-md transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {new URL(link).hostname}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+};

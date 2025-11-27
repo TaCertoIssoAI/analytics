@@ -1,0 +1,113 @@
+import { Header } from "@/components/Header";
+import { FilterSection } from "@/components/FilterSection";
+import { VerificationCard } from "@/components/VerificationCard";
+import { Button } from "@/components/ui/button";
+import { Database, TrendingUp, Users } from "lucide-react";
+
+const Index = () => {
+  // Mock data - será substituído por dados reais
+  const mockVerifications = [
+    {
+      id: "verificacao-001",
+      title: "Presidente anuncia novo programa de auxílio financeiro",
+      status: "false" as const,
+      date: "15 de Nov, 2025",
+      tags: ["Política", "Economia"],
+      excerpt: "Circula nas redes sociais mensagem alegando que o presidente teria anunciado um novo programa de auxílio financeiro...",
+    },
+    {
+      id: "verificacao-002",
+      title: "Estudo sobre eficácia de vacinas compartilhado em grupos",
+      status: "misleading" as const,
+      date: "14 de Nov, 2025",
+      tags: ["Saúde", "Ciência"],
+      excerpt: "Mensagem viral afirma que estudo comprova ineficácia de vacinas, mas dados foram tirados de contexto...",
+    },
+    {
+      id: "verificacao-003",
+      title: "Nova lei de trânsito entrará em vigor no próximo mês",
+      status: "true" as const,
+      date: "13 de Nov, 2025",
+      tags: ["Legislação", "Trânsito"],
+      excerpt: "De fato, o Congresso aprovou mudanças na legislação de trânsito que entrarão em vigor em dezembro...",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="border-b border-border bg-gradient-to-br from-background via-muted/30 to-background">
+        <div className="container py-16 md:py-24">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Combatendo Desinformação com{" "}
+              <span className="text-primary">Inteligência Artificial</span>
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas pelo nosso bot de WhatsApp.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center pt-4">
+              <Button size="lg" className="gap-2">
+                <Database className="h-5 w-5" />
+                Explorar Dados
+              </Button>
+              <Button size="lg" variant="outline" className="gap-2">
+                Sobre o Projeto
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+            <div className="bg-card rounded-lg border p-6 text-center">
+              <Database className="h-8 w-8 text-primary mx-auto mb-3" />
+              <div className="text-3xl font-bold">12,847</div>
+              <div className="text-sm text-muted-foreground">Verificações Realizadas</div>
+            </div>
+            <div className="bg-card rounded-lg border p-6 text-center">
+              <TrendingUp className="h-8 w-8 text-primary mx-auto mb-3" />
+              <div className="text-3xl font-bold">89%</div>
+              <div className="text-sm text-muted-foreground">Precisão da IA</div>
+            </div>
+            <div className="bg-card rounded-lg border p-6 text-center">
+              <Users className="h-8 w-8 text-primary mx-auto mb-3" />
+              <div className="text-3xl font-bold">50k+</div>
+              <div className="text-sm text-muted-foreground">Usuários Ativos</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Filter Section */}
+      <section className="container py-12">
+        <FilterSection />
+      </section>
+
+      {/* Results Section */}
+      <section className="container pb-16">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-2">Verificações Recentes</h2>
+          <p className="text-muted-foreground">
+            Explore as verificações mais recentes realizadas pela nossa IA
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {mockVerifications.map((verification) => (
+            <VerificationCard key={verification.id} {...verification} />
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Button variant="outline" size="lg">
+            Carregar Mais Verificações
+          </Button>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Index;

@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 142 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 142 76% 36%;
+
+    --radius: 0.75rem;
+
+    /* Status colors for fact-checking */
+    --status-true: 142 76% 36%;
+    --status-false: 0 72% 51%;
+    --status-misleading: 38 92% 50%;
+    --status-unverifiable: 0 0% 60%;
+
+    /* Analytics specific */
+    --chart-1: 142 76% 36%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 0 72% 51%;
+    --chart-4: 217 91% 60%;
+    --chart-5: 280 65% 60%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 60% 45%) 100%);
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 142 76% 45%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 142 60% 50%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 142 76% 45%;
+
+    /* Status colors for fact-checking - dark mode */
+    --status-true: 142 76% 45%;
+    --status-false: 0 72% 51%;
+    --status-misleading: 38 92% 50%;
+    --status-unverifiable: 0 0% 55%;
+
+    /* Analytics specific - dark mode */
+    --chart-1: 142 76% 45%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 0 72% 51%;
+    --chart-4: 217 91% 60%;
+    --chart-5: 280 65% 60%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 45%) 0%, hsl(142 60% 50%) 100%);
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

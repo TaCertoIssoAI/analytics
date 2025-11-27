@@ -1,0 +1,35 @@
+{
+  "DocumentId": "550e8400-e29b-41d4-a716-446655440002",
+  "PureText": "Vacina contra COVID-19 causa magnetismo no corpo humano.",
+  "FinalTranscribedText": "Vacina contra COVID-19 causa magnetismo no corpo humano. Colheres grudando no braço.",
+  "HadAudio": false,
+  "AudioText": "",
+  "HadImage": true,
+  "ImageText": "Foto de pessoa com colher no braço",
+  "HadVideo": true,
+  "VideoText": "Vídeo mostrando pessoa com objetos metálicos grudados no braço",
+  "Links": [],
+  "MessageType": "FromWhatsappGroup",
+  "Claims": {
+    "1": {
+      "text": "Vacina contra COVID-19 causa magnetismo",
+      "links": []
+    }
+  },
+  "Date": "2025-11-10T14:20:00Z",
+  "Topics": ["Saúde", "Vacinas", "COVID-19"],
+  "ResponseByClaim": {
+    "1": {
+      "Result": "Fake",
+      "reasoningText": "Não há nenhuma evidência científica de que vacinas contra COVID-19 causem magnetismo. As vacinas não contêm metais magnéticos em quantidade suficiente para causar tal efeito. Vídeos mostrando objetos 'grudados' na pele são facilmente explicados por umidade, óleos naturais da pele ou truques.",
+      "reasoningSources": [
+        "https://www.who.int/",
+        "https://www.fiocruz.br/",
+        "https://www.cdc.gov/",
+        "https://butantan.gov.br/"
+      ]
+    }
+  },
+  "CommentAboutCompleteContext": "Esta é uma narrativa de desinformação comum que circula globalmente desde o início da vacinação contra COVID-19. Especialistas e órgãos de saúde já desmentiram essa alegação múltiplas vezes.",
+  "FinalResponseText": "FALSO - Vacinas contra COVID-19 não causam magnetismo. Esta alegação foi desmentida por múltiplas organizações de saúde internacionais e não possui base científica."
+}
