@@ -1,19 +1,24 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, Camera, Image as ImageIcon, FileText, Users, User } from "lucide-react";
+import { Mic, Camera, Image as ImageIcon, FileText, Users, User, ExternalLink } from "lucide-react";
 import { Analysis } from "@/types/analysis";
 import { ClaimCard } from "./ClaimCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 interface MessageDetailDialogProps {
   analysis: Analysis | null;
+  fileId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const MessageDetailDialog = ({ analysis, open, onOpenChange }: MessageDetailDialogProps) => {
+export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: MessageDetailDialogProps) => {
+  const navigate = useNavigate();
+
   if (!analysis) return null;
 
   const modalityIcons = [];
@@ -22,11 +27,26 @@ export const MessageDetailDialog = ({ analysis, open, onOpenChange }: MessageDet
   if (analysis.HadVideo) modalityIcons.push({ icon: Camera, label: "Vídeo" });
   if (analysis.PureText) modalityIcons.push({ icon: FileText, label: "Texto" });
 
+  const handleExpandClick = () => {
+    if (fileId) {
+      navigate(`/verificacao/${fileId}`);
+      onOpenChange(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Detalhes da Análise</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Detalhes da Análise</DialogTitle>
+            {fileId && (
+              <Button onClick={handleExpandClick} variant="outline" size="sm" className="gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Expandir
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

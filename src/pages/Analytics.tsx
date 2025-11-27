@@ -16,30 +16,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FileText, MessageSquare, AlertCircle, BarChart3, Download, Search } from "lucide-react";
-import { Analysis } from "@/types/analysis";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { loadAllAnalyses, type AnalysisWithFileId } from "@/lib/loadAnalyses";
 
 const Analytics = () => {
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
+  const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisWithFileId | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Carregar análises de exemplo
-    const loadAnalyses = async () => {
-      try {
-        const responses = await Promise.all([
-          fetch("/analises/001.json"),
-          fetch("/analises/002.json"),
-        ]);
-        const data = await Promise.all(responses.map((r) => r.json()));
+    loadAllAnalyses()
+      .then((data) => {
         setAnalyses(data);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error("Erro ao carregar análises:", error);
-      }
-    };
-    loadAnalyses();
+      });
   }, []);
 
   const totalMessages = analyses.length;
@@ -52,7 +45,7 @@ const Analytics = () => {
   );
   const fakePercentage = totalClaims > 0 ? Math.round((fakeCount / totalClaims) * 100) : 0;
 
-  const handleRowClick = (analysis: Analysis) => {
+  const handleRowClick = (analysis: AnalysisWithFileId) => {
     setSelectedAnalysis(analysis);
     setDialogOpen(true);
   };
@@ -221,6 +214,7 @@ const Analytics = () => {
 
       <MessageDetailDialog
         analysis={selectedAnalysis}
+        fileId={selectedAnalysis?.fileId}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
