@@ -3,35 +3,34 @@ import { FilterSection } from "@/components/FilterSection";
 import { VerificationCard } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
 import { Database, TrendingUp, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { loadAllAnalyses, getAnalysisStatus, formatDate, type AnalysisWithFileId } from "@/lib/loadAnalyses";
 
 const Index = () => {
-  // Mock data - será substituído por dados reais
-  const mockVerifications = [
-    {
-      id: "verificacao-001",
-      title: "Presidente anuncia novo programa de auxílio financeiro",
-      status: "false" as const,
-      date: "15 de Nov, 2025",
-      tags: ["Política", "Economia"],
-      excerpt: "Circula nas redes sociais mensagem alegando que o presidente teria anunciado um novo programa de auxílio financeiro...",
-    },
-    {
-      id: "verificacao-002",
-      title: "Estudo sobre eficácia de vacinas compartilhado em grupos",
-      status: "misleading" as const,
-      date: "14 de Nov, 2025",
-      tags: ["Saúde", "Ciência"],
-      excerpt: "Mensagem viral afirma que estudo comprova ineficácia de vacinas, mas dados foram tirados de contexto...",
-    },
-    {
-      id: "verificacao-003",
-      title: "Nova lei de trânsito entrará em vigor no próximo mês",
-      status: "true" as const,
-      date: "13 de Nov, 2025",
-      tags: ["Legislação", "Trânsito"],
-      excerpt: "De fato, o Congresso aprovou mudanças na legislação de trânsito que entrarão em vigor em dezembro...",
-    },
-  ];
+  const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAllAnalyses()
+      .then((data) => {
+        setAnalyses(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar análises:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  // Converte análises para o formato esperado pelo VerificationCard
+  const verifications = analyses.map((analysis) => ({
+    id: analysis.fileId, // Usa o fileId (001, 002, etc.) para as rotas
+    title: analysis.PureText.substring(0, 100) + (analysis.PureText.length > 100 ? '...' : ''),
+    status: getAnalysisStatus(analysis),
+    date: formatDate(analysis.Date),
+    tags: analysis.Topics,
+    excerpt: analysis.FinalResponseText,
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,17 +93,29 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockVerifications.map((verification) => (
-            <VerificationCard key={verification.id} {...verification} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Carregando verificações...</p>
+          </div>
+        ) : verifications.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Nenhuma verificação encontrada.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {verifications.map((verification) => (
+                <VerificationCard key={verification.id} {...verification} />
+              ))}
+            </div>
 
-        <div className="mt-8 text-center">
-          <Button variant="outline" size="lg">
-            Carregar Mais Verificações
-          </Button>
-        </div>
+            <div className="mt-8 text-center">
+              <Button variant="outline" size="lg">
+                Carregar Mais Verificações
+              </Button>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );
