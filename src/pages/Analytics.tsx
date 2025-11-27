@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnalysisSidebar } from "@/components/analytics/AnalysisSidebar";
+import { AnalysisSidebar, type AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
 import { MetricsCard } from "@/components/analytics/MetricsCard";
 import { MessageDetailDialog } from "@/components/analytics/MessageDetailDialog";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,24 @@ const Analytics = () => {
   const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisWithFileId | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<AnalysisFilters>({
+    messageType: {
+      whatsapp: true,
+      direct: true,
+    },
+    modality: {
+      text: true,
+      audio: true,
+      video: true,
+      image: true,
+    },
+    result: {
+      fake: true,
+      true: true,
+      misleading: true,
+      unknown: true,
+    },
+  });
 
   useEffect(() => {
     loadAllAnalyses()
@@ -35,9 +53,49 @@ const Analytics = () => {
       });
   }, []);
 
-  const totalMessages = analyses.length;
-  const totalClaims = analyses.reduce((acc, a) => acc + Object.keys(a.Claims).length, 0);
-  const fakeCount = analyses.reduce(
+  const getMainResult = (analysis: AnalysisWithFileId) => {
+    const results = Object.values(analysis.ResponseByClaim).map((r) => r.Result);
+    const fakeCount = results.filter((r) => r === "Fake").length;
+    const trueCount = results.filter((r) => r === "True").length;
+    if (fakeCount > trueCount) return "Fake";
+    if (trueCount > fakeCount) return "True";
+    return "Misleading";
+  };
+
+  // Aplica os filtros nas análises
+  const filteredAnalyses = useMemo(() => {
+    return analyses.filter((analysis) => {
+      // Filtro de tipo de mensagem
+      const messageTypeMatch =
+        (filters.messageType.whatsapp && analysis.MessageType === "FromWhatsappGroup") ||
+        (filters.messageType.direct && analysis.MessageType === "FromDirectMessage");
+
+      if (!messageTypeMatch) return false;
+
+      // Filtro de modalidade
+      const modalityMatch =
+        (filters.modality.text && analysis.PureText) ||
+        (filters.modality.audio && analysis.HadAudio) ||
+        (filters.modality.video && analysis.HadVideo) ||
+        (filters.modality.image && analysis.HadImage);
+
+      if (!modalityMatch) return false;
+
+      // Filtro de resultado
+      const mainResult = getMainResult(analysis);
+      const resultMatch =
+        (filters.result.fake && mainResult === "Fake") ||
+        (filters.result.true && mainResult === "True") ||
+        (filters.result.misleading && mainResult === "Misleading") ||
+        (filters.result.unknown && mainResult === "Unknown");
+
+      return resultMatch;
+    });
+  }, [analyses, filters]);
+
+  const totalMessages = filteredAnalyses.length;
+  const totalClaims = filteredAnalyses.reduce((acc, a) => acc + Object.keys(a.Claims).length, 0);
+  const fakeCount = filteredAnalyses.reduce(
     (acc, a) =>
       acc +
       Object.values(a.ResponseByClaim).filter((r) => r.Result === "Fake").length,
@@ -48,15 +106,6 @@ const Analytics = () => {
   const handleRowClick = (analysis: AnalysisWithFileId) => {
     setSelectedAnalysis(analysis);
     setDialogOpen(true);
-  };
-
-  const getMainResult = (analysis: Analysis) => {
-    const results = Object.values(analysis.ResponseByClaim).map((r) => r.Result);
-    const fakeCount = results.filter((r) => r === "Fake").length;
-    const trueCount = results.filter((r) => r === "True").length;
-    if (fakeCount > trueCount) return "Fake";
-    if (trueCount > fakeCount) return "True";
-    return "Misleading";
   };
 
   const resultColors = {
@@ -91,7 +140,7 @@ const Analytics = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <AnalysisSidebar />
+            <AnalysisSidebar filters={filters} onFilterChange={setFilters} />
           </aside>
 
           {/* Conteúdo Principal */}
@@ -143,7 +192,7 @@ const Analytics = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {analyses.map((analysis) => (
+                    {filteredAnalyses.map((analysis) => (
                       <TableRow
                         key={analysis.DocumentId}
                         className="cursor-pointer"
