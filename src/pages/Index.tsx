@@ -2,7 +2,7 @@ import { Header } from "@/components/Header";
 import { FilterSection } from "@/components/FilterSection";
 import { VerificationCard } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, TrendingUp, Users } from "lucide-react";
+import { Database, FileText, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { loadAllAnalyses, getAnalysisStatus, formatDate, type AnalysisWithFileId } from "@/lib/loadAnalyses";
 
@@ -31,6 +31,15 @@ const Index = () => {
     tags: analysis.Topics,
     excerpt: analysis.FinalResponseText,
   }));
+
+  // Calcula estatísticas
+  const totalClaims = analyses.reduce((acc, a) => acc + Object.keys(a.Claims).length, 0);
+  const fakeCount = analyses.reduce(
+    (acc, a) =>
+      acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "Fake").length,
+    0
+  );
+  const fakePercentage = totalClaims > 0 ? Math.round((fakeCount / totalClaims) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,18 +71,24 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
             <div className="bg-card rounded-lg border p-6 text-center">
               <Database className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold">12,847</div>
+              <div className="text-3xl font-bold">
+                {loading ? "..." : analyses.length.toLocaleString('pt-BR')}
+              </div>
               <div className="text-sm text-muted-foreground">Verificações Realizadas</div>
             </div>
             <div className="bg-card rounded-lg border p-6 text-center">
-              <TrendingUp className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold">89%</div>
-              <div className="text-sm text-muted-foreground">Precisão da IA</div>
+              <FileText className="h-8 w-8 text-primary mx-auto mb-3" />
+              <div className="text-3xl font-bold">
+                {loading ? "..." : totalClaims.toLocaleString('pt-BR')}
+              </div>
+              <div className="text-sm text-muted-foreground">Afirmações Analisadas</div>
             </div>
             <div className="bg-card rounded-lg border p-6 text-center">
-              <Users className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold">50k+</div>
-              <div className="text-sm text-muted-foreground">Usuários Ativos</div>
+              <AlertTriangle className="h-8 w-8 text-primary mx-auto mb-3" />
+              <div className="text-3xl font-bold">
+                {loading ? "..." : `${fakePercentage}%`}
+              </div>
+              <div className="text-sm text-muted-foreground">Conteúdo Falso Detectado</div>
             </div>
           </div>
         </div>
