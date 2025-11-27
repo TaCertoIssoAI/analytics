@@ -97,16 +97,15 @@ const Analytics = () => {
           {/* Conteúdo Principal */}
           <main className="lg:col-span-3">
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="messages">Mensagens</TabsTrigger>
-                <TabsTrigger value="claims">Claims</TabsTrigger>
                 <TabsTrigger value="sources">Fontes</TabsTrigger>
               </TabsList>
 
               {/* Aba Overview */}
               <TabsContent value="overview" className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <MetricsCard
                     title="Total de Mensagens"
                     value={totalMessages}
@@ -122,11 +121,6 @@ const Analytics = () => {
                     value={`${fakePercentage}%`}
                     icon={AlertCircle}
                     description={`${fakeCount} de ${totalClaims} claims`}
-                  />
-                  <MetricsCard
-                    title="Fontes Únicas"
-                    value="12"
-                    icon={BarChart3}
                   />
                 </div>
 
@@ -190,14 +184,6 @@ const Analytics = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </TabsContent>
-
-              {/* Aba Claims */}
-              <TabsContent value="claims" className="space-y-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Visualização de claims em desenvolvimento</p>
-                </div>
               </TabsContent>
 
               {/* Aba Fontes */}
