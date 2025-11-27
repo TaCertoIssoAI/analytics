@@ -1,17 +1,75 @@
-import { Calendar, Filter, Download } from "lucide-react";
+import { Calendar, Filter, Download, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import type { AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
 
-export const FilterSection = () => {
+interface FilterSectionProps {
+  filters?: AnalysisFilters;
+  onFilterChange?: (filters: AnalysisFilters) => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
+}
+
+export const FilterSection = ({
+  filters,
+  onFilterChange,
+  searchTerm = "",
+  onSearchChange
+}: FilterSectionProps) => {
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const handleMessageTypeChange = (type: 'whatsapp' | 'direct', checked: boolean) => {
+    if (filters && onFilterChange) {
+      onFilterChange({
+        ...filters,
+        messageType: {
+          ...filters.messageType,
+          [type]: checked,
+        },
+      });
+    }
+  };
+
+  const handleModalityChange = (modality: 'text' | 'audio' | 'video' | 'image', checked: boolean) => {
+    if (filters && onFilterChange) {
+      onFilterChange({
+        ...filters,
+        modality: {
+          ...filters.modality,
+          [modality]: checked,
+        },
+      });
+    }
+  };
+
+  const handleResultChange = (result: 'fake' | 'true' | 'misleading' | 'unknown', checked: boolean) => {
+    if (filters && onFilterChange) {
+      onFilterChange({
+        ...filters,
+        result: {
+          ...filters.result,
+          [result]: checked,
+        },
+      });
+    }
+  };
+
+  const handleClearFilters = () => {
+    if (onFilterChange) {
+      onFilterChange({
+        messageType: { whatsapp: true, direct: true },
+        modality: { text: true, audio: true, video: true, image: true },
+        result: { fake: true, true: true, misleading: true, unknown: true },
+      });
+    }
+    if (onSearchChange) {
+      onSearchChange("");
+    }
+  };
+
   return (
     <Card className="p-6 space-y-6">
       <div className="flex items-center gap-2">
@@ -19,70 +77,182 @@ export const FilterSection = () => {
         <h2 className="text-xl font-semibold">Filtros de Pesquisa</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Busca e Botão de Filtros Avançados */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
         <div className="space-y-2">
           <Label htmlFor="search">Buscar por conteúdo</Label>
-          <Input
-            id="search"
-            placeholder="Digite palavras-chave..."
-            className="w-full"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="status">Status da Verificação</Label>
-          <Select>
-            <SelectTrigger id="status">
-              <SelectValue placeholder="Todos os status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="true">Verdadeiro</SelectItem>
-              <SelectItem value="false">Falso</SelectItem>
-              <SelectItem value="misleading">Enganoso</SelectItem>
-              <SelectItem value="unverifiable">Não Verificável</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="date-start">Data Inicial</Label>
           <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              id="date-start"
-              type="date"
-              className="w-full"
+              id="search"
+              placeholder="Digite palavras-chave, tópico ou ID..."
+              className="w-full pl-10"
+              value={searchTerm}
+              onChange={(e) => onSearchChange?.(e.target.value)}
             />
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="date-end">Data Final</Label>
-          <div className="relative">
-            <Input
-              id="date-end"
-              type="date"
-              className="w-full"
-            />
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          </div>
-        </div>
+        {/* Botão Expandir Filtros Avançados */}
+        {filters && (
+          <Button
+            variant="outline"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="gap-2"
+          >
+            {showAdvancedFilters ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Ocultar Filtros
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Mostrar Filtros
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <Button className="gap-2">
-          <Filter className="h-4 w-4" />
-          Aplicar Filtros
-        </Button>
-        <Button variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Exportar Dados
-        </Button>
-        <Button variant="ghost">
-          Limpar Filtros
-        </Button>
-      </div>
+      {/* Filtros em Grid */}
+      {filters && showAdvancedFilters && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Tipo de Mensagem */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Tipo de Mensagem</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="whatsapp"
+                  checked={filters.messageType.whatsapp}
+                  onCheckedChange={(checked) => handleMessageTypeChange('whatsapp', checked as boolean)}
+                />
+                <label htmlFor="whatsapp" className="text-sm cursor-pointer">
+                  Grupo do WhatsApp
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="direct"
+                  checked={filters.messageType.direct}
+                  onCheckedChange={(checked) => handleMessageTypeChange('direct', checked as boolean)}
+                />
+                <label htmlFor="direct" className="text-sm cursor-pointer">
+                  Mensagem Direta
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Modalidade */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Modalidade</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="text"
+                  checked={filters.modality.text}
+                  onCheckedChange={(checked) => handleModalityChange('text', checked as boolean)}
+                />
+                <label htmlFor="text" className="text-sm cursor-pointer">
+                  Texto
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="audio"
+                  checked={filters.modality.audio}
+                  onCheckedChange={(checked) => handleModalityChange('audio', checked as boolean)}
+                />
+                <label htmlFor="audio" className="text-sm cursor-pointer">
+                  Áudio
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="video"
+                  checked={filters.modality.video}
+                  onCheckedChange={(checked) => handleModalityChange('video', checked as boolean)}
+                />
+                <label htmlFor="video" className="text-sm cursor-pointer">
+                  Vídeo
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="image"
+                  checked={filters.modality.image}
+                  onCheckedChange={(checked) => handleModalityChange('image', checked as boolean)}
+                />
+                <label htmlFor="image" className="text-sm cursor-pointer">
+                  Imagem
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Resultado */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Resultado</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="fake"
+                  checked={filters.result.fake}
+                  onCheckedChange={(checked) => handleResultChange('fake', checked as boolean)}
+                />
+                <label htmlFor="fake" className="text-sm cursor-pointer">
+                  Falso
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="true-result"
+                  checked={filters.result.true}
+                  onCheckedChange={(checked) => handleResultChange('true', checked as boolean)}
+                />
+                <label htmlFor="true-result" className="text-sm cursor-pointer">
+                  Verdadeiro
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="misleading"
+                  checked={filters.result.misleading}
+                  onCheckedChange={(checked) => handleResultChange('misleading', checked as boolean)}
+                />
+                <label htmlFor="misleading" className="text-sm cursor-pointer">
+                  Enganoso
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="unknown"
+                  checked={filters.result.unknown}
+                  onCheckedChange={(checked) => handleResultChange('unknown', checked as boolean)}
+                />
+                <label htmlFor="unknown" className="text-sm cursor-pointer">
+                  Desconhecido
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Botões */}
+      {filters && showAdvancedFilters && (
+        <div className="flex flex-wrap gap-3 pt-4 border-t">
+          <Button variant="outline" onClick={handleClearFilters}>
+            Limpar Filtros
+          </Button>
+          <Button variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar Dados
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };

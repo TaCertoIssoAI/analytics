@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnalysisSidebar, type AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
+import { FilterSection } from "@/components/FilterSection";
+import { type AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
 import { MetricsCard } from "@/components/analytics/MetricsCard";
 import { MessageDetailDialog } from "@/components/analytics/MessageDetailDialog";
 import { SourceDetailDialog } from "@/components/analytics/SourceDetailDialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -16,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, MessageSquare, AlertCircle, BarChart3, Download, Search, ExternalLink } from "lucide-react";
+import { FileText, MessageSquare, AlertCircle, BarChart3, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadAllAnalyses, type AnalysisWithFileId } from "@/lib/loadAnalyses";
@@ -27,6 +26,7 @@ const Analytics = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<AnalysisFilters>({
     messageType: {
       whatsapp: true,
@@ -68,6 +68,19 @@ const Analytics = () => {
   // Aplica os filtros nas análises
   const filteredAnalyses = useMemo(() => {
     return analyses.filter((analysis) => {
+      // Filtro de busca por texto
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          analysis.PureText.toLowerCase().includes(searchLower) ||
+          analysis.FinalTranscribedText.toLowerCase().includes(searchLower) ||
+          analysis.Topics.some(topic => topic.toLowerCase().includes(searchLower)) ||
+          analysis.fileId.includes(searchTerm) ||
+          analysis.DocumentId.toLowerCase().includes(searchLower);
+
+        if (!matchesSearch) return false;
+      }
+
       // Filtro de tipo de mensagem
       const messageTypeMatch =
         (filters.messageType.whatsapp && analysis.MessageType === "FromWhatsappGroup") ||
@@ -94,7 +107,7 @@ const Analytics = () => {
 
       return resultMatch;
     });
-  }, [analyses, filters]);
+  }, [analyses, filters, searchTerm]);
 
   const totalMessages = filteredAnalyses.length;
   const totalClaims = filteredAnalyses.reduce((acc, a) => acc + Object.keys(a.Claims).length, 0);
@@ -170,32 +183,23 @@ const Analytics = () => {
       <Header />
 
       <div className="container py-8">
-        {/* Header com Busca e Exportar */}
-        <div className="mb-8 space-y-4">
+        {/* Header */}
+        <div className="mb-8">
           <h1 className="text-4xl font-bold">Analytics Dashboard</h1>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por texto, tópico ou ID..."
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Exportar Dados
-            </Button>
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <AnalysisSidebar filters={filters} onFilterChange={setFilters} />
-          </aside>
+        {/* Filtros */}
+        <div className="mb-8">
+          <FilterSection
+            filters={filters}
+            onFilterChange={setFilters}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+        </div>
 
-          {/* Conteúdo Principal */}
-          <main className="lg:col-span-3">
+        {/* Conteúdo Principal */}
+        <div>
             <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
@@ -324,7 +328,6 @@ const Analytics = () => {
                 )}
               </TabsContent>
             </Tabs>
-          </main>
         </div>
       </div>
 

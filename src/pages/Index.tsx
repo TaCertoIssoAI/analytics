@@ -1,5 +1,4 @@
 import { Header } from "@/components/Header";
-import { FilterSection } from "@/components/FilterSection";
 import { VerificationCard } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
 import { Database, FileText, AlertTriangle } from "lucide-react";
@@ -99,13 +98,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="container py-12">
-        <FilterSection />
-      </section>
-
       {/* Results Section */}
-      <section className="container pb-16">
+      <section className="container py-16">
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-2">Verificações Recentes</h2>
           <p className="text-muted-foreground">
