@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Verification from "./pages/Verification";
 import NotFoundVerification from "./pages/NotFoundVerification";
 import Analytics from "./pages/Analytics";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/verificacao/:id" element={<Verification />} />
             <Route path="/verificacao-nao-encontrada/:id?" element={<NotFoundVerification />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/sobre" element={<About />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

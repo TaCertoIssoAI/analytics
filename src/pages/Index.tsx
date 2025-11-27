@@ -4,6 +4,7 @@ import { VerificationCard } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
 import { Database, FileText, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { loadAllAnalyses, getAnalysisStatus, formatDate, type AnalysisWithFileId } from "@/lib/loadAnalyses";
 
 const Index = () => {
@@ -57,12 +58,16 @@ const Index = () => {
               Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas pelo nosso bot de WhatsApp.
             </p>
             <div className="flex flex-wrap gap-4 justify-center pt-4">
-              <Button size="lg" className="gap-2">
-                <Database className="h-5 w-5" />
-                Explorar Dados
+              <Button size="lg" className="gap-2" asChild>
+                <Link to="/analytics">
+                  <Database className="h-5 w-5" />
+                  Explorar Dados
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="gap-2">
-                Sobre o Projeto
+              <Button size="lg" variant="outline" className="gap-2" asChild>
+                <Link to="/sobre">
+                  Sobre o Projeto
+                </Link>
               </Button>
             </div>
           </div>
