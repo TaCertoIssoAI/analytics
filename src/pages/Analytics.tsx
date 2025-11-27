@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnalysisSidebar, type AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
 import { MetricsCard } from "@/components/analytics/MetricsCard";
 import { MessageDetailDialog } from "@/components/analytics/MessageDetailDialog";
+import { SourceDetailDialog } from "@/components/analytics/SourceDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, MessageSquare, AlertCircle, BarChart3, Download, Search } from "lucide-react";
+import { FileText, MessageSquare, AlertCircle, BarChart3, Download, Search, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadAllAnalyses, type AnalysisWithFileId } from "@/lib/loadAnalyses";
@@ -24,6 +25,8 @@ const Analytics = () => {
   const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisWithFileId | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<string | null>(null);
+  const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
   const [filters, setFilters] = useState<AnalysisFilters>({
     messageType: {
       whatsapp: true,
@@ -107,6 +110,54 @@ const Analytics = () => {
     setSelectedAnalysis(analysis);
     setDialogOpen(true);
   };
+
+  const handleSourceClick = (source: string) => {
+    setSelectedSource(source);
+    setSourceDialogOpen(true);
+  };
+
+  // Processar fontes e suas citações
+  const sourcesData = useMemo(() => {
+    const sourceMap = new Map<string, Array<{
+      analysis: AnalysisWithFileId;
+      claimId: string;
+      claimText: string;
+      result: string;
+    }>>();
+
+    filteredAnalyses.forEach((analysis) => {
+      Object.entries(analysis.ResponseByClaim).forEach(([claimId, response]) => {
+        response.reasoningSources.forEach((source) => {
+          if (!sourceMap.has(source)) {
+            sourceMap.set(source, []);
+          }
+          sourceMap.get(source)!.push({
+            analysis,
+            claimId,
+            claimText: analysis.Claims[claimId].text,
+            result: response.Result,
+          });
+        });
+      });
+    });
+
+    return Array.from(sourceMap.entries())
+      .map(([source, citations]) => ({
+        source,
+        citations,
+        count: citations.length,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [filteredAnalyses]);
+
+  const selectedSourceData = useMemo(() => {
+    if (!selectedSource) return { citations: [], totalCitations: 0 };
+    const sourceData = sourcesData.find(s => s.source === selectedSource);
+    return {
+      citations: sourceData?.citations || [],
+      totalCitations: sourceData?.count || 0,
+    };
+  }, [selectedSource, sourcesData]);
 
   const resultColors = {
     Fake: "bg-status-false/10 text-status-false border-status-false/20",
@@ -237,10 +288,40 @@ const Analytics = () => {
 
               {/* Aba Fontes */}
               <TabsContent value="sources" className="space-y-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Análise de fontes em desenvolvimento</p>
-                </div>
+                {sourcesData.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ExternalLink className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Nenhuma fonte encontrada com os filtros atuais</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fonte</TableHead>
+                        <TableHead className="text-right">Citações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sourcesData.map(({ source, count }) => (
+                        <TableRow
+                          key={source}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSourceClick(source)}
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate max-w-xl">{source}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="secondary">{count}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </TabsContent>
             </Tabs>
           </main>
@@ -252,6 +333,14 @@ const Analytics = () => {
         fileId={selectedAnalysis?.fileId}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+      />
+
+      <SourceDetailDialog
+        source={selectedSource}
+        citations={selectedSourceData.citations}
+        totalCitations={selectedSourceData.totalCitations}
+        open={sourceDialogOpen}
+        onOpenChange={setSourceDialogOpen}
       />
     </div>
   );
