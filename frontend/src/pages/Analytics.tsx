@@ -15,10 +15,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, MessageSquare, AlertCircle, BarChart3, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadAllAnalyses, type AnalysisWithFileId } from "@/lib/loadAnalyses";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import { Pie, PieChart, Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const Analytics = () => {
   const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
@@ -172,6 +181,93 @@ const Analytics = () => {
     };
   }, [selectedSource, sourcesData]);
 
+  // Dados para os gráficos
+  const resultsChartData = useMemo(() => {
+    const fakeCount = filteredAnalyses.reduce(
+      (acc, a) => acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "Fake").length,
+      0
+    );
+    const trueCount = filteredAnalyses.reduce(
+      (acc, a) => acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "True").length,
+      0
+    );
+    const misleadingCount = filteredAnalyses.reduce(
+      (acc, a) => acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "Misleading").length,
+      0
+    );
+
+    return [
+      { name: "Falso", value: fakeCount, fill: "hsl(var(--chart-1))" },
+      { name: "Verdadeiro", value: trueCount, fill: "hsl(var(--chart-2))" },
+      { name: "Enganoso", value: misleadingCount, fill: "hsl(var(--chart-3))" },
+    ].filter(item => item.value > 0);
+  }, [filteredAnalyses]);
+
+  const modalitiesChartData = useMemo(() => {
+    return [
+      {
+        name: "Texto",
+        value: filteredAnalyses.filter((a) => a.PureText).length,
+        fill: "hsl(var(--chart-1))",
+      },
+      {
+        name: "Áudio",
+        value: filteredAnalyses.filter((a) => a.HadAudio).length,
+        fill: "hsl(var(--chart-2))",
+      },
+      {
+        name: "Vídeo",
+        value: filteredAnalyses.filter((a) => a.HadVideo).length,
+        fill: "hsl(var(--chart-3))",
+      },
+      {
+        name: "Imagem",
+        value: filteredAnalyses.filter((a) => a.HadImage).length,
+        fill: "hsl(var(--chart-4))",
+      },
+    ].filter(item => item.value > 0);
+  }, [filteredAnalyses]);
+
+  const resultsChartConfig = {
+    value: {
+      label: "Quantidade",
+    },
+    Falso: {
+      label: "Falso",
+      color: "hsl(var(--chart-1))",
+    },
+    Verdadeiro: {
+      label: "Verdadeiro",
+      color: "hsl(var(--chart-2))",
+    },
+    Enganoso: {
+      label: "Enganoso",
+      color: "hsl(var(--chart-3))",
+    },
+  };
+
+  const modalitiesChartConfig = {
+    value: {
+      label: "Análises",
+    },
+    Texto: {
+      label: "Texto",
+      color: "hsl(var(--chart-1))",
+    },
+    Áudio: {
+      label: "Áudio",
+      color: "hsl(var(--chart-2))",
+    },
+    Vídeo: {
+      label: "Vídeo",
+      color: "hsl(var(--chart-3))",
+    },
+    Imagem: {
+      label: "Imagem",
+      color: "hsl(var(--chart-4))",
+    },
+  };
+
   const resultColors = {
     Fake: "bg-status-false/10 text-status-false border-status-false/20",
     True: "bg-status-true/10 text-status-true border-status-true/20",
@@ -209,7 +305,7 @@ const Analytics = () => {
 
               {/* Aba Overview */}
               <TabsContent value="overview" className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   <MetricsCard
                     title="Total de Mensagens"
                     value={totalMessages}
@@ -220,17 +316,63 @@ const Analytics = () => {
                     value={totalClaims}
                     icon={FileText}
                   />
-                  <MetricsCard
-                    title="Fake News"
-                    value={`${fakePercentage}%`}
-                    icon={AlertCircle}
-                    description={`${fakeCount} de ${totalClaims} claims`}
-                  />
                 </div>
 
-                <div className="text-center py-12 text-muted-foreground">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Gráficos em desenvolvimento</p>
+                {/* Gráficos */}
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  {/* Gráfico de Resultados */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Distribuição de Resultados</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {resultsChartData.length > 0 ? (
+                        <ChartContainer config={resultsChartConfig} className="h-[250px]">
+                          <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Pie
+                              data={resultsChartData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={70}
+                              label
+                            />
+                            <ChartLegend content={<ChartLegendContent />} />
+                          </PieChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                          Nenhum dado disponível
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Gráfico de Modalidades */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Análises por Modalidade</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {modalitiesChartData.length > 0 ? (
+                        <ChartContainer config={modalitiesChartConfig} className="h-[250px]">
+                          <BarChart data={modalitiesChartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                          Nenhum dado disponível
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 

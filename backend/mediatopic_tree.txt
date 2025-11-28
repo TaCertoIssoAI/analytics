@@ -1,0 +1,1429 @@
+total de conceitos: 1392
+total de raizes: 17
+
+# raiz
+[medtop:01000000] (nivel 1) artes, cultura, entretenimento e mídia
+  [medtop:20000002] (nivel 2) arte e entretenimento
+    [medtop:20000003] (nivel 3) animação
+    [medtop:20000031] (nivel 3) artes visuais
+      [medtop:20000032] (nivel 4) arquitetura
+      [medtop:20001203] (nivel 4) artes têxteis
+      [medtop:20000034] (nivel 4) desenho
+      [medtop:20000033] (nivel 4) design
+      [medtop:20000037] (nivel 4) escultura
+      [medtop:20001205] (nivel 4) forjamento
+      [medtop:20000036] (nivel 4) fotografia
+      [medtop:20001204] (nivel 4) marcenaria
+      [medtop:20000035] (nivel 4) pintura
+    [medtop:20000004] (nivel 3) cartoon
+    [medtop:20000005] (nivel 3) cinema
+    [medtop:20000007] (nivel 3) dança
+      [medtop:20000008] (nivel 4) ballet
+      [medtop:20000009] (nivel 4) dança moderna
+      [medtop:20000010] (nivel 4) dança tradicional
+    [medtop:20001181] (nivel 3) festival
+      [medtop:20000006] (nivel 4) festivais de cinema
+    [medtop:20000013] (nivel 3) literatura
+      [medtop:20000014] (nivel 4) drama (literatura)
+      [medtop:20000015] (nivel 4) ficção
+      [medtop:20000016] (nivel 4) não ficção
+      [medtop:20000017] (nivel 4) poesia
+    [medtop:20000011] (nivel 3) moda
+      [medtop:20001248] (nivel 4) cosmética
+      [medtop:20000012] (nivel 4) joias
+      [medtop:20001249] (nivel 4) penteados
+    [medtop:20000018] (nivel 3) música
+      [medtop:20000020] (nivel 4) concerto
+      [medtop:20000021] (nivel 4) gênero musical
+        [medtop:20001186] (nivel 5) heavy metal
+        [medtop:20001184] (nivel 5) hip-hop
+        [medtop:20000022] (nivel 5) música clássica
+        [medtop:20000023] (nivel 5) música country
+        [medtop:20001187] (nivel 5) música de banda de dança
+        [medtop:20001188] (nivel 5) música de dança eletrônica
+        [medtop:20000024] (nivel 5) música folk
+        [medtop:20000025] (nivel 5) música jazz
+        [medtop:20001189] (nivel 5) música para crianças
+        [medtop:20000026] (nivel 5) música popular
+        [medtop:20000027] (nivel 5) música rock
+        [medtop:20001185] (nivel 5) R&B
+      [medtop:20000019] (nivel 4) instrumento musical
+    [medtop:20001179] (nivel 3) série
+    [medtop:20000029] (nivel 3) teatro
+      [medtop:20001191] (nivel 4) cabaré
+      [medtop:20001180] (nivel 4) drama (teatro)
+      [medtop:20001133] (nivel 4) musical
+      [medtop:20001134] (nivel 4) opereta
+      [medtop:20001190] (nivel 4) stand-up
+      [medtop:20000030] (nivel 4) teatro musical
+      [medtop:20000028] (nivel 4) ópera
+  [medtop:20000038] (nivel 2) cultura
+    [medtop:20000043] (nivel 3) bibliotecas e museus
+    [medtop:20000040] (nivel 3) costumes e tradições
+    [medtop:20000039] (nivel 3) desenvolvimento cultural
+    [medtop:20001135] (nivel 3) exposição artística
+    [medtop:20000041] (nivel 3) festividades (cultura)
+    [medtop:20000042] (nivel 3) língua
+    [medtop:20000044] (nivel 3) monumentos e patrimônio
+      [medtop:20000242] (nivel 4) obras de renovação
+  [medtop:20000045] (nivel 2) mídia de massas
+    [medtop:20001319] (nivel 3) desinformação e informação errada
+    [medtop:20000047] (nivel 3) jornais
+    [medtop:20000046] (nivel 3) mídia noticiosa
+    [medtop:20000048] (nivel 3) mídia online
+    [medtop:20001182] (nivel 3) mídias sociais
+      [medtop:20001192] (nivel 4) influenciadores
+    [medtop:20000049] (nivel 3) periódicos
+    [medtop:20000050] (nivel 3) rádio
+    [medtop:20000051] (nivel 3) televisão
+
+# raiz
+[medtop:02000000] (nivel 1) crime, lei e justiça
+  [medtop:20000082] (nivel 2) crime
+    [medtop:20000084] (nivel 3) assalto
+      [medtop:20000085] (nivel 4) crimes sexuais
+    [medtop:20000086] (nivel 3) cibercrime
+    [medtop:20001283] (nivel 3) contrabando e tráfico de pessoas
+    [medtop:20000093] (nivel 3) corrupção
+      [medtop:20000094] (nivel 4) suborno
+    [medtop:20000105] (nivel 3) crime de guerra
+    [medtop:20000087] (nivel 3) crime econômico
+      [medtop:20000091] (nivel 4) abuso de informação privilegiada
+      [medtop:20000088] (nivel 4) crime antitruste
+      [medtop:20001194] (nivel 4) fraude contábil
+      [medtop:20000090] (nivel 4) peculato
+      [medtop:20000089] (nivel 4) quebra de contrato
+      [medtop:20000092] (nivel 4) restrição ao comércio
+    [medtop:20000101] (nivel 3) crime organizado
+      [medtop:20000102] (nivel 4) gangues
+    [medtop:20000095] (nivel 3) crimes relacionados com drogas
+      [medtop:20000096] (nivel 4) tráfico de droga
+    [medtop:20000097] (nivel 3) fraude
+      [medtop:20001195] (nivel 4) sonegação fiscal
+    [medtop:20000072] (nivel 3) genocídio
+    [medtop:20000098] (nivel 3) hijacking
+    [medtop:20000099] (nivel 3) homicídio
+    [medtop:20000083] (nivel 3) incêndio criminoso
+    [medtop:20001196] (nivel 3) infração de trânsito
+    [medtop:20001314] (nivel 3) maus-tratos a animais
+    [medtop:20001320] (nivel 3) medtop:20001320
+    [medtop:20000100] (nivel 3) rapto
+    [medtop:20000104] (nivel 3) roubo
+    [medtop:20000103] (nivel 3) terrorismo
+    [medtop:20001313] (nivel 3) tiroteios
+    [medtop:20001285] (nivel 3) vandalismo
+  [medtop:20000129] (nivel 2) forças policiais
+    [medtop:20000130] (nivel 3) detenção
+    [medtop:20000131] (nivel 3) investigação (criminal)
+      [medtop:20000132] (nivel 4) desaparecidos
+      [medtop:20001200] (nivel 4) investigação criminal arquivada
+    [medtop:20000133] (nivel 3) polícia
+    [medtop:20001299] (nivel 3) vigilância
+  [medtop:20000106] (nivel 2) judiciário (sistema de justiça)
+    [medtop:20000118] (nivel 3) acusação
+    [medtop:20000116] (nivel 3) procedimentos judiciais fora do tribunal
+      [medtop:20000117] (nivel 4) arbitragem
+    [medtop:20000107] (nivel 3) tribunal
+      [medtop:20000110] (nivel 4) juiz
+      [medtop:20000111] (nivel 4) julgamentos
+        [medtop:20000114] (nivel 5) litígio
+        [medtop:20000134] (nivel 5) pena/sentença
+          [medtop:20000136] (nivel 6) multa
+          [medtop:20000135] (nivel 6) pena de morte
+          [medtop:20000137] (nivel 6) prisão
+          [medtop:20001199] (nivel 6) suspensão da pena
+          [medtop:20001198] (nivel 6) tratamento psiquiátrico por ordem judicial
+        [medtop:20000112] (nivel 5) processos preliminares
+        [medtop:20000113] (nivel 5) réu
+        [medtop:20000115] (nivel 5) testemunha
+      [medtop:20000108] (nivel 4) recurso (tribunal)
+      [medtop:20000109] (nivel 4) serviços de tribunal
+      [medtop:20001287] (nivel 4) supremo tribunal e tribunal superior
+  [medtop:20000119] (nivel 2) justiça e direitos
+  [medtop:20000121] (nivel 2) leis
+    [medtop:20001197] (nivel 3) direito administrativo
+    [medtop:20000122] (nivel 3) lei civil
+      [medtop:20000124] (nivel 4) regulação
+        [medtop:20000123] (nivel 5) antitruste
+    [medtop:20000125] (nivel 3) lei criminal
+    [medtop:20000126] (nivel 3) lei internacional
+      [medtop:20000127] (nivel 4) extradição (processos)
+      [medtop:20000128] (nivel 4) tribunal internacional
+
+# raiz
+[medtop:03000000] (nivel 1) desastres, acidentes e emergências
+  [medtop:20000139] (nivel 2) acidente (geral)
+    [medtop:20000141] (nivel 3) acidente industrial
+      [medtop:20000142] (nivel 4) acidente nuclear
+    [medtop:20000143] (nivel 3) acidentes de transporte
+      [medtop:20000144] (nivel 4) acidente aéreo
+      [medtop:20000146] (nivel 4) acidente ferroviário
+      [medtop:20000145] (nivel 4) acidente marítimo
+      [medtop:20000147] (nivel 4) acidente rodoviário
+        [medtop:20001201] (nivel 5) atropelamento de animais selvagens
+    [medtop:20000140] (nivel 3) explosão
+    [medtop:20000161] (nivel 3) falhas estruturais
+    [medtop:20001321] (nivel 3) medtop:20001321
+  [medtop:20000160] (nivel 2) caso de emergência
+    [medtop:20000162] (nivel 3) acidente de transporte
+      [medtop:20000163] (nivel 4) acidente aéreo e espacial
+      [medtop:20000165] (nivel 4) acidente ferroviário
+      [medtop:20000164] (nivel 4) acidente marítimo
+      [medtop:20000166] (nivel 4) acidente rodoviário
+  [medtop:20000148] (nivel 2) desastre (geral)
+    [medtop:20000151] (nivel 3) desastre natural
+      [medtop:20000157] (nivel 4) desastre meteorológico
+        [medtop:20001280] (nivel 5) furacão
+        [medtop:20000158] (nivel 5) tempestade ciclônica
+      [medtop:20000155] (nivel 4) deslizamento de terra
+        [medtop:20000156] (nivel 5) avalancha
+      [medtop:20000159] (nivel 4) erupção vulcânica
+      [medtop:20000154] (nivel 4) inundações
+      [medtop:20001353] (nivel 4) medtop:20001353
+      [medtop:20000152] (nivel 4) seca
+      [medtop:20000153] (nivel 4) terremoto
+    [medtop:20000149] (nivel 3) fome
+    [medtop:20000150] (nivel 3) incêndios
+      [medtop:20001202] (nivel 4) incêndio florestal
+  [medtop:20000167] (nivel 2) planos de emergência
+  [medtop:20000168] (nivel 2) resposta de emergência
+
+# raiz
+[medtop:04000000] (nivel 1) economia, negócios e finanças
+  [medtop:20000344] (nivel 2) economia (geral)
+    [medtop:20000363] (nivel 3) associações empresariais
+    [medtop:20000350] (nivel 3) banco central
+    [medtop:20000373] (nivel 3) comércio externo
+      [medtop:20000374] (nivel 4) acordos comerciais
+      [medtop:20000375] (nivel 4) balança comercial
+      [medtop:20000376] (nivel 4) disputa comercial
+      [medtop:20000377] (nivel 4) política comercial
+      [medtop:20000384] (nivel 4) tarifas
+    [medtop:20001171] (nivel 3) economia colaborativa
+    [medtop:20000381] (nivel 3) fundos de investimento
+    [medtop:20000372] (nivel 3) instituições econômicas internacionais
+    [medtop:20000346] (nivel 3) macroeconomia
+      [medtop:20000367] (nivel 4) ajuda governamental
+      [medtop:20000352] (nivel 4) confiança do consumidor
+      [medtop:20000351] (nivel 4) consumidores
+        [medtop:20000353] (nivel 5) questão de consumo
+      [medtop:20000357] (nivel 4) crescimento econômico
+      [medtop:20000354] (nivel 4) crédito e dívida
+      [medtop:20000356] (nivel 4) deflação
+      [medtop:20000368] (nivel 4) dívida pública
+      [medtop:20000365] (nivel 4) estatísticas de emprego
+      [medtop:20000366] (nivel 4) exportações
+      [medtop:20000380] (nivel 4) hipotecas
+      [medtop:20000369] (nivel 4) importações
+      [medtop:20000358] (nivel 4) indicadores econômicos
+      [medtop:20000370] (nivel 4) inflação
+      [medtop:20000361] (nivel 4) inventários
+      [medtop:20000378] (nivel 4) investimentos
+      [medtop:20000347] (nivel 4) obrigações
+      [medtop:20000348] (nivel 4) orçamento
+      [medtop:20000382] (nivel 4) preços
+      [medtop:20000362] (nivel 4) produtividade
+      [medtop:20000359] (nivel 4) produto interno bruto
+      [medtop:20000360] (nivel 4) produção industrial
+      [medtop:20000383] (nivel 4) recessão
+    [medtop:20000364] (nivel 3) mercados emergentes
+    [medtop:20000379] (nivel 3) política monetária
+      [medtop:20000371] (nivel 4) juros
+    [medtop:20000355] (nivel 3) valor cambial
+      [medtop:20001279] (nivel 4) criptomoeda
+  [medtop:20000349] (nivel 2) empresas
+    [medtop:20001278] (nivel 3) cooperativa
+    [medtop:20001158] (nivel 3) empreendedorismo
+    [medtop:20001172] (nivel 3) pequena e média empresa
+  [medtop:20000170] (nivel 2) informação sobre empresas
+    [medtop:20000192] (nivel 3) estratégia e marketing
+      [medtop:20000196] (nivel 4) contrato comercial
+      [medtop:20000202] (nivel 4) contrato de licença
+      [medtop:20001159] (nivel 4) contrato público
+      [medtop:20000283] (nivel 4) estudos de mercado
+      [medtop:20001163] (nivel 4) gestão de relacionamento com o cliente
+      [medtop:20000198] (nivel 4) globalização econômica
+      [medtop:20000284] (nivel 4) indicadores de consumo
+      [medtop:20000205] (nivel 4) novo produto ou serviço
+      [medtop:20000206] (nivel 4) patente, direitos de autor e marca registrada
+      [medtop:20000208] (nivel 4) pesquisa e desenvolvimento
+      [medtop:20000207] (nivel 4) recolha de produtos
+      [medtop:20001295] (nivel 4) terceirização
+    [medtop:20000183] (nivel 3) financiamento e oferta de ações
+      [medtop:20000396] (nivel 4) ações
+        [medtop:20000177] (nivel 5) anúncio de dividendos
+        [medtop:20000186] (nivel 5) atividade bolsista
+        [medtop:20000395] (nivel 5) derivados financeiros
+        [medtop:20001141] (nivel 5) hot stock
+        [medtop:20000187] (nivel 5) oferta pública inicial
+        [medtop:20001137] (nivel 5) recomendação de ações
+          [medtop:20001138] (nivel 6) recomendação de compra
+          [medtop:20001139] (nivel 6) recomendação de manutenção
+          [medtop:20001140] (nivel 6) recomendação de venda
+        [medtop:20000175] (nivel 5) recompra
+      [medtop:20001294] (nivel 4) crowdfunding
+      [medtop:20000182] (nivel 4) empresa com dificuldades financeiras
+      [medtop:20000174] (nivel 4) falência
+      [medtop:20001376] (nivel 4) medtop:20001376
+      [medtop:20000184] (nivel 4) reestruturação e recapitalização
+      [medtop:20000394] (nivel 4) títulos
+        [medtop:20000191] (nivel 5) opções de compra de ações
+    [medtop:20000171] (nivel 3) finanças empresariais
+      [medtop:20000173] (nivel 4) comentários de analistas
+    [medtop:20000199] (nivel 3) gestão empresarial
+      [medtop:20000185] (nivel 4) acionista
+      [medtop:20000195] (nivel 4) conselho de administração
+      [medtop:20000181] (nivel 4) procurações
+      [medtop:20000194] (nivel 4) relatório anual
+      [medtop:20001230] (nivel 4) responsabilidade social corporativa
+      [medtop:20000193] (nivel 4) reuniões corporativas anuais e especiais
+    [medtop:20001365] (nivel 3) medtop:20001365
+      [medtop:20000172] (nivel 4) contabilidade e auditoria
+      [medtop:20000180] (nivel 4) demonstração financeira
+      [medtop:20000178] (nivel 4) lucros
+      [medtop:20000176] (nivel 4) notação de risco
+      [medtop:20000179] (nivel 4) previsão de lucros
+    [medtop:20001366] (nivel 3) medtop:20001366
+      [medtop:20000201] (nivel 4) aquisição alavancada
+      [medtop:20000204] (nivel 4) fusão e aquisição
+      [medtop:20000200] (nivel 4) joint venture
+      [medtop:20000203] (nivel 4) operação de compra
+      [medtop:20000197] (nivel 4) spin-off
+    [medtop:20000188] (nivel 3) recursos humanos
+      [medtop:20000190] (nivel 4) administração
+      [medtop:20000189] (nivel 4) redução de efetivos
+  [medtop:20000385] (nivel 2) mercado e bolsa
+    [medtop:20000391] (nivel 3) mercado cambial
+    [medtop:20000390] (nivel 3) mercado de dívida
+    [medtop:20000392] (nivel 3) mercado de empréstimos
+    [medtop:20000386] (nivel 3) mercados de produtos de base
+      [medtop:20000387] (nivel 4) mercado da energia
+      [medtop:20000388] (nivel 4) metal
+      [medtop:20000389] (nivel 4) produtos agrícolas
+  [medtop:20000209] (nivel 2) setor econômico
+    [medtop:20000210] (nivel 3) agricultura e pescas
+      [medtop:20000212] (nivel 4) agricultura
+      [medtop:20000211] (nivel 4) aquacultura
+      [medtop:20000215] (nivel 4) pecuária
+      [medtop:20000216] (nivel 4) vinicultura
+    [medtop:20000243] (nivel 3) bens de consumo
+      [medtop:20000248] (nivel 4) alimentação
+      [medtop:20001160] (nivel 4) artesanato
+      [medtop:20000244] (nivel 4) bebidas
+      [medtop:20000249] (nivel 4) bens de luxo
+      [medtop:20000251] (nivel 4) bens não duráveis
+      [medtop:20000254] (nivel 4) brinquedos
+      [medtop:20001258] (nivel 4) eletrônica de consumo
+      [medtop:20000324] (nivel 4) indústria da alimentação
+      [medtop:20000325] (nivel 4) mobiliário e decoração
+      [medtop:20001168] (nivel 4) produtos e serviços para animais de estimação
+      [medtop:20000330] (nivel 4) tabaco
+      [medtop:20000245] (nivel 4) vestuário
+    [medtop:20001289] (nivel 3) canais de vendas
+      [medtop:20000255] (nivel 4) mercado atacadista
+      [medtop:20000252] (nivel 4) varejo
+        [medtop:20001296] (nivel 5) centro comercial
+        [medtop:20000247] (nivel 5) comércio eletrônico
+        [medtop:20000246] (nivel 5) lojas de departamento
+        [medtop:20000253] (nivel 5) lojas especializadas
+        [medtop:20000250] (nivel 5) vendas por correio
+        [medtop:20001297] (nivel 5) zona comercial
+      [medtop:20000273] (nivel 4) venda por leilão
+    [medtop:20000235] (nivel 3) construção e propriedades
+      [medtop:20000239] (nivel 4) construção civil
+      [medtop:20001246] (nivel 4) construção comercial
+      [medtop:20000236] (nivel 4) design e engenharia
+      [medtop:20000241] (nivel 4) imobiliário
+      [medtop:20000317] (nivel 4) material de construção
+      [medtop:20001367] (nivel 4) medtop:20001367
+      [medtop:20001368] (nivel 4) medtop:20001368
+      [medtop:20000238] (nivel 4) obras públicas
+      [medtop:20000240] (nivel 4) preço do terreno
+      [medtop:20001245] (nivel 4) projetos de infraestrutura
+      [medtop:20000237] (nivel 4) propriedade agrícola
+    [medtop:20000256] (nivel 3) energia e recursos
+      [medtop:20001207] (nivel 4) biocombustível
+      [medtop:20000258] (nivel 4) carvão
+      [medtop:20000265] (nivel 4) energia nuclear
+      [medtop:20000257] (nivel 4) energias alternativas
+        [medtop:20001211] (nivel 5) energia eólica
+        [medtop:20001208] (nivel 5) energia geotérmica
+        [medtop:20001210] (nivel 5) energia hidrelétrica
+        [medtop:20001209] (nivel 5) energia solar
+      [medtop:20000261] (nivel 4) indústria da energia
+      [medtop:20001243] (nivel 4) indústria do petróleo e do gás
+        [medtop:20000268] (nivel 5) gasolina
+        [medtop:20000259] (nivel 5) gasóleo
+        [medtop:20000263] (nivel 5) gás natural
+        [medtop:20000262] (nivel 5) querosene/parafina
+      [medtop:20000266] (nivel 4) petróleo e gás (distribuição)
+      [medtop:20000267] (nivel 4) petróleo e gás (extração)
+    [medtop:20000214] (nivel 3) exploração florestal e silvicultura
+    [medtop:20000331] (nivel 3) indústria do turismo e lazer
+      [medtop:20000332] (nivel 4) cassinos e jogo
+      [medtop:20000333] (nivel 4) hotelaria e alojamentos
+      [medtop:20000336] (nivel 4) operadores turísticos
+      [medtop:20000334] (nivel 4) produtos para esporte e lazer
+      [medtop:20000335] (nivel 4) restaurantes e catering
+    [medtop:20000294] (nivel 3) indústria metalomecânica e engenharia
+      [medtop:20000296] (nivel 4) automóvel
+      [medtop:20001165] (nivel 4) bens de produção
+      [medtop:20001166] (nivel 4) construção ferroviária
+      [medtop:20000303] (nivel 4) construção naval
+      [medtop:20000301] (nivel 4) engenharia de instrumentação
+      [medtop:20000302] (nivel 4) engenharia de máquinas
+      [medtop:20000300] (nivel 4) equipamentos metalomecânicos
+      [medtop:20000299] (nivel 4) equipamentos pesados
+      [medtop:20000295] (nivel 4) indústria aeroespacial
+      [medtop:20000297] (nivel 4) indústria da defesa
+      [medtop:20000298] (nivel 4) material elétrico
+    [medtop:20000322] (nivel 3) indústria transformadora
+      [medtop:20000327] (nivel 4) borracha
+      [medtop:20001169] (nivel 4) cigarro eletrônico
+      [medtop:20000323] (nivel 4) destilação e bebidas
+      [medtop:20000326] (nivel 4) papel e embalagem
+      [medtop:20000328] (nivel 4) refrigerantes
+      [medtop:20000329] (nivel 4) têxtil e vestuário
+    [medtop:20000225] (nivel 3) informática e tecnologias de informação
+      [medtop:20000227] (nivel 4) conexão em rede
+      [medtop:20000232] (nivel 4) equipamentos de telecomunicação
+      [medtop:20000226] (nivel 4) hardware
+      [medtop:20001161] (nivel 4) internet das coisas
+      [medtop:20000229] (nivel 4) segurança informática
+      [medtop:20000230] (nivel 4) semicondutores e componentes ativos
+      [medtop:20000233] (nivel 4) serviços de telecomunicações
+      [medtop:20000231] (nivel 4) software
+      [medtop:20000228] (nivel 4) tecnologia de satélite
+      [medtop:20000234] (nivel 4) tecnologia sem fio
+    [medtop:20001354] (nivel 3) medtop:20001354
+      [medtop:20000218] (nivel 4) biotecnologia
+      [medtop:20001167] (nivel 4) equipamento médico
+      [medtop:20000223] (nivel 4) indústria farmacêutica
+      [medtop:20000278] (nivel 4) prestador de serviços de saúde
+    [medtop:20001370] (nivel 3) medtop:20001370
+      [medtop:20000274] (nivel 4) banca
+      [medtop:20000292] (nivel 4) corretagem
+      [medtop:20000393] (nivel 4) empréstimos
+      [medtop:20001162] (nivel 4) gestão de ativos
+      [medtop:20000287] (nivel 4) investimentos pessoais
+      [medtop:20000279] (nivel 4) seguros
+      [medtop:20000272] (nivel 4) serviços de contabilidade e auditoria
+      [medtop:20000280] (nivel 4) serviços de investimento
+    [medtop:20001371] (nivel 3) medtop:20001371
+      [medtop:20000276] (nivel 4) agência de emprego
+      [medtop:20001136] (nivel 4) feira profissional
+      [medtop:20000275] (nivel 4) serviço de consultoria
+      [medtop:20000293] (nivel 4) serviços de casamento
+      [medtop:20000291] (nivel 4) serviços de expedição
+      [medtop:20000281] (nivel 4) serviços de limpeza
+      [medtop:20000290] (nivel 4) serviços de locação
+      [medtop:20000282] (nivel 4) serviços jurídicos
+      [medtop:20000288] (nivel 4) serviços pessoais
+      [medtop:20001164] (nivel 4) sistema de pagamento
+    [medtop:20000316] (nivel 3) minérios e metais
+      [medtop:20000319] (nivel 4) ferro e aço
+      [medtop:20000321] (nivel 4) metais não ferrosos
+      [medtop:20000320] (nivel 4) minas
+      [medtop:20000318] (nivel 4) ouro e metais preciosos
+    [medtop:20000304] (nivel 3) mídia
+      [medtop:20000309] (nivel 4) agências noticiosas
+      [medtop:20000310] (nivel 4) imprensa
+      [medtop:20000307] (nivel 4) indústria cinematográfica
+      [medtop:20000308] (nivel 4) indústria musical
+      [medtop:20001369] (nivel 4) medtop:20001369
+      [medtop:20001372] (nivel 4) medtop:20001372
+      [medtop:20000306] (nivel 4) mercado livreiro
+      [medtop:20000311] (nivel 4) mídia online
+      [medtop:20000305] (nivel 4) publicidade
+      [medtop:20000312] (nivel 4) relações públicas
+      [medtop:20000313] (nivel 4) rádio
+      [medtop:20001293] (nivel 4) serviço de streaming
+      [medtop:20000314] (nivel 4) serviços de satélite e de cabo
+      [medtop:20000315] (nivel 4) televisão
+    [medtop:20000213] (nivel 3) pesca
+    [medtop:20000217] (nivel 3) produtos químicos
+      [medtop:20000219] (nivel 4) fertilizantes
+      [medtop:20001395] (nivel 4) medtop:20001395
+      [medtop:20000220] (nivel 4) produtos de saúde e beleza
+      [medtop:20000221] (nivel 4) químicos inorgânicos
+      [medtop:20000222] (nivel 4) químicos orgânicos
+    [medtop:20000224] (nivel 3) químicos sintéticos e plásticos
+    [medtop:20000271] (nivel 3) serviços financeiros
+      [medtop:20000277] (nivel 4) agência funerária e crematório
+      [medtop:20000285] (nivel 4) finanças pessoais
+      [medtop:20000286] (nivel 4) rendimento individual
+      [medtop:20000289] (nivel 4) serviços promocionais e de impressão
+    [medtop:20001244] (nivel 3) serviços públicos
+      [medtop:20000270] (nivel 4) abastecimento de água
+      [medtop:20001291] (nivel 4) climatização
+      [medtop:20000269] (nivel 4) indústria de gestão de resíduos
+      [medtop:20000260] (nivel 4) produção e distribuição de eletricidade
+    [medtop:20000337] (nivel 3) transportes
+      [medtop:20000338] (nivel 4) aviação
+      [medtop:20001170] (nivel 4) logística
+      [medtop:20001362] (nivel 4) medtop:20001362
+      [medtop:20001363] (nivel 4) medtop:20001363
+      [medtop:20001364] (nivel 4) medtop:20001364
+      [medtop:20000340] (nivel 4) transporte ferroviário
+      [medtop:20000343] (nivel 4) transporte marítimo e fluvial
+      [medtop:20000341] (nivel 4) transporte rodoviário
+      [medtop:20000342] (nivel 4) trânsito
+
+# raiz
+[medtop:05000000] (nivel 1) educação
+  [medtop:20000415] (nivel 2) alunos
+  [medtop:20000410] (nivel 2) aprendizagem social
+  [medtop:20000398] (nivel 2) associações de pais
+  [medtop:20001217] (nivel 2) classificação
+  [medtop:20000412] (nivel 2) currículo
+  [medtop:20000399] (nivel 2) Educação religiosa
+  [medtop:20001216] (nivel 2) ensino profissional
+  [medtop:20000411] (nivel 2) ensino/aprendizado
+  [medtop:20000400] (nivel 2) escolas
+    [medtop:20000402] (nivel 3) educação contínua
+    [medtop:20000403] (nivel 3) educação de adultos
+    [medtop:20000405] (nivel 3) ensino superior
+      [medtop:20000406] (nivel 4) faculdade
+      [medtop:20000407] (nivel 4) universidades
+    [medtop:20000401] (nivel 3) escolas de ensino fundamental, 1ª à 5ª série
+    [medtop:20000408] (nivel 3) escolas de ensino fundamental, 6ª à 9ª série
+    [medtop:20000404] (nivel 3) escolas de ensino médio
+    [medtop:20001215] (nivel 3) escolas independentes
+    [medtop:20001214] (nivel 3) escolas privadas
+    [medtop:20001213] (nivel 3) escolas públicas
+    [medtop:20001212] (nivel 3) escolas religiosas
+    [medtop:20000409] (nivel 3) pré-escolar
+  [medtop:20000414] (nivel 2) exame de admissão
+  [medtop:20001337] (nivel 2) medtop:20001337
+  [medtop:20000416] (nivel 2) professores
+  [medtop:20000413] (nivel 2) prova
+
+# raiz
+[medtop:06000000] (nivel 1) ambiente
+  [medtop:20000418] (nivel 2) alterações climáticas
+    [medtop:20000419] (nivel 3) aquecimento global
+  [medtop:20000420] (nivel 2) conservação
+    [medtop:20000422] (nivel 3) parques
+    [medtop:20000421] (nivel 3) poupança de energia
+  [medtop:20001374] (nivel 2) medtop:20001374
+  [medtop:20000441] (nivel 2) natureza
+    [medtop:20000500] (nivel 3) animais
+      [medtop:20000494] (nivel 4) doenças dos animais
+      [medtop:20001318] (nivel 4) pragas
+    [medtop:20000442] (nivel 3) ecossistema
+    [medtop:20000444] (nivel 3) espécie invasora
+    [medtop:20000443] (nivel 3) espécies ameaçadas
+    [medtop:20000433] (nivel 3) florestas
+    [medtop:20000434] (nivel 3) montanhas
+    [medtop:20000438] (nivel 3) oceanos
+    [medtop:20000507] (nivel 3) plantas
+      [medtop:20000495] (nivel 4) doenças das plantas
+    [medtop:20000439] (nivel 3) rios
+    [medtop:20000440] (nivel 3) zonas úmidas
+  [medtop:20000424] (nivel 2) poluição ambiental
+    [medtop:20000426] (nivel 3) limpeza ambiental
+    [medtop:20000427] (nivel 3) materiais perigosos
+    [medtop:20000425] (nivel 3) poluição atmosférica
+    [medtop:20000429] (nivel 3) poluição da água
+    [medtop:20000428] (nivel 3) resíduos
+  [medtop:20000430] (nivel 2) recursos naturais
+    [medtop:20000435] (nivel 3) crescimento demográfico
+    [medtop:20000436] (nivel 3) energias renováveis
+    [medtop:20000431] (nivel 3) recursos energéticos
+    [medtop:20000432] (nivel 3) recursos terrestres
+    [medtop:20000437] (nivel 3) água
+
+# raiz
+[medtop:07000000] (nivel 1) saúde
+  [medtop:20000446] (nivel 2) doenças e condições
+    [medtop:20000457] (nivel 3) condições médicas
+      [medtop:20000460] (nivel 4) obesidade
+    [medtop:20000447] (nivel 3) câncer
+    [medtop:20000458] (nivel 3) distúrbios mentais e comportamentais
+      [medtop:20001356] (nivel 4) medtop:20001356
+      [medtop:20001357] (nivel 4) medtop:20001357
+      [medtop:20000459] (nivel 4) transtornos alimentares
+    [medtop:20000454] (nivel 3) doença cardíaca
+    [medtop:20000448] (nivel 3) doenças transmissíveis
+      [medtop:20000451] (nivel 4) doenças virais
+        [medtop:20000452] (nivel 5) aids
+        [medtop:20000453] (nivel 5) retrovírus
+      [medtop:20000449] (nivel 4) epidemia
+        [medtop:20001218] (nivel 5) pandemia
+        [medtop:20000450] (nivel 5) peste
+    [medtop:20001322] (nivel 3) medtop:20001322
+    [medtop:20001355] (nivel 3) medtop:20001355
+    [medtop:20000455] (nivel 3) outras doenças
+    [medtop:20000456] (nivel 3) traumatismos
+  [medtop:20000493] (nivel 2) doenças não humanas
+  [medtop:20000461] (nivel 2) estabelecimento de saúde
+    [medtop:20001229] (nivel 3) centro de saúde
+    [medtop:20000462] (nivel 3) hospitais
+  [medtop:20001358] (nivel 2) medtop:20001358
+  [medtop:20000463] (nivel 2) organizações de saúde
+  [medtop:20000485] (nivel 2) profissão médica
+    [medtop:20000487] (nivel 3) especialização médica
+      [medtop:20000713] (nivel 4) farmacologia
+      [medtop:20000488] (nivel 4) geriatria
+      [medtop:20001226] (nivel 4) medicina cirúrgica
+      [medtop:20001220] (nivel 4) medicina de família e comunidade
+      [medtop:20000712] (nivel 4) medicina dentária
+      [medtop:20000491] (nivel 4) medicina reprodutiva
+      [medtop:20000714] (nivel 4) medicina veterinária
+      [medtop:20000489] (nivel 4) obstetrícia/ginecologia
+      [medtop:20001225] (nivel 4) oftalmologia
+      [medtop:20001223] (nivel 4) oncologia
+      [medtop:20001222] (nivel 4) ortopedia
+      [medtop:20000490] (nivel 4) pediatria
+      [medtop:20001227] (nivel 4) psiquiatria
+      [medtop:20001224] (nivel 4) radiologia
+    [medtop:20000492] (nivel 3) profissionais de saúde
+    [medtop:20000486] (nivel 3) serviços médicos
+  [medtop:20000483] (nivel 2) seguro de saúde
+  [medtop:20000480] (nivel 2) sistema público de saúde
+    [medtop:20000481] (nivel 3) Medicaid
+    [medtop:20000482] (nivel 3) Medicare
+  [medtop:20000484] (nivel 2) sistemas privados de saúde
+  [medtop:20000464] (nivel 2) tratamento de saúde
+    [medtop:20001228] (nivel 3) cirurgia
+    [medtop:20000475] (nivel 3) condição física
+    [medtop:20001219] (nivel 3) cura de desintoxicação
+    [medtop:20000465] (nivel 3) dieta
+      [medtop:20000466] (nivel 4) suplementos alimentares
+    [medtop:20000467] (nivel 3) fármacos
+    [medtop:20000470] (nivel 3) medicamento
+      [medtop:20000471] (nivel 4) fitoterapia
+      [medtop:20000472] (nivel 4) medicina holística
+      [medtop:20000474] (nivel 4) medicina ocidental
+      [medtop:20000473] (nivel 4) medicina tradicional chinesa
+    [medtop:20000468] (nivel 3) medicamentos sujeitos a prescrição médica
+    [medtop:20000476] (nivel 3) medicina preventiva
+    [medtop:20000469] (nivel 3) meios complementares de diagnóstico
+    [medtop:20001221] (nivel 3) serviço de emergência
+    [medtop:20000478] (nivel 3) terapias
+    [medtop:20000477] (nivel 3) vacinas
+
+# raiz
+[medtop:08000000] (nivel 1) interesse humano
+  [medtop:20000504] (nivel 2) alta sociedade
+    [medtop:20000506] (nivel 3) realeza
+  [medtop:20001238] (nivel 2) aniversário
+  [medtop:20000505] (nivel 2) celebridades
+  [medtop:20000501] (nivel 2) cerimônia
+    [medtop:20001236] (nivel 3) casamento
+    [medtop:20001233] (nivel 3) cerimônia de batismo
+    [medtop:20001234] (nivel 3) formatura
+    [medtop:20001235] (nivel 3) funeral e serviço fúnebre
+  [medtop:20000503] (nivel 2) desaires
+  [medtop:20001237] (nivel 2) efeméride
+  [medtop:20000497] (nivel 2) feitos
+  [medtop:20000502] (nivel 2) pessoas
+  [medtop:20000498] (nivel 2) prêmios e galardões
+  [medtop:20000499] (nivel 2) recordes e proezas
+
+# raiz
+[medtop:09000000] (nivel 1) trabalho
+  [medtop:20000531] (nivel 2) aposentadoria
+    [medtop:20000532] (nivel 3) reforma pensionária
+  [medtop:20000533] (nivel 2) desemprego
+    [medtop:20000534] (nivel 3) demissões
+    [medtop:20000535] (nivel 3) seguro-desemprego
+  [medtop:20000509] (nivel 2) emprego
+    [medtop:20000512] (nivel 3) empregado
+    [medtop:20000513] (nivel 3) empregador
+    [medtop:20000510] (nivel 3) estagiários e aprendizes
+    [medtop:20000514] (nivel 3) formação profissional
+      [medtop:20000515] (nivel 4) formação avançada
+      [medtop:20000516] (nivel 4) reconversão
+    [medtop:20001276] (nivel 3) licença parental
+    [medtop:20000339] (nivel 3) migração pendular
+    [medtop:20000517] (nivel 3) ocupações
+    [medtop:20000518] (nivel 3) salários e benefícios
+      [medtop:20000519] (nivel 4) benefícios trabalhistas
+      [medtop:20001375] (nivel 4) medtop:20001375
+      [medtop:20000520] (nivel 4) seguridade social
+    [medtop:20001206] (nivel 3) trabalho autônomo
+    [medtop:20000511] (nivel 3) trabalho infantil
+    [medtop:20001277] (nivel 3) voluntariado
+  [medtop:20000521] (nivel 2) legislação trabalhista
+    [medtop:20000522] (nivel 3) higiene e segurança no trabalho
+  [medtop:20000523] (nivel 2) mercado de trabalho
+    [medtop:20001275] (nivel 3) economia sob demanda
+  [medtop:20000524] (nivel 2) relações trabalhistas
+    [medtop:20000529] (nivel 3) conflitos trabalhistas
+      [medtop:20000530] (nivel 4) greve
+    [medtop:20000525] (nivel 3) contratos coletivos
+      [medtop:20000527] (nivel 4) questões contratuais de salário
+      [medtop:20000526] (nivel 4) questões contratuais de saúde
+      [medtop:20000528] (nivel 4) questões contratuais trabalhistas
+  [medtop:20000536] (nivel 2) sindicatos
+
+# raiz
+[medtop:10000000] (nivel 1) estilo de vida e lazer
+  [medtop:20000565] (nivel 2) estilo de vida
+    [medtop:20000569] (nivel 3) alimentos biológicos
+    [medtop:20000570] (nivel 3) casa e decoração
+      [medtop:20001256] (nivel 4) decoração de interiores
+      [medtop:20001257] (nivel 4) jardinagem
+      [medtop:20001255] (nivel 4) reforma de casas
+    [medtop:20001143] (nivel 3) festa
+    [medtop:20001391] (nivel 3) medtop:20001391
+    [medtop:20000572] (nivel 3) tendências
+      [medtop:20001250] (nivel 4) modificação corporal
+        [medtop:20001252] (nivel 5) piercing
+        [medtop:20001251] (nivel 5) tatuagem
+  [medtop:20000538] (nivel 2) lazer
+    [medtop:20000560] (nivel 3) atividades recreativas ao ar livre
+      [medtop:20000562] (nivel 4) caça
+      [medtop:20001241] (nivel 4) equitação
+      [medtop:20000917] (nivel 4) mergulho
+      [medtop:20001142] (nivel 4) montanhismo
+      [medtop:20000561] (nivel 4) pesca
+    [medtop:20000539] (nivel 3) clubes e associações
+    [medtop:20000551] (nivel 3) férias
+      [medtop:20001270] (nivel 4) Dia das Bruxas
+      [medtop:20000552] (nivel 4) feriado
+        [medtop:20001269] (nivel 5) Dia de Ano Novo
+        [medtop:20001268] (nivel 5) feriado nacional
+        [medtop:20001267] (nivel 5) festa de solstício de verão
+    [medtop:20000540] (nivel 3) jogos
+      [medtop:20000542] (nivel 4) jogo de cartas
+      [medtop:20000543] (nivel 4) jogo de crianças
+      [medtop:20000544] (nivel 4) jogo de dados
+      [medtop:20000545] (nivel 4) jogo de exterior
+      [medtop:20000547] (nivel 4) jogo de peças
+      [medtop:20000541] (nivel 4) jogo de tabuleiro
+      [medtop:20000548] (nivel 4) jogo eletrônico
+      [medtop:20000546] (nivel 4) quebra-cabeça
+    [medtop:20000549] (nivel 3) jogos e loterias
+    [medtop:20000553] (nivel 3) lugar de lazer
+      [medtop:20000555] (nivel 4) bar
+      [medtop:20000556] (nivel 4) café
+      [medtop:20000557] (nivel 4) casa noturna
+      [medtop:20000559] (nivel 4) instalações esportivas
+      [medtop:20001315] (nivel 4) jardim zoológico
+      [medtop:20001392] (nivel 4) medtop:20001392
+      [medtop:20000554] (nivel 4) parque de diversões
+      [medtop:20000558] (nivel 4) restaurante
+    [medtop:20000550] (nivel 3) passatempo
+      [medtop:20001247] (nivel 4) colecionismo
+      [medtop:20000566] (nivel 4) entusiasmo automobilístico
+      [medtop:20000568] (nivel 4) interesse gastronômico
+        [medtop:20001254] (nivel 5) cerveja, vinho e bebidas espirituosas
+        [medtop:20001253] (nivel 5) cozinhar
+      [medtop:20000567] (nivel 4) interesse por bicicletas
+      [medtop:20000571] (nivel 4) interesse por motas
+    [medtop:20000563] (nivel 3) viagens e turismo
+      [medtop:20000564] (nivel 4) turismo
+  [medtop:20001339] (nivel 2) medtop:20001339
+    [medtop:20001239] (nivel 3) exercício físico
+    [medtop:20001340] (nivel 3) medtop:20001340
+
+# raiz
+[medtop:11000000] (nivel 1) política
+  [medtop:20000647] (nivel 2) crise política
+  [medtop:20000648] (nivel 2) dissidência política
+  [medtop:20000574] (nivel 2) eleições
+    [medtop:20000580] (nivel 3) campanhas políticas
+    [medtop:20000582] (nivel 3) candidatos políticos
+    [medtop:20001266] (nivel 3) debates políticos
+    [medtop:20000577] (nivel 3) eleições intergovernamentais
+    [medtop:20000578] (nivel 3) eleições locais
+    [medtop:20001263] (nivel 3) eleições na Igreja
+    [medtop:20000579] (nivel 3) eleições nacionais
+    [medtop:20000583] (nivel 3) eleições primárias
+    [medtop:20000585] (nivel 3) eleições regionais
+    [medtop:20000581] (nivel 3) financiamento de campanhas
+    [medtop:20000575] (nivel 3) iniciativa dos cidadãos e revocação
+    [medtop:20001380] (nivel 3) medtop:20001380
+    [medtop:20001381] (nivel 3) medtop:20001381
+    [medtop:20001382] (nivel 3) medtop:20001382
+    [medtop:20000584] (nivel 3) referendo
+    [medtop:20000576] (nivel 3) sistema eleitoral
+    [medtop:20000586] (nivel 3) votação
+  [medtop:20000593] (nivel 2) governo
+    [medtop:20001173] (nivel 3) agência reguladora
+    [medtop:20001261] (nivel 3) chefe de governo
+    [medtop:20000610] (nivel 3) chefes de estado
+    [medtop:20001260] (nivel 3) comissão parlamentar
+    [medtop:20000597] (nivel 3) constituição
+    [medtop:20001259] (nivel 3) convenção partidária
+    [medtop:20000598] (nivel 3) defesa
+      [medtop:20000602] (nivel 4) armamento militar
+      [medtop:20000601] (nivel 4) equipamento militar
+      [medtop:20000605] (nivel 4) espionagem e inteligência
+      [medtop:20000599] (nivel 4) forças armadas
+        [medtop:20001145] (nivel 5) serviço militar
+        [medtop:20000600] (nivel 5) veteranos
+      [medtop:20000603] (nivel 4) medidas de segurança
+        [medtop:20000604] (nivel 5) segurança nacional
+    [medtop:20000609] (nivel 3) departamentos governamentais
+    [medtop:20000652] (nivel 3) desenvolvimento político
+    [medtop:20000596] (nivel 3) detentores de cargos públicos
+    [medtop:20000606] (nivel 3) executivo (governo)
+    [medtop:20000595] (nivel 3) funcionários públicos
+    [medtop:20000612] (nivel 3) governo e autoridades locais
+    [medtop:20000618] (nivel 3) governo e autoridades regionais
+    [medtop:20000614] (nivel 3) governo nacional
+    [medtop:20000611] (nivel 3) impeachment
+    [medtop:20001262] (nivel 3) inquérito público
+    [medtop:20001312] (nivel 3) liderança política
+    [medtop:20000650] (nivel 3) lobby
+    [medtop:20001384] (nivel 3) medtop:20001384
+    [medtop:20001385] (nivel 3) medtop:20001385
+    [medtop:20000613] (nivel 3) ministro (governo)
+    [medtop:20000607] (nivel 3) orçamento de estado
+      [medtop:20000608] (nivel 4) finanças públicas
+    [medtop:20000615] (nivel 3) parlamento
+      [medtop:20000617] (nivel 4) câmara alta (legislatura)
+      [medtop:20000616] (nivel 4) câmara baixa (legislatura)
+    [medtop:20000651] (nivel 3) partidos e movimentos políticos
+    [medtop:20000594] (nivel 3) serviços públicos
+      [medtop:20001144] (nivel 4) serviço alternativo
+    [medtop:20000653] (nivel 3) sistemas políticos
+      [medtop:20000654] (nivel 4) democracia
+      [medtop:20000655] (nivel 4) ditadura
+      [medtop:20001386] (nivel 4) medtop:20001386
+      [medtop:20001387] (nivel 4) medtop:20001387
+      [medtop:20001388] (nivel 4) medtop:20001388
+      [medtop:20001389] (nivel 4) medtop:20001389
+  [medtop:20000646] (nivel 2) organização não governamental
+  [medtop:20000621] (nivel 2) política governamental
+    [medtop:20000636] (nivel 3) autoridades reguladoras
+      [medtop:20000637] (nivel 4) regulamentação sobre alimentos e bebidas
+    [medtop:20000633] (nivel 3) consultas públicas
+    [medtop:20000632] (nivel 3) controle de armas pessoais
+    [medtop:20000620] (nivel 3) impostos
+    [medtop:20001338] (nivel 3) medtop:20001338
+    [medtop:20001383] (nivel 3) medtop:20001383
+    [medtop:20001132] (nivel 3) política cultural
+    [medtop:20001174] (nivel 3) política de desenvolvimento regional
+    [medtop:20001265] (nivel 3) política de governo local
+    [medtop:20000628] (nivel 3) política de habitação e urbanismo
+    [medtop:20001264] (nivel 3) política de infraestruturas
+    [medtop:20001146] (nivel 3) política de integração
+    [medtop:20000634] (nivel 3) política de migração
+    [medtop:20000630] (nivel 3) política de pensões e benefícios sociais
+    [medtop:20000627] (nivel 3) política de proteção de dados
+    [medtop:20000631] (nivel 3) política de recolha de dados pessoais
+    [medtop:20000479] (nivel 3) política de saúde
+    [medtop:20000345] (nivel 3) política econômica
+      [medtop:20000625] (nivel 4) empresa estatal
+      [medtop:20001292] (nivel 4) incentivo ao desenvolvimento econômico
+      [medtop:20000623] (nivel 4) nacionalização
+      [medtop:20000624] (nivel 4) privatização
+    [medtop:20000626] (nivel 3) política interna
+    [medtop:20000635] (nivel 3) política nuclear
+    [medtop:20000629] (nivel 3) política para os povos indígenas
+    [medtop:20000423] (nivel 3) políticas ambientais
+    [medtop:20001147] (nivel 3) políticas esportivas
+    [medtop:20000619] (nivel 3) segurança dos cidadãos
+  [medtop:20000649] (nivel 2) processo político
+  [medtop:20000638] (nivel 2) relações internacionais
+    [medtop:20000643] (nivel 3) ajuda externa
+    [medtop:20001316] (nivel 3) conflitos fronteiriços
+    [medtop:20000639] (nivel 3) diplomacia
+      [medtop:20000640] (nivel 4) cúpulas
+      [medtop:20000641] (nivel 4) tratado
+    [medtop:20000644] (nivel 3) organizações internacionais
+    [medtop:20000645] (nivel 3) refugiados e deslocados
+    [medtop:20000642] (nivel 3) sanções econômicas
+
+# raiz
+[medtop:12000000] (nivel 1) religião e crença
+  [medtop:20000688] (nivel 2) conflito religioso
+  [medtop:20000657] (nivel 2) crenças religiosas
+    [medtop:20000658] (nivel 3) budismo
+    [medtop:20000682] (nivel 3) cientologia
+    [medtop:20000673] (nivel 3) confucionismo
+    [medtop:20000659] (nivel 3) cristianismo
+      [medtop:20000671] (nivel 4) católico romano
+        [medtop:20000672] (nivel 5) concordata
+      [medtop:20000660] (nivel 4) ecumenismo
+      [medtop:20001344] (nivel 4) medtop:20001344
+      [medtop:20000661] (nivel 4) mórmon
+      [medtop:20000663] (nivel 4) ortodoxia
+      [medtop:20000664] (nivel 4) protestante
+        [medtop:20000665] (nivel 5) anglicano
+        [medtop:20000666] (nivel 5) batista
+        [medtop:20000667] (nivel 5) luterano
+        [medtop:20000668] (nivel 5) menonita
+        [medtop:20000669] (nivel 5) metodista
+        [medtop:20000670] (nivel 5) reformado
+      [medtop:20000662] (nivel 4) veterocatólico
+    [medtop:20000674] (nivel 3) cultos e seitas
+    [medtop:20000676] (nivel 3) hinduísmo
+    [medtop:20000677] (nivel 3) islã
+      [medtop:20001347] (nivel 4) medtop:20001347
+      [medtop:20001348] (nivel 4) medtop:20001348
+    [medtop:20000678] (nivel 3) jainismo
+    [medtop:20000679] (nivel 3) judaísmo
+      [medtop:20001351] (nivel 4) medtop:20001351
+    [medtop:20000675] (nivel 3) maçonaria
+    [medtop:20001349] (nivel 3) medtop:20001349
+    [medtop:20000681] (nivel 3) parsismo
+    [medtop:20000680] (nivel 3) religião natural
+    [medtop:20000684] (nivel 3) siquismo
+    [medtop:20000685] (nivel 3) taoismo
+    [medtop:20000686] (nivel 3) unificacionismo
+    [medtop:20000683] (nivel 3) xintoísmo
+  [medtop:20000687] (nivel 2) diálogo inter-religioso
+  [medtop:20000689] (nivel 2) evento religioso
+  [medtop:20000690] (nivel 2) festa ou feriado religioso
+    [medtop:20001271] (nivel 3) Dia de Todos os Santos
+    [medtop:20001350] (nivel 3) medtop:20001350
+    [medtop:20001352] (nivel 3) medtop:20001352
+    [medtop:20000691] (nivel 3) natal
+    [medtop:20001272] (nivel 3) Noite de Santa Valburga
+    [medtop:20000693] (nivel 3) pentecostes
+    [medtop:20000692] (nivel 3) páscoa
+    [medtop:20000694] (nivel 3) ramadã
+    [medtop:20000695] (nivel 3) yom kippur
+  [medtop:20000697] (nivel 2) instalações religiosas
+    [medtop:20000698] (nivel 3) igreja
+    [medtop:20000699] (nivel 3) mesquita
+    [medtop:20000700] (nivel 3) sinagoga
+    [medtop:20000701] (nivel 3) templo
+  [medtop:20000702] (nivel 2) instituições religiosas e relações com o estado
+  [medtop:20000703] (nivel 2) líder religioso
+    [medtop:20000704] (nivel 3) papa
+  [medtop:20000696] (nivel 2) ritual
+    [medtop:20001273] (nivel 3) batismo
+    [medtop:20001345] (nivel 3) medtop:20001345
+    [medtop:20001346] (nivel 3) medtop:20001346
+  [medtop:20000705] (nivel 2) textos religiosos
+    [medtop:20000707] (nivel 3) Alcorão
+    [medtop:20000706] (nivel 3) Bíblia
+    [medtop:20000708] (nivel 3) Torá
+
+# raiz
+[medtop:13000000] (nivel 1) ciência e tecnologia
+  [medtop:20000710] (nivel 2) ciência biomédica
+    [medtop:20000711] (nivel 3) biotecnologia
+  [medtop:20000717] (nivel 2) ciências naturais
+    [medtop:20000718] (nivel 3) astronomia
+    [medtop:20000719] (nivel 3) biologia
+      [medtop:20000720] (nivel 4) botânica
+      [medtop:20000723] (nivel 4) fisiologia
+      [medtop:20000721] (nivel 4) genética
+      [medtop:20000722] (nivel 4) paleontologia
+      [medtop:20000724] (nivel 4) zoologia
+    [medtop:20000729] (nivel 3) ciências marinhas
+    [medtop:20000726] (nivel 3) cosmologia
+    [medtop:20000731] (nivel 3) física
+      [medtop:20000732] (nivel 4) eletromagnetismo
+      [medtop:20000733] (nivel 4) física nuclear
+        [medtop:20000734] (nivel 5) física de partículas
+    [medtop:20000727] (nivel 3) geologia
+    [medtop:20000728] (nivel 3) horticultura
+    [medtop:20000730] (nivel 3) meteorologia
+    [medtop:20000725] (nivel 3) química
+  [medtop:20000742] (nivel 2) ciências sociais
+    [medtop:20000743] (nivel 3) antropologia
+    [medtop:20000744] (nivel 3) arqueologia
+    [medtop:20000752] (nivel 3) ciência política
+    [medtop:20000748] (nivel 3) ciências da informação
+    [medtop:20000749] (nivel 3) direito
+    [medtop:20000745] (nivel 3) economia
+    [medtop:20000751] (nivel 3) filosofia
+    [medtop:20000746] (nivel 3) geografia
+    [medtop:20000747] (nivel 3) história
+    [medtop:20000750] (nivel 3) linguística
+    [medtop:20000753] (nivel 3) psicologia
+    [medtop:20000754] (nivel 3) sociologia
+  [medtop:20000741] (nivel 2) instituições científicas
+  [medtop:20000735] (nivel 2) investigação científica
+    [medtop:20000738] (nivel 3) exploração científica
+      [medtop:20000739] (nivel 4) exploração espacial
+    [medtop:20000736] (nivel 3) inovação científica
+    [medtop:20000737] (nivel 3) investigação médica
+    [medtop:20000740] (nivel 3) publicação científica
+  [medtop:20000715] (nivel 2) matemática
+  [medtop:20000755] (nivel 2) normas científicas
+  [medtop:20000756] (nivel 2) tecnologia e engenharia
+    [medtop:20000764] (nivel 3) ciência dos materiais
+    [medtop:20000757] (nivel 3) engenharia aeroespacial
+      [medtop:20000758] (nivel 4) ciência de foguetes
+    [medtop:20000760] (nivel 3) engenharia civil
+    [medtop:20000761] (nivel 3) engenharia eletrônica
+    [medtop:20000716] (nivel 3) engenharia mecânica
+    [medtop:20000765] (nivel 3) nanociência
+      [medtop:20000766] (nivel 4) nanotecnologia
+    [medtop:20000759] (nivel 3) tecnologia agrícola
+    [medtop:20000762] (nivel 3) tecnologia de identificação
+    [medtop:20000763] (nivel 3) tecnologias de informação
+      [medtop:20001298] (nivel 4) inteligência artificial
+
+# raiz
+[medtop:14000000] (nivel 1) sociedade
+  [medtop:20000817] (nivel 2) assistência social
+    [medtop:20001232] (nivel 3) assistência a idosos
+    [medtop:20001317] (nivel 3) assistência infantil
+    [medtop:20000819] (nivel 3) cuidados continuados
+    [medtop:20000818] (nivel 3) filantropia
+    [medtop:20001290] (nivel 3) habitação social
+    [medtop:20000820] (nivel 3) serviços sociais
+  [medtop:20000768] (nivel 2) comunidades
+    [medtop:20001360] (nivel 3) medtop:20001360
+    [medtop:20000769] (nivel 3) redes sociais
+  [medtop:20000799] (nivel 2) condição social
+    [medtop:20000801] (nivel 3) pobreza
+    [medtop:20000800] (nivel 3) sem-teto
+  [medtop:20000770] (nivel 2) demografia
+    [medtop:20000774] (nivel 3) população e censos
+  [medtop:20000587] (nivel 2) direitos fundamentais
+    [medtop:20000588] (nivel 3) censura e liberdade de expressão
+    [medtop:20000120] (nivel 3) direitos civis
+    [medtop:20000592] (nivel 3) direitos humanos
+    [medtop:20000591] (nivel 3) liberdade de imprensa
+    [medtop:20000590] (nivel 3) liberdade religiosa
+    [medtop:20001326] (nivel 3) medtop:20001326
+    [medtop:20001300] (nivel 3) privacidade
+  [medtop:20000775] (nivel 2) discriminação
+    [medtop:20000778] (nivel 3) discriminação religiosa
+    [medtop:20000776] (nivel 3) idadismo
+    [medtop:20000777] (nivel 3) racismo
+    [medtop:20000779] (nivel 3) sexismo
+  [medtop:20000772] (nivel 2) emigrantes
+  [medtop:20000780] (nivel 2) família
+    [medtop:20000781] (nivel 3) adoção
+    [medtop:20000786] (nivel 3) casamento
+    [medtop:20000783] (nivel 3) divórcio
+    [medtop:20001359] (nivel 3) medtop:20001359
+    [medtop:20000782] (nivel 3) namoro
+    [medtop:20000787] (nivel 3) pais e filhos
+    [medtop:20000784] (nivel 3) planejamento familiar
+      [medtop:20000785] (nivel 4) aborto
+      [medtop:20001274] (nivel 4) contracepção
+  [medtop:20000788] (nivel 2) humanidade
+    [medtop:20000798] (nivel 3) adolescentes
+    [medtop:20000789] (nivel 3) adultos
+    [medtop:20000794] (nivel 3) bebês
+    [medtop:20000790] (nivel 3) crianças
+    [medtop:20000791] (nivel 3) deficiências
+    [medtop:20000793] (nivel 3) gênero
+    [medtop:20000792] (nivel 3) LGBT
+    [medtop:20001327] (nivel 3) medtop:20001327
+    [medtop:20001328] (nivel 3) medtop:20001328
+    [medtop:20000795] (nivel 3) minoria étnica ou nacional
+    [medtop:20001288] (nivel 3) povo indígena
+    [medtop:20000797] (nivel 3) terceira idade
+    [medtop:20000796] (nivel 3) vítimas de radiação nuclear
+  [medtop:20000771] (nivel 2) imigração
+    [medtop:20000773] (nivel 3) imigrantes ilegais
+  [medtop:20001373] (nivel 2) medtop:20001373
+  [medtop:20000802] (nivel 2) problemas sociais
+    [medtop:20000804] (nivel 3) adição
+    [medtop:20001284] (nivel 3) bullying
+    [medtop:20000805] (nivel 3) delinquência juvenil
+    [medtop:20000807] (nivel 3) escravatura
+    [medtop:20000803] (nivel 3) maus-tratos
+    [medtop:20001193] (nivel 3) má conduta sexual
+    [medtop:20000806] (nivel 3) prostituição
+  [medtop:20000808] (nivel 2) valores
+    [medtop:20000816] (nivel 3) comportamento sexual
+    [medtop:20000810] (nivel 3) morte
+      [medtop:20000811] (nivel 4) eutanásia
+        [medtop:20000812] (nivel 5) suicídio assistido
+      [medtop:20000813] (nivel 4) suicídio
+    [medtop:20000815] (nivel 3) pornografia
+    [medtop:20000809] (nivel 3) práticas corruptas
+    [medtop:20000814] (nivel 3) ética
+
+# raiz
+[medtop:15000000] (nivel 1) esporte
+  [medtop:20001301] (nivel 2) conquistas esportivas
+    [medtop:20001303] (nivel 3) medalha esportiva
+    [medtop:20001304] (nivel 3) prêmio esportivo
+    [medtop:20001302] (nivel 3) recorde esportivo
+  [medtop:20000822] (nivel 2) disciplina de competição
+    [medtop:20000884] (nivel 3) alpinismo
+      [medtop:20000885] (nivel 4) escalada no gelo
+      [medtop:20000886] (nivel 4) montanhismo
+    [medtop:20001157] (nivel 3) artes marciais
+      [medtop:20001231] (nivel 4) artes marciais mistas
+      [medtop:20000983] (nivel 4) caratê
+      [medtop:20000969] (nivel 4) judô
+        [medtop:20000970] (nivel 5) peso-extraleve (judô)
+        [medtop:20000975] (nivel 5) peso-leve (judô)
+        [medtop:20000972] (nivel 5) peso-meio-leve (judô)
+        [medtop:20000973] (nivel 5) peso-meio-médio (judô)
+        [medtop:20000971] (nivel 5) peso-meio-pesado (judô)
+        [medtop:20000976] (nivel 5) peso-médio (judô)
+        [medtop:20000974] (nivel 5) peso-pesado (judô)
+      [medtop:20000977] (nivel 4) jukendo
+      [medtop:20000984] (nivel 4) kendo
+      [medtop:20001310] (nivel 4) kickboxing
+      [medtop:20001308] (nivel 4) krav maga
+      [medtop:20000985] (nivel 4) kyudo
+      [medtop:20001009] (nivel 4) naginata
+      [medtop:20001311] (nivel 4) sambo
+      [medtop:20001084] (nivel 4) taekwondo
+      [medtop:20001102] (nivel 4) wushu
+    [medtop:20000827] (nivel 3) atletismo
+      [medtop:20000843] (nivel 4) arremesso de peso
+      [medtop:20000834] (nivel 4) barreiras
+      [medtop:20000828] (nivel 4) corrida de cross-country
+      [medtop:20000836] (nivel 4) corrida de fundo
+      [medtop:20000838] (nivel 4) corrida de meio-fundo
+      [medtop:20001242] (nivel 4) corrida de obstáculos (atletismo)
+      [medtop:20000829] (nivel 4) decatlo
+      [medtop:20000832] (nivel 4) heptatlo
+      [medtop:20000835] (nivel 4) lançamento de dardo
+      [medtop:20000830] (nivel 4) lançamento de disco
+      [medtop:20000831] (nivel 4) lançamento de martelo
+      [medtop:20000841] (nivel 4) marcha atlética
+      [medtop:20000839] (nivel 4) pentatlo
+      [medtop:20000842] (nivel 4) revezamento
+      [medtop:20000840] (nivel 4) salto com vara
+      [medtop:20000833] (nivel 4) salto em altura
+      [medtop:20000837] (nivel 4) salto em distância
+      [medtop:20000845] (nivel 4) salto triplo
+      [medtop:20000844] (nivel 4) sprint
+    [medtop:20000847] (nivel 3) badminton
+    [medtop:20000848] (nivel 3) bandy
+    [medtop:20000851] (nivel 3) basquete
+    [medtop:20000849] (nivel 3) beisebol
+      [medtop:20000850] (nivel 4) beisebol de bola de borracha
+    [medtop:20000852] (nivel 3) biatlo
+    [medtop:20000853] (nivel 3) bilhar
+    [medtop:20001015] (nivel 3) bilhar
+    [medtop:20000854] (nivel 3) bobsled
+    [medtop:20001086] (nivel 3) boliche
+    [medtop:20000856] (nivel 3) boxe
+      [medtop:20000858] (nivel 4) peso-cruzador (boxe)
+      [medtop:20000857] (nivel 4) peso-galo (boxe)
+      [medtop:20000866] (nivel 4) peso-leve (boxe)
+      [medtop:20000874] (nivel 4) peso-meio-médio (boxe)
+      [medtop:20000865] (nivel 4) peso-meio-médio-ligeiro (boxe)
+      [medtop:20000863] (nivel 4) peso-meio-pesado (boxe)
+      [medtop:20000860] (nivel 4) peso-mosca (boxe)
+      [medtop:20000862] (nivel 4) peso-mosca-ligeiro (boxe)
+      [medtop:20000867] (nivel 4) peso-médio (boxe)
+      [medtop:20000864] (nivel 4) peso-médio-ligeiro (boxe)
+      [medtop:20000868] (nivel 4) peso-palha (boxe)
+      [medtop:20000859] (nivel 4) peso-pena (boxe)
+      [medtop:20000861] (nivel 4) peso-pesado (boxe)
+      [medtop:20000869] (nivel 4) peso-supergalo (boxe)
+      [medtop:20000871] (nivel 4) peso-supermosca (boxe)
+      [medtop:20000873] (nivel 4) peso-supermédio (boxe)
+      [medtop:20000870] (nivel 4) peso-superpena (boxe)
+      [medtop:20000872] (nivel 4) peso-superpesado (boxe)
+    [medtop:20001286] (nivel 3) braço de ferro
+    [medtop:20001088] (nivel 3) cabo de guerra
+    [medtop:20000979] (nivel 3) caiaque
+      [medtop:20000980] (nivel 4) K1
+      [medtop:20000981] (nivel 4) K2
+      [medtop:20000982] (nivel 4) K4
+    [medtop:20000877] (nivel 3) canoagem
+      [medtop:20000878] (nivel 4) C1
+      [medtop:20000879] (nivel 4) C2
+      [medtop:20000880] (nivel 4) C4
+      [medtop:20000881] (nivel 4) canoa a vela
+      [medtop:20000882] (nivel 4) pontoniering
+    [medtop:20000883] (nivel 3) casting (pesca)
+    [medtop:20001309] (nivel 3) cheerleading
+    [medtop:20000892] (nivel 3) ciclismo
+      [medtop:20000894] (nivel 4) bicross
+      [medtop:20000895] (nivel 4) BMX
+      [medtop:20000893] (nivel 4) ciclismo artístico
+      [medtop:20000905] (nivel 4) ciclismo de estrada
+      [medtop:20000903] (nivel 4) ciclismo de montanha
+      [medtop:20000896] (nivel 4) ciclobol
+      [medtop:20000900] (nivel 4) contra o relógio individual (ciclismo)
+      [medtop:20000909] (nivel 4) contra o relógio por equipes (ciclismo)
+      [medtop:20000906] (nivel 4) corrida por etapas
+      [medtop:20000904] (nivel 4) corrida por pontos (ciclismo)
+      [medtop:20000898] (nivel 4) cyclocross
+      [medtop:20000901] (nivel 4) keirin
+      [medtop:20000902] (nivel 4) madison
+      [medtop:20001332] (nivel 4) medtop:20001332
+      [medtop:20000899] (nivel 4) perseguição individual (ciclismo)
+      [medtop:20000908] (nivel 4) perseguição por equipes
+      [medtop:20000910] (nivel 4) pista (ciclismo)
+      [medtop:20000897] (nivel 4) velocidade individual
+      [medtop:20000907] (nivel 4) velocidade por equipes
+    [medtop:20000991] (nivel 3) corrida de automóveis
+      [medtop:20000994] (nivel 4) Fórmula 1
+      [medtop:20000993] (nivel 4) Fórmula 3000
+      [medtop:20000995] (nivel 4) Fórmula Indy
+      [medtop:20000997] (nivel 4) rali
+      [medtop:20000996] (nivel 4) rallycross
+      [medtop:20000992] (nivel 4) resistência
+    [medtop:20000990] (nivel 3) corrida de barcos a motor
+    [medtop:20000919] (nivel 3) corrida de cães
+      [medtop:20000921] (nivel 4) corrida de trenó com cães
+      [medtop:20000920] (nivel 4) pista oval
+    [medtop:20000960] (nivel 3) corridas de cavalos
+      [medtop:20000963] (nivel 4) corrida de obstáculos
+      [medtop:20000962] (nivel 4) corridas de cavalos
+      [medtop:20000961] (nivel 4) flat racing
+    [medtop:20000889] (nivel 3) croquet
+    [medtop:20000888] (nivel 3) críquete
+    [medtop:20001240] (nivel 3) culturismo
+    [medtop:20000890] (nivel 3) curling
+      [medtop:20000891] (nivel 4) ice stock sport
+    [medtop:20000911] (nivel 3) dança rítmica
+      [medtop:20001379] (nivel 4) medtop:20001379
+    [medtop:20000912] (nivel 3) dardos
+    [medtop:20000922] (nivel 3) duatlo
+    [medtop:20000887] (nivel 3) escalada
+    [medtop:20000929] (nivel 3) esgrima
+      [medtop:20000930] (nivel 4) espada
+      [medtop:20000931] (nivel 4) florete
+      [medtop:20000932] (nivel 4) sabre
+    [medtop:20001183] (nivel 3) esporte eletrônico
+    [medtop:20001155] (nivel 3) esportes sobre patins
+      [medtop:20001025] (nivel 4) hóquei em patins
+      [medtop:20001156] (nivel 4) skate
+    [medtop:20000918] (nivel 3) esportes subaquáticos
+    [medtop:20001056] (nivel 3) esqui
+      [medtop:20001150] (nivel 4) combinado nórdico
+      [medtop:20001057] (nivel 4) esqui alpino
+      [medtop:20001149] (nivel 4) esqui de fundo
+      [medtop:20001058] (nivel 4) esqui estilo livre
+      [medtop:20001059] (nivel 4) esqui na grama
+      [medtop:20001060] (nivel 4) esqui nórdico
+      [medtop:20001390] (nivel 4) medtop:20001390
+      [medtop:20001061] (nivel 4) saltos de esqui
+      [medtop:20001153] (nivel 4) telemark
+    [medtop:20001092] (nivel 3) esqui náutico
+    [medtop:20000937] (nivel 3) floorball
+    [medtop:20000938] (nivel 3) frisbee
+    [medtop:20001065] (nivel 3) futebol
+      [medtop:20001393] (nivel 4) medtop:20001393
+      [medtop:20001394] (nivel 4) medtop:20001394
+    [medtop:20000823] (nivel 3) futebol americano
+    [medtop:20000846] (nivel 3) futebol australiano
+    [medtop:20000876] (nivel 3) futebol canadense
+    [medtop:20000939] (nivel 3) futebol gaélico
+    [medtop:20000942] (nivel 3) ginástica
+      [medtop:20001152] (nivel 4) ginástica artística
+        [medtop:20000953] (nivel 5) argolas
+        [medtop:20000948] (nivel 5) barra
+        [medtop:20000956] (nivel 5) barras assimétricas
+        [medtop:20000949] (nivel 5) barras paralelas
+        [medtop:20000950] (nivel 5) cavalo com alças
+        [medtop:20000957] (nivel 5) salto
+        [medtop:20000946] (nivel 5) solo
+        [medtop:20000944] (nivel 5) trave
+      [medtop:20000951] (nivel 4) rítmica
+        [medtop:20000947] (nivel 5) arco
+        [medtop:20000943] (nivel 5) bola
+        [medtop:20000954] (nivel 5) corda
+        [medtop:20000952] (nivel 5) fita
+        [medtop:20000945] (nivel 5) maças
+      [medtop:20000955] (nivel 4) trampolim
+    [medtop:20000940] (nivel 3) golfe
+      [medtop:20000941] (nivel 4) minigolfe
+    [medtop:20001093] (nivel 3) halterofilismo
+      [medtop:20001096] (nivel 4) arranco
+      [medtop:20001094] (nivel 4) arremesso
+      [medtop:20001095] (nivel 4) levantamento de peso básico
+    [medtop:20000958] (nivel 3) handebol
+    [medtop:20000923] (nivel 3) hipismo
+      [medtop:20000925] (nivel 4) adestramento
+      [medtop:20000928] (nivel 4) atrelagem
+      [medtop:20000927] (nivel 4) concurso completo de equitação (CCE)
+      [medtop:20000924] (nivel 4) cross-country
+      [medtop:20000926] (nivel 4) saltos
+    [medtop:20000959] (nivel 3) hornuss
+    [medtop:20000964] (nivel 3) hurling
+    [medtop:20000933] (nivel 3) hóquei em campo
+    [medtop:20000965] (nivel 3) hóquei no gelo
+      [medtop:20000966] (nivel 4) hóquei em trenó
+    [medtop:20000978] (nivel 3) kabaddi
+    [medtop:20001306] (nivel 3) kite
+    [medtop:20000986] (nivel 3) lacrosse
+    [medtop:20000987] (nivel 3) luge
+    [medtop:20001098] (nivel 3) luta livre
+      [medtop:20001099] (nivel 4) estilo livre
+      [medtop:20001100] (nivel 4) greco-romana
+      [medtop:20001101] (nivel 4) luta suíça
+    [medtop:20000988] (nivel 3) maratona
+    [medtop:20001329] (nivel 3) medtop:20001329
+    [medtop:20001330] (nivel 3) medtop:20001330
+    [medtop:20001331] (nivel 3) medtop:20001331
+    [medtop:20001333] (nivel 3) medtop:20001333
+    [medtop:20001334] (nivel 3) medtop:20001334
+    [medtop:20001335] (nivel 3) medtop:20001335
+    [medtop:20001336] (nivel 3) medtop:20001336
+    [medtop:20000998] (nivel 3) motociclismo
+      [medtop:20001000] (nivel 4) enduro
+      [medtop:20001001] (nivel 4) grass-track
+      [medtop:20001002] (nivel 4) motoball
+      [medtop:20001003] (nivel 4) motocross
+      [medtop:20001004] (nivel 4) motoGP
+      [medtop:20001005] (nivel 4) rali de motos
+      [medtop:20000999] (nivel 4) resistência
+      [medtop:20001006] (nivel 4) sidecar
+      [medtop:20001007] (nivel 4) speedway
+      [medtop:20001008] (nivel 4) trial
+    [medtop:20001016] (nivel 3) motonáutica
+    [medtop:20001175] (nivel 3) nado sincronizado
+      [medtop:20001082] (nivel 4) sincronizada
+      [medtop:20001081] (nivel 4) sincronizada livre
+    [medtop:20001071] (nivel 3) natação
+      [medtop:20001074] (nivel 4) borboleta
+      [medtop:20001072] (nivel 4) costas
+      [medtop:20001075] (nivel 4) livre
+      [medtop:20001077] (nivel 4) maratona aquática
+      [medtop:20001076] (nivel 4) medley
+      [medtop:20001073] (nivel 4) peito
+      [medtop:20001080] (nivel 4) piscina curta
+      [medtop:20001078] (nivel 4) revezamento livre
+      [medtop:20001079] (nivel 4) revezamento medley
+    [medtop:20001010] (nivel 3) netball
+    [medtop:20001011] (nivel 3) orientação
+      [medtop:20001012] (nivel 4) orientação em esqui
+    [medtop:20001305] (nivel 3) padel
+    [medtop:20001013] (nivel 3) paraquedismo
+    [medtop:20001067] (nivel 3) patinação (velocidade)
+    [medtop:20000934] (nivel 3) patinação artística
+      [medtop:20000935] (nivel 4) dança no gelo
+    [medtop:20001151] (nivel 3) patinação de pista curta
+    [medtop:20000967] (nivel 3) patinação em linha
+    [medtop:20000968] (nivel 3) pelota basca
+    [medtop:20000989] (nivel 3) pentatlo moderno
+    [medtop:20000855] (nivel 3) petanca
+    [medtop:20001014] (nivel 3) polo
+    [medtop:20001091] (nivel 3) polo aquático
+    [medtop:20000936] (nivel 3) punhobol
+    [medtop:20001281] (nivel 3) raquetebol
+    [medtop:20001026] (nivel 3) remo
+      [medtop:20001028] (nivel 4) dois com timoneiro
+      [medtop:20001030] (nivel 4) dois sem timoneiro
+      [medtop:20001031] (nivel 4) double sculls
+      [medtop:20001032] (nivel 4) oito com timoneiro
+      [medtop:20001033] (nivel 4) quadruple sculls
+      [medtop:20001027] (nivel 4) quatro com timoneiro
+      [medtop:20001029] (nivel 4) quatro sem timoneiro
+      [medtop:20001034] (nivel 4) skiff
+    [medtop:20001282] (nivel 3) ringette
+    [medtop:20001017] (nivel 3) rodeio
+      [medtop:20001018] (nivel 4) bareback
+      [medtop:20001019] (nivel 4) barrel racing
+      [medtop:20001020] (nivel 4) bull riding
+      [medtop:20001021] (nivel 4) bulldogging
+      [medtop:20001022] (nivel 4) calf roping
+      [medtop:20001023] (nivel 4) goat roping
+      [medtop:20001024] (nivel 4) saddle bronc
+    [medtop:20001176] (nivel 3) rúgbi
+      [medtop:20001035] (nivel 4) rúgbi de 13
+      [medtop:20001036] (nivel 4) rúgbi de 15
+      [medtop:20001037] (nivel 4) rúgbi de 7
+    [medtop:20001062] (nivel 3) salto em queda livre
+    [medtop:20000913] (nivel 3) saltos ornamentais
+      [medtop:20000914] (nivel 4) saltos de plataforma
+      [medtop:20000915] (nivel 4) saltos de trampolim
+      [medtop:20000916] (nivel 4) saltos ornamentais sincronizados
+    [medtop:20001047] (nivel 3) sepak takraw
+    [medtop:20001048] (nivel 3) shinty
+    [medtop:20001063] (nivel 3) sinuca
+    [medtop:20001055] (nivel 3) skeleton
+    [medtop:20001064] (nivel 3) snowboard
+    [medtop:20001066] (nivel 3) softball
+    [medtop:20001068] (nivel 3) squash
+    [medtop:20001307] (nivel 3) stand up paddle (SUP)
+    [medtop:20001069] (nivel 3) sumô
+    [medtop:20001070] (nivel 3) surfe
+    [medtop:20001049] (nivel 3) tiro
+      [medtop:20001052] (nivel 4) alvo móvel
+      [medtop:20001051] (nivel 4) carabina
+      [medtop:20001053] (nivel 4) espingarda
+      [medtop:20001050] (nivel 4) pistola
+      [medtop:20001054] (nivel 4) tiro ao prato
+    [medtop:20000824] (nivel 3) tiro com arco
+      [medtop:20000826] (nivel 4) tiro com arco longo
+      [medtop:20000825] (nivel 4) tiro com besta
+    [medtop:20000875] (nivel 3) tourada
+    [medtop:20001087] (nivel 3) triatlo
+    [medtop:20001085] (nivel 3) tênis
+    [medtop:20001083] (nivel 3) tênis de mesa
+    [medtop:20001038] (nivel 3) vela
+      [medtop:20001044] (nivel 4) corrida de volta ao mundo
+      [medtop:20001040] (nivel 4) dinghy
+      [medtop:20001041] (nivel 4) keelboat
+      [medtop:20001039] (nivel 4) multicasco
+      [medtop:20001046] (nivel 4) non-stop em solitário
+      [medtop:20001042] (nivel 4) regata a vela
+      [medtop:20001045] (nivel 4) regata em solitário
+      [medtop:20001043] (nivel 4) regata oceânica
+    [medtop:20001089] (nivel 3) vôlei
+      [medtop:20001090] (nivel 4) vôlei de praia
+    [medtop:20001097] (nivel 3) windsurf
+    [medtop:20001154] (nivel 3) xadrez
+  [medtop:20001104] (nivel 2) dopagem (geral)
+    [medtop:20001105] (nivel 3) dopagem
+    [medtop:20001106] (nivel 3) exame antidoping
+    [medtop:20001107] (nivel 3) uso de medicamentos no esporte
+  [medtop:20001108] (nivel 2) eventos esportivos
+    [medtop:20001109] (nivel 3) campeonato continental
+    [medtop:20001121] (nivel 3) campeonato do mundo
+    [medtop:20001112] (nivel 3) campeonato internacional
+    [medtop:20001115] (nivel 3) campeonato nacional
+    [medtop:20001118] (nivel 3) campeonato regional
+    [medtop:20001110] (nivel 3) copa continental
+    [medtop:20001122] (nivel 3) copa do mundo
+    [medtop:20001113] (nivel 3) copa internacional
+    [medtop:20001116] (nivel 3) copa nacional
+    [medtop:20001119] (nivel 3) copa regional
+    [medtop:20001111] (nivel 3) jogos continentais
+    [medtop:20001114] (nivel 3) jogos internacionais
+    [medtop:20001123] (nivel 3) jogos mundiais
+    [medtop:20001117] (nivel 3) jogos nacionais
+    [medtop:20001177] (nivel 3) jogos olímpicos
+    [medtop:20001178] (nivel 3) jogos paraolímpicos
+    [medtop:20001120] (nivel 3) jogos regionais
+    [medtop:20001341] (nivel 3) medtop:20001341
+    [medtop:20001342] (nivel 3) medtop:20001342
+    [medtop:20001343] (nivel 3) medtop:20001343
+  [medtop:20001124] (nivel 2) indústria do esporte
+  [medtop:20001126] (nivel 2) instalação esportiva
+  [medtop:20001103] (nivel 2) medidas disciplinares no esporte
+  [medtop:20001323] (nivel 2) medtop:20001323
+  [medtop:20001324] (nivel 2) medtop:20001324
+  [medtop:20001325] (nivel 2) medtop:20001325
+  [medtop:20001125] (nivel 2) organizações esportivas
+  [medtop:20001148] (nivel 2) transferência
+
+# raiz
+[medtop:16000000] (nivel 1) conflito, guerra e paz
+  [medtop:20000065] (nivel 2) agitação civil
+    [medtop:20000066] (nivel 3) manifestação
+    [medtop:20000069] (nivel 3) motins
+    [medtop:20000067] (nivel 3) rebeliões
+    [medtop:20000068] (nivel 3) revoluções
+  [medtop:20000056] (nivel 2) conflito armado
+    [medtop:20000062] (nivel 3) guerra
+      [medtop:20000064] (nivel 4) crimes de guerra
+      [medtop:20000063] (nivel 4) guerra civil
+    [medtop:20000057] (nivel 3) guerrilha
+    [medtop:20000058] (nivel 3) intervenção militar internacional
+    [medtop:20000060] (nivel 3) ocupação militar
+  [medtop:20000070] (nivel 2) golpe de estado
+  [medtop:20000071] (nivel 2) massacre
+  [medtop:20001361] (nivel 2) medtop:20001361
+  [medtop:20001377] (nivel 2) medtop:20001377
+    [medtop:20000061] (nivel 3) desaparecidos em combate
+    [medtop:20001378] (nivel 3) medtop:20001378
+    [medtop:20000080] (nivel 3) prisioneiros de guerra
+  [medtop:20000073] (nivel 2) processo de paz
+    [medtop:20000076] (nivel 3) conversações de paz
+    [medtop:20000078] (nivel 3) desarmamento
+    [medtop:20000074] (nivel 3) enviado de paz
+    [medtop:20000059] (nivel 3) força de paz
+    [medtop:20000075] (nivel 3) plano de paz
+  [medtop:20000077] (nivel 2) reconstrução pós-guerra
+    [medtop:20000079] (nivel 3) neutralização de material bélico
+  [medtop:20000053] (nivel 2) terrorismo
+    [medtop:20000055] (nivel 3) atentados à bomba
+    [medtop:20000054] (nivel 3) atos de bioterrorismo
+
+# raiz
+[medtop:17000000] (nivel 1) meteorologia
+  [medtop:20001131] (nivel 2) alerta meteorológico
+  [medtop:20001130] (nivel 2) estatísticas climáticas
+  [medtop:20001129] (nivel 2) fenômenos climáticos
+  [medtop:20001128] (nivel 2) previsão meteorológica
+
