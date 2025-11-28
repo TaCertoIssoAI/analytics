@@ -1,69 +1,29 @@
 import os
 import json
 from pathlib import Path
-from collections import deque
+
+from typing import Dict, List, Tuple
 
 import numpy as np
 from openai import OpenAI
 
 
-def load_taxonomy(json_path: Path):
-    # carrega o json bruto do iptc mediatopic
+def load_concepts(json_path: Path) -> Dict[str, dict]:
+    """
+    carrega o json do iptc e retorna um dict qcode -> concept
+    """
     with json_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
     concept_set = data["conceptSet"]
-
-    # indices auxiliares
-    concepts_by_uri = {c["uri"]: c for c in concept_set}
     concepts_by_qcode = {c["qcode"]: c for c in concept_set}
-
-    # grafo: filhos e pais
-    children = {c["qcode"]: [] for c in concept_set}
-    parent = {}
-
-    for c in concept_set:
-        qcode = c["qcode"]
-        for child_q in c.get("narrower", []):
-            children.setdefault(qcode, []).append(child_q)
-            parent[child_q] = qcode
-
-    # raizes = hasTopConcept
-    roots_qcodes = []
-    for uri in data.get("hasTopConcept", []):
-        concept = concepts_by_uri.get(uri)
-        if concept:
-            roots_qcodes.append(concept["qcode"])
-
-    # calcula nivel com bfs
-    level = {}
-    queue = deque()
-
-    for root_q in roots_qcodes:
-        level[root_q] = 1
-        queue.append(root_q)
-
-    while queue:
-        current = queue.popleft()
-        current_level = level[current]
-        for child_q in children.get(current, []):
-            if child_q in level:
-                continue
-            level[child_q] = current_level + 1
-            queue.append(child_q)
-
-    return {
-        "data": data,
-        "concepts_by_qcode": concepts_by_qcode,
-        "children": children,
-        "parent": parent,
-        "level": level,
-        "roots": roots_qcodes,
-    }
+    return concepts_by_qcode
 
 
 def get_label(concept: dict, lang: str = "pt-BR") -> str:
-    # pega o label em pt-br, ou en-gb, ou qualquer um disponivel
+    """
+    pega o label em pt br ou faz fallback
+    """
     labels = concept.get("prefLabel", {}) or {}
     if lang in labels:
         return labels[lang]
@@ -75,7 +35,9 @@ def get_label(concept: dict, lang: str = "pt-BR") -> str:
 
 
 def get_definition(concept: dict, lang: str = "pt-BR") -> str:
-    # pega definicao em pt-br, ou en-gb, ou qualquer uma
+    """
+    pega a definicao em pt br ou faz fallback
+    """
     defs = concept.get("definition", {}) or {}
     if lang in defs:
         return defs[lang]
@@ -87,7 +49,9 @@ def get_definition(concept: dict, lang: str = "pt-BR") -> str:
 
 
 def build_topic_text(concept: dict) -> str:
-    # monta o texto usado para embedding: rotulo + definicao
+    """
+    monta o texto que sera usado para gerar o embedding do topico
+    """
     label = get_label(concept)
     definition = get_definition(concept)
     if definition:
@@ -96,33 +60,35 @@ def build_topic_text(concept: dict) -> str:
 
 
 def generate_embeddings_for_topics(
-    concepts_by_qcode: dict,
+    concepts_by_qcode: Dict[str, dict],
     model: str = "text-embedding-3-small",
     batch_size: int = 256,
-):
-    # cria cliente da openai (usa variavel de ambiente OPENAI_API_KEY)
+) -> Tuple[List[str], np.ndarray]:
+    """
+    gera embeddings de todos os topicos usando a api da openai
+    retorna (lista_de_qcodes, matriz_de_embeddings)
+    """
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError("defina a variavel de ambiente OPENAI_API_KEY com sua chave da openai")
+        raise RuntimeError(
+            "defina a variavel de ambiente OPENAI_API_KEY com sua chave da openai"
+        )
 
     client = OpenAI(api_key=api_key)
 
-    # prepara lista de qcodes e textos
-    qcodes_list = []
-    texts = []
-    for qcode, concept in concepts_by_qcode.items():
-        qcodes_list.append(qcode)
-        texts.append(build_topic_text(concept))
+    # monta lista de qcodes e textos de forma deterministica
+    qcodes_list: List[str] = sorted(concepts_by_qcode.keys())
+    texts: List[str] = [build_topic_text(concepts_by_qcode[q]) for q in qcodes_list]
 
     n = len(texts)
     print(f"total de topicos: {n}")
 
-    embeddings = []
+    embeddings: List[List[float]] = []
 
     for start in range(0, n, batch_size):
         end = min(start + batch_size, n)
         batch_texts = texts[start:end]
-        print(f"gerando embeddings {start}..{end - 1}")
+        print(f"gerando embeddings para indices {start}..{end - 1}")
 
         response = client.embeddings.create(
             model=model,
@@ -134,7 +100,7 @@ def generate_embeddings_for_topics(
             embeddings.append(item.embedding)
 
     emb_matrix = np.array(embeddings, dtype="float32")
-    print(f"matriz de embeddings: shape = {emb_matrix.shape}")
+    print(f"matriz de embeddings criada com shape {emb_matrix.shape}")
 
     return qcodes_list, emb_matrix
 
@@ -143,17 +109,17 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="gera embeddings para iptc mediatopic usando openai"
+        description="gera arquivo iptc_embeddings.npz a partir do json do mediatopic"
     )
     parser.add_argument(
         "input_json",
-        help="caminho para o arquivo json do mediatopic (ex: mediatopic-pt-BR.json)",
+        help="caminho para o arquivo json do mediatopic (ex: backend/cptall-pt-BR.json)",
     )
     parser.add_argument(
         "-o",
         "--output",
-        default="iptc_embeddings.npz",
-        help="arquivo .npz de saida (padrao: iptc_embeddings.npz)",
+        default="backend/iptc_embeddings.npz",
+        help="caminho do arquivo .npz de saida (padrao: backend/iptc_embeddings.npz)",
     )
     parser.add_argument(
         "--model",
@@ -170,25 +136,29 @@ def main():
 
     json_path = Path(args.input_json)
     if not json_path.exists():
-        raise SystemExit(f"arquivo nao encontrado: {json_path}")
+        raise SystemExit(f"arquivo json nao encontrado: {json_path}")
 
-    taxonomy = load_taxonomy(json_path)
-    concepts_by_qcode = taxonomy["concepts_by_qcode"]
+    # carrega conceitos
+    concepts_by_qcode = load_concepts(json_path)
 
+    # gera embeddings
     qcodes_list, emb_matrix = generate_embeddings_for_topics(
         concepts_by_qcode,
         model=args.model,
         batch_size=args.batch_size,
     )
 
-    # salva qcodes e embeddings em um .npz
+    # salva em .npz
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     np.savez_compressed(
-        args.output,
+        output_path,
         qcodes=np.array(qcodes_list),
         embeddings=emb_matrix,
     )
 
-    print(f"embeddings salvos em {args.output}")
+    print(f"arquivo de embeddings salvo em: {output_path}")
 
 
 if __name__ == "__main__":
