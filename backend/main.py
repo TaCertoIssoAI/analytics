@@ -8,13 +8,22 @@ def main():
     )
 
     claim = "Presidente anuncia novo programa de auxílio financeiro de R$ 1.500"
-    path = tree.classify_claim(claim)
+    results = tree.classify_claim(
+        claim,
+        max_depth=5,
+        top_k_roots=3,
+        rerank_with_llm=True,  # aqui entra a magia
+        llm_model="gpt-4.1-mini",
+    )
 
-    print("caminho de classificacao:")
-    for node in path:
-        print(
-            f"nivel {node['level']} | {node['qcode']} | {node['name']} | sim={node['similarity']:.3f}"
-        )
+    print("caminhos de classificacao (primeiro = escolhido pela llm):")
+    for i, item in enumerate(results, start=1):
+        print(f"\n> caminho {i} | score heuristico={item['score']:.3f}")
+        for node in item["nodes"]:
+            print(
+                f"  nivel {node['level']} | {node['qcode']} | "
+                f"{node['name']} | sim={node['similarity']:.3f}"
+            )
 
 
 if __name__ == "__main__":
