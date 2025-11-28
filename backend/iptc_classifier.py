@@ -1,4 +1,5 @@
 import json
+import time
 from pathlib import Path
 from collections import deque
 
@@ -91,7 +92,7 @@ class IptcEmbeddingTree:
             self.roots,
         ) = load_taxonomy(Path(json_path))
 
-        # carrega embeddings
+        # carrega embeddings (um por qcode)
         emb_data = np.load(embeddings_path, allow_pickle=True)
         self.qcodes = emb_data["qcodes"].tolist()
         self.emb_matrix = emb_data["embeddings"].astype("float32")
@@ -99,7 +100,7 @@ class IptcEmbeddingTree:
         # mapa qcode -> indice na matriz
         self.qcode_to_idx = {q: i for i, q in enumerate(self.qcodes)}
 
-        # cliente da openai para embedar claims e usar llm
+        # cliente da openai para embedding + llm
         self.client = OpenAI()
         self.embedding_model = embedding_model
 
@@ -116,56 +117,89 @@ class IptcEmbeddingTree:
         sims = num / denom
         return {self.qcodes[i]: float(s) for i, s in zip(idxs, sims)}
 
+    def _cosine_all(self, claim_vec: np.ndarray) -> dict:
+        """
+        calcula similaridade coseno entre o claim e TODOS os topicos iptc.
+        retorna dict qcode -> similarity
+        """
+        # como qcodes e emb_matrix estao alinhados, podemos operar direto na matriz toda
+        mat = self.emb_matrix  # shape (N, D)
+        t0 = time.perf_counter()
+        num = mat @ claim_vec  # (N,)
+        denom = np.linalg.norm(mat, axis=1) * np.linalg.norm(claim_vec) + 1e-8
+        sims = num / denom
+        t1 = time.perf_counter()
+        print(f"[iptc] tempo para calcular similaridade com TODOS os topicos: {t1 - t0:.4f}s")
+        return {q: float(s) for q, s in zip(self.qcodes, sims)}
+
     def embed_claim(self, text: str) -> np.ndarray:
         # gera embedding para um claim
+        t0 = time.perf_counter()
         resp = self.client.embeddings.create(
             model=self.embedding_model,
             input=text,
         )
         vec = np.array(resp.data[0].embedding, dtype="float32")
+        t1 = time.perf_counter()
+        print(f"[iptc] tempo para gerar embedding do claim: {t1 - t0:.4f}s")
         return vec
 
     def classify_claim(
         self,
         text: str,
         max_depth: int = 5,
-        top_k_roots: int = 3,
+        top_k_concepts: int = 5,
         rerank_with_llm: bool = False,
         llm_model: str = "gpt-4.1-mini",
     ) -> list[dict]:
         """
-        classifica um claim retornando ate top_k_roots caminhos hierarquicos.
-        cada item da lista eh um dict: { "score": float, "nodes": [nos...] }
+        classifica um claim retornando caminhos hierarquicos baseados
+        nos top_k_concepts mais proximos em TODO o vocabulario.
 
-        se rerank_with_llm=True, usa a llm para escolher o melhor caminho
-        entre os candidatos e coloca o escolhido em primeiro lugar da lista.
+        cada item da lista eh:
+        {
+          "score": float,
+          "nodes": [nos...],
+          "build_time_sec": float
+        }
+
+        se rerank_with_llm=True, a llm escolhe o melhor caminho e
+        ele e colocado em primeiro lugar.
         """
-        # faz embedding do claim
+        t_total_start = time.perf_counter()
+
+        # 1. embedding do claim
         claim_vec = self.embed_claim(text)
 
-        # 1. calcula similaridade com todas as raizes
-        root_sims = self._cosine_for_qcodes(claim_vec, self.roots)
-        if not root_sims:
+        # 2. similaridade com TODOS os topicos
+        sims = self._cosine_all(claim_vec)
+        if not sims:
             return []
 
-        # ordena raizes por similaridade decrescente
-        sorted_roots = sorted(
-            root_sims.items(), key=lambda x: x[1], reverse=True
-        )
-
-        # pega no maximo top_k_roots raizes
-        top_roots = sorted_roots[:top_k_roots]
+        # 3. pega os top_k_concepts mais similares (folhas candidatas)
+        sorted_concepts = sorted(sims.items(), key=lambda x: x[1], reverse=True)
+        top_concepts = sorted_concepts[:top_k_concepts]
 
         paths_with_scores: list[dict] = []
 
-        # 2. para cada raiz candidata, desce na arvore construindo um caminho
-        for root_q, root_sim in top_roots:
-            path_nodes = self._build_path_from_root(
-                claim_vec=claim_vec,
-                start_qcode=root_q,
-                start_sim=root_sim,
+        # 4. para cada conceito candidato, sobe ate a raiz montando o caminho
+        for qcode, leaf_sim in top_concepts:
+            t_path_start = time.perf_counter()
+            path_nodes = self._build_path_to_root(
+                qcode=qcode,
+                sims=sims,
                 max_depth=max_depth,
             )
+            t_path_end = time.perf_counter()
+            build_time = t_path_end - t_path_start
+
+            concept = self.concepts_by_qcode.get(qcode, {})
+            name = get_label(concept)
+            print(
+                f"[iptc] tempo para construir caminho global a partir do conceito "
+                f"{qcode} ({name}): {build_time:.4f}s"
+            )
+
             if not path_nodes:
                 continue
 
@@ -174,74 +208,83 @@ class IptcEmbeddingTree:
                 {
                     "score": score,
                     "nodes": path_nodes,
+                    "build_time_sec": build_time,
                 }
             )
 
         if not paths_with_scores:
+            t_total_end = time.perf_counter()
+            print(f"[iptc] tempo total classify_claim (sem caminhos validos): {t_total_end - t_total_start:.4f}s")
             return []
 
-        # ordena caminhos pelo score (maior primeiro, heuristica)
+        # 5. ordena por score heuristico
         paths_with_scores.sort(key=lambda x: x["score"], reverse=True)
 
-        # se nao for para usar llm, retorna heuristica pura
         if not rerank_with_llm:
+            t_total_end = time.perf_counter()
+            print(f"[iptc] tempo total classify_claim (sem llm): {t_total_end - t_total_start:.4f}s")
             return paths_with_scores
 
-        # 3. usa llm para escolher o melhor caminho entre os candidatos
+        # 6. usa llm para escolher o melhor entre os candidatos
+        t_llm_start = time.perf_counter()
         best_idx = self._choose_best_with_llm(
             claim_text=text,
             candidate_paths=paths_with_scores,
             model=llm_model,
         )
+        t_llm_end = time.perf_counter()
+        print(
+            f"[iptc] tempo para decisao da llm entre {len(paths_with_scores)} caminhos: "
+            f"{t_llm_end - t_llm_start:.4f}s"
+        )
 
-        # garante indice valido
         if best_idx < 0 or best_idx >= len(paths_with_scores):
             best_idx = 0
 
-        # reordena lista colocando o melhor em primeiro lugar
         if best_idx != 0:
             best_item = paths_with_scores.pop(best_idx)
             paths_with_scores.insert(0, best_item)
 
+        t_total_end = time.perf_counter()
+        print(f"[iptc] tempo total classify_claim (com llm): {t_total_end - t_total_start:.4f}s")
+
         return paths_with_scores
 
-    def _build_path_from_root(
+    def _build_path_to_root(
         self,
-        claim_vec: np.ndarray,
-        start_qcode: str,
-        start_sim: float,
+        qcode: str,
+        sims: dict,
         max_depth: int,
     ) -> list[dict]:
         """
-        constroi um caminho descendo a arvore a partir de uma raiz especifica.
+        constrói o caminho da raiz ate o conceito dado,
+        subindo pelos pais, e depois invertendo a ordem.
+
+        usa as similaridades ja calculadas em `sims` para preencher
+        o campo similarity de cada no.
         """
-        path: list[dict] = []
-        current_q = start_qcode
-        current_sim = start_sim
+        path_rev: list[dict] = []
+        current_q = qcode
 
-        path.append(self._node_info(current_q, current_sim))
+        # sobe ate a raiz ou ate estourar max_depth
+        while current_q is not None:
+            sim = sims.get(current_q, 0.0)
+            node = self._node_info(current_q, sim)
+            path_rev.append(node)
 
-        while self.level.get(current_q, 1) < max_depth:
-            child_qs = self.children.get(current_q, [])
-            if not child_qs:
+            parent_q = self.parent.get(current_q)
+            current_q = parent_q
+
+            # se ja tiver ultrapassado o nivel maximo, para de subir
+            if len(path_rev) >= max_depth:
                 break
 
-            child_sims = self._cosine_for_qcodes(claim_vec, child_qs)
-            if not child_sims:
-                break
+        # path_rev esta folha -> raiz; inverte para raiz -> folha
+        path = list(reversed(path_rev))
 
-            best_child_q = max(child_sims, key=child_sims.get)
-            best_child_sim = child_sims[best_child_q]
-
-            # se voce quiser evitar descer para algo muito pior que o pai,
-            # pode reativar essa validacao com algum criterio:
-            # if best_child_sim + 0.02 < current_sim:
-            #     break
-
-            path.append(self._node_info(best_child_q, best_child_sim))
-            current_q = best_child_q
-            current_sim = best_child_sim
-
+        # opcional: garantir que o primeiro nivel seja 1 e que
+        # o caminho nao comece no meio da arvore sem raiz
+        # (nesse taxonomy deve estar ok, mas mantemos simple)
         return path
 
     def _node_info(self, qcode: str, similarity: float) -> dict:
@@ -256,7 +299,6 @@ class IptcEmbeddingTree:
     def _score_path(self, path: list[dict]) -> float:
         """
         calcula um score heuristico para o caminho.
-        voce pode tunar essa funcao depois com base em dados reais.
 
         ideias usadas aqui:
         - valoriza similaridade do no folha
@@ -271,11 +313,10 @@ class IptcEmbeddingTree:
         avg_sim = sum(sims) / len(sims)
         depth = len(path)
 
-        # pesos heurísticos, ajuste a vontade
         score = (
             0.6 * leaf_sim
             + 0.3 * avg_sim
-            + 0.1 * (depth / 5.0)  # bonus pequeno por ser mais profundo
+            + 0.1 * (depth / 5.0)
         )
         return float(score)
 
@@ -319,7 +360,6 @@ class IptcEmbeddingTree:
         if not candidate_paths:
             return 0
 
-        # monta texto com os caminhos
         paths_text = self._format_paths_for_llm(candidate_paths)
 
         system_msg = (
@@ -354,7 +394,6 @@ class IptcEmbeddingTree:
             data = json.loads(content)
             idx = int(data.get("index", 0))
         except Exception:
-            # fallback: se nao conseguir parsear, escolhe o primeiro
             idx = 0
 
         return idx
