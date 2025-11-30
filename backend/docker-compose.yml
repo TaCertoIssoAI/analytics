@@ -1,0 +1,49 @@
+services:
+  # Backend FastAPI - Fake News Detector
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fakenews-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # App Configuration
+      - APP_NAME=Fake News Detector API
+      - DEBUG=false
+      - PORT=8000
+      
+      # AI Services (será sobrescrito por .env se existir)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      
+      # Web Scraping (Apify)
+      - APIFY_TOKEN=${APIFY_TOKEN:-}
+      
+      # Processing Limits
+      - MAX_TEXT_LENGTH=10000
+      - MAX_IMAGE_SIZE_MB=10
+      - TEXT_PROCESSING_TIMEOUT=5
+      - IMAGE_PROCESSING_TIMEOUT=12
+    volumes:
+      # Mount código para desenvolvimento (comentar em produção)
+      - ./app:/app/app:ro
+      # Mount para logs (opcional)
+      - ./logs:/app/logs
+    networks:
+      - backend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  backend-network:
+    driver: bridge
+    name: fakenews-network
+
+volumes:
+  logs:
+    driver: local
