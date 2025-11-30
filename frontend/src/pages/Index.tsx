@@ -104,6 +104,7 @@ const Index = () => {
       date: formatDate(analysis.processed_at),
       tags: allTopics.slice(0, 3), // Limita a 3 tags para não poluir
       excerpt: analysis.final_comment,
+      analysis_metrics: analysis.analysis_metrics,
     };
   });
 

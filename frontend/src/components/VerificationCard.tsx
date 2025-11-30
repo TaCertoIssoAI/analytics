@@ -3,6 +3,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { AnalysisMetrics } from "@/types/analysis";
+
 interface VerificationCardProps {
   id: string;
   title: string;
@@ -10,6 +12,7 @@ interface VerificationCardProps {
   date: string;
   tags: string[];
   excerpt: string;
+  analysis_metrics?: AnalysisMetrics;
 }
 
 const statusConfig = {
@@ -35,7 +38,7 @@ const statusConfig = {
   },
 };
 
-export const VerificationCard = ({ id, title, status, date, tags, excerpt }: VerificationCardProps) => {
+export const VerificationCard = ({ id, title, status, date, tags, excerpt, analysis_metrics }: VerificationCardProps) => {
   const config = statusConfig[status];
   const StatusIcon = config.icon;
 
@@ -45,10 +48,26 @@ export const VerificationCard = ({ id, title, status, date, tags, excerpt }: Ver
         <CardHeader className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <h3 className="font-semibold text-lg line-clamp-2 leading-tight">{title}</h3>
-            <Badge variant="outline" className={config.className}>
-              <StatusIcon className="h-3 w-3 mr-1" />
-              {config.label}
-            </Badge>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {analysis_metrics ? (
+                <>
+                  {analysis_metrics.true_count > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-status-true" title="Contém informações verdadeiras" />
+                  )}
+                  {analysis_metrics.fake_count > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-status-false" title="Contém informações falsas" />
+                  )}
+                  {analysis_metrics.unverified_count > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-status-unverifiable" title="Contém informações não verificáveis" />
+                  )}
+                </>
+              ) : (
+                <Badge variant="outline" className={config.className}>
+                  <StatusIcon className="h-3 w-3 mr-1" />
+                  {config.label}
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         

@@ -108,10 +108,26 @@ const Verification = () => {
         <div className="space-y-8">
           {/* Header */}
           <div className="space-y-4">
-            <Badge variant="outline" className={`${config.className} text-base py-1.5 px-4`}>
-              <StatusIcon className="h-4 w-4 mr-2" />
-              {config.label}
-            </Badge>
+            <div className="flex items-center gap-2 mb-2">
+              {analysis.analysis_metrics ? (
+                <>
+                  {analysis.analysis_metrics.true_count > 0 && (
+                    <div className="h-4 w-4 rounded-full bg-status-true" title="Contém informações verdadeiras" />
+                  )}
+                  {analysis.analysis_metrics.fake_count > 0 && (
+                    <div className="h-4 w-4 rounded-full bg-status-false" title="Contém informações falsas" />
+                  )}
+                  {analysis.analysis_metrics.unverified_count > 0 && (
+                    <div className="h-4 w-4 rounded-full bg-status-unverifiable" title="Contém informações não verificáveis" />
+                  )}
+                </>
+              ) : (
+                <Badge variant="outline" className={`${config.className} text-base py-1.5 px-4`}>
+                  <StatusIcon className="h-4 w-4 mr-2" />
+                  {config.label}
+                </Badge>
+              )}
+            </div>
 
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               {analysis.analysis_title || analysis.full_combined_text}
@@ -154,12 +170,66 @@ const Verification = () => {
                 <Share2 className="h-4 w-4" />
                 Compartilhar
               </Button>
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Baixar JSON
-              </Button>
             </div>
           </div>
+
+            {/* Métricas de Veracidade */}
+            {analysis.analysis_metrics && (
+              <Card className="border-none shadow-sm bg-muted/30">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm font-medium mb-2">
+                      <span>Nível de Veracidade</span>
+                      <span className="text-muted-foreground">{analysis.analysis_metrics.total_claims} afirmações analisadas</span>
+                    </div>
+                    
+                    {/* Barra de Progresso Segmentada */}
+                    <div className="h-4 w-full flex rounded-full overflow-hidden bg-secondary">
+                      {analysis.analysis_metrics.truth_score > 0 && (
+                        <div 
+                          style={{ width: `${analysis.analysis_metrics.truth_score}%` }} 
+                          className="h-full bg-status-true"
+                          title={`Verdadeiro: ${analysis.analysis_metrics.truth_score}%`}
+                        />
+                      )}
+                      {analysis.analysis_metrics.fake_score > 0 && (
+                        <div 
+                          style={{ width: `${analysis.analysis_metrics.fake_score}%` }} 
+                          className="h-full bg-status-false"
+                          title={`Falso: ${analysis.analysis_metrics.fake_score}%`}
+                        />
+                      )}
+                      {analysis.analysis_metrics.unverified_score > 0 && (
+                        <div 
+                          style={{ width: `${analysis.analysis_metrics.unverified_score}%` }} 
+                          className="h-full bg-status-unverifiable"
+                          title={`Não Verificável: ${analysis.analysis_metrics.unverified_score}%`}
+                        />
+                      )}
+                    </div>
+
+                    {/* Legenda e Contadores */}
+                    <div className="grid grid-cols-3 gap-4 pt-2">
+                      <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
+                        <span className="text-2xl font-bold text-status-true">{analysis.analysis_metrics.true_count}</span>
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Verdadeiras</span>
+                        <span className="text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.truth_score}%</span>
+                      </div>
+                      <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
+                        <span className="text-2xl font-bold text-status-false">{analysis.analysis_metrics.fake_count}</span>
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Falsas</span>
+                        <span className="text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.fake_score}%</span>
+                      </div>
+                      <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
+                        <span className="text-2xl font-bold text-status-unverifiable">{analysis.analysis_metrics.unverified_count}</span>
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Outros</span>
+                        <span className="text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.unverified_score}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
           {/* Conteúdo Original */}
           <Card>

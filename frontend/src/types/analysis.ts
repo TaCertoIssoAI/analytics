@@ -36,6 +36,16 @@ export interface Claim {
   sources: Source[];
 }
 
+export interface AnalysisMetrics {
+  total_claims: number;
+  true_count: number;
+  fake_count: number;
+  unverified_count: number;
+  truth_score: number;
+  fake_score: number;
+  unverified_score: number;
+}
+
 export interface Analysis {
   document_id: string;
   processed_at: string;
@@ -47,5 +57,6 @@ export interface Analysis {
   overall_verdict: string;
   final_comment: string;
   media_info: MediaInfo;
+  analysis_metrics?: AnalysisMetrics;
   claims: Claim[];
 }
