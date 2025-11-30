@@ -222,36 +222,99 @@ class BigQueryService:
             print(f"❌ Erro ao buscar estatísticas: {e}")
             return None
 
-    def list_analises(self, limit: int = 10, offset: int = 0) -> Optional[Dict[str, Any]]:
+    def _build_filter_clause(self, filters: Dict[str, Any]) -> str:
         """
-        Lista análises com paginação.
+        Constrói a cláusula WHERE baseada nos filtros.
+        """
+        clauses = []
 
-        Args:
-            limit: Número máximo de resultados
-            offset: Número de resultados a pular
+        # Filtro de busca (texto)
+        if filters.get("search"):
+            search = filters["search"].lower()
+            # Busca em user_message_text, full_combined_text, e tópicos
+            clauses.append(f"""
+                (LOWER(user_message_text) LIKE '%{search}%' 
+                 OR LOWER(full_combined_text) LIKE '%{search}%'
+                 OR EXISTS(
+                     SELECT 1 
+                     FROM UNNEST(claims) c, UNNEST(c.topics) t 
+                     WHERE LOWER(t) LIKE '%{search}%'
+                 ))
+            """)
 
-        Returns:
-            Dict com:
-            - items: lista de análises
-            - total: número total de análises
-            - limit: limite usado
-            - offset: offset usado
+        # Filtro de tipo de mensagem
+        msg_types = []
+        if filters.get("message_type_whatsapp"):
+            msg_types.append("'FromWhatsappGroup'")
+        if filters.get("message_type_direct"):
+            msg_types.append("'FromDirectMessage'")
+        
+        if msg_types:
+            clauses.append(f"source_type IN ({', '.join(msg_types)})")
+        elif "message_type_whatsapp" in filters or "message_type_direct" in filters:
+            # Se filtros foram passados mas nenhum selecionado, não retorna nada
+            clauses.append("1=0")
+
+        # Filtro de modalidade (OR logic)
+        modality_clauses = []
+        if filters.get("modality_text"):
+            modality_clauses.append("user_message_text IS NOT NULL AND LENGTH(user_message_text) > 0")
+        if filters.get("modality_audio"):
+            modality_clauses.append("media_info.has_audio = TRUE")
+        if filters.get("modality_video"):
+            modality_clauses.append("media_info.has_video = TRUE")
+        if filters.get("modality_image"):
+            modality_clauses.append("media_info.has_image = TRUE")
+        
+        if modality_clauses:
+            clauses.append(f"({' OR '.join(modality_clauses)})")
+        elif any(k.startswith("modality_") for k in filters.keys()):
+             # Se filtros foram passados mas nenhum selecionado
+            clauses.append("1=0")
+
+        # Filtro de resultado (overall_verdict)
+        verdicts = []
+        if filters.get("result_fake"):
+            verdicts.append("'FALSO'")
+        if filters.get("result_true"):
+            verdicts.append("'VERDADEIRO'")
+        if filters.get("result_misleading"):
+            verdicts.append("'ENGANOSO'")
+        if filters.get("result_unknown"):
+            verdicts.extend(["'CHECK'", "'UNVERIFIED'"])
+            
+        if verdicts:
+            clauses.append(f"overall_verdict IN ({', '.join(verdicts)})")
+        elif any(k.startswith("result_") for k in filters.keys()):
+             # Se filtros foram passados mas nenhum selecionado
+            clauses.append("1=0")
+
+        return " AND ".join(clauses) if clauses else "1=1"
+
+    def list_analises(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+        """
+        Lista análises com paginação e filtros.
         """
         try:
-            # Query para contar total
+            filters = filters or {}
+            where_clause = self._build_filter_clause(filters)
+
+            # Query para contar total com filtros
             count_query = f"""
                 SELECT COUNT(*) as total
                 FROM `{self.full_table_id}`
+                WHERE {where_clause}
             """
 
             count_job = self.client.query(count_query)
             count_results = list(count_job.result())
             total = count_results[0]["total"] if count_results else 0
 
-            # Query para buscar análises paginadas
+            # Query para buscar análises paginadas com filtros
             query = f"""
                 SELECT *
                 FROM `{self.full_table_id}`
+                WHERE {where_clause}
                 ORDER BY processed_at DESC
                 LIMIT @limit
                 OFFSET @offset
@@ -271,7 +334,6 @@ class BigQueryService:
             items = []
             for row in results:
                 data = dict(row.items())
-                # Converte datetime para string ISO
                 data = self._convert_datetimes_to_strings(data)
                 items.append(data)
 
@@ -282,11 +344,111 @@ class BigQueryService:
                 "offset": offset
             }
 
-            print(f"📄 Listagem: {len(items)} análises (total: {total})")
+            print(f"📄 Listagem: {len(items)} análises (total filtrado: {total})")
             return response
 
         except Exception as e:
             print(f"❌ Erro ao listar análises: {e}")
+            return None
+
+    def get_analytics_dashboard(self, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+        """
+        Retorna dados agregados para o dashboard de analytics, respeitando os filtros.
+        """
+        try:
+            filters = filters or {}
+            where_clause = self._build_filter_clause(filters)
+
+            # 1. Totais e Distribuição de Resultados (Claims)
+            # Nota: O filtro de resultado (overall_verdict) filtra as ANÁLISES.
+            # Mas aqui queremos contar CLAIMS dentro dessas análises filtradas.
+            query_stats = f"""
+                WITH filtered_analyses AS (
+                    SELECT *
+                    FROM `{self.full_table_id}`
+                    WHERE {where_clause}
+                ),
+                claims_unpacked AS (
+                    SELECT 
+                        c.verdict as claim_verdict
+                    FROM filtered_analyses,
+                    UNNEST(claims) as c
+                )
+                SELECT
+                    (SELECT COUNT(*) FROM filtered_analyses) as total_messages,
+                    (SELECT COUNT(*) FROM claims_unpacked) as total_claims,
+                    COUNTIF(claim_verdict = 'Fake') as count_fake,
+                    COUNTIF(claim_verdict = 'True') as count_true,
+                    COUNTIF(claim_verdict = 'Misleading') as count_misleading
+                FROM claims_unpacked
+            """
+
+            # 2. Distribuição de Modalidades
+            query_modalities = f"""
+                SELECT
+                    COUNTIF(user_message_text IS NOT NULL AND LENGTH(user_message_text) > 0) as count_text,
+                    COUNTIF(media_info.has_audio = TRUE) as count_audio,
+                    COUNTIF(media_info.has_video = TRUE) as count_video,
+                    COUNTIF(media_info.has_image = TRUE) as count_image
+                FROM `{self.full_table_id}`
+                WHERE {where_clause}
+            """
+
+            # 3. Top Fontes
+            query_sources = f"""
+                WITH filtered_analyses AS (
+                    SELECT claims
+                    FROM `{self.full_table_id}`
+                    WHERE {where_clause}
+                ),
+                all_sources AS (
+                    SELECT source
+                    FROM filtered_analyses,
+                    UNNEST(claims) as c,
+                    UNNEST(c.sources) as source
+                )
+                SELECT source, COUNT(*) as count
+                FROM all_sources
+                GROUP BY source
+                ORDER BY count DESC
+                LIMIT 20
+            """
+
+            # Executa queries
+            job_stats = self.client.query(query_stats)
+            job_modalities = self.client.query(query_modalities)
+            job_sources = self.client.query(query_sources)
+
+            res_stats = list(job_stats.result())[0] if list(job_stats.result()) else {}
+            res_modalities = list(job_modalities.result())[0] if list(job_modalities.result()) else {}
+            res_sources = list(job_sources.result())
+
+            # Formata resposta
+            dashboard_data = {
+                "total_messages": res_stats.get("total_messages", 0),
+                "total_claims": res_stats.get("total_claims", 0),
+                "results_distribution": [
+                    {"name": "Falso", "value": res_stats.get("count_fake", 0)},
+                    {"name": "Verdadeiro", "value": res_stats.get("count_true", 0)},
+                    {"name": "Enganoso", "value": res_stats.get("count_misleading", 0)},
+                ],
+                "modalities_distribution": [
+                    {"name": "Texto", "value": res_modalities.get("count_text", 0)},
+                    {"name": "Áudio", "value": res_modalities.get("count_audio", 0)},
+                    {"name": "Vídeo", "value": res_modalities.get("count_video", 0)},
+                    {"name": "Imagem", "value": res_modalities.get("count_image", 0)},
+                ],
+                "top_sources": [
+                    {"source": row["source"], "count": row["count"]} 
+                    for row in res_sources
+                ]
+            }
+
+            print(f"📊 Dashboard data calculated")
+            return dashboard_data
+
+        except Exception as e:
+            print(f"❌ Erro ao gerar dashboard analytics: {e}")
             return None
 
 

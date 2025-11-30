@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # API
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "http://localhost:8080"
 
     # URLs
     VERIFICATION_URL_BASE: str = "/verificacao"

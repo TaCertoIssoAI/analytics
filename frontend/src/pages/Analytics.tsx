@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilterSection } from "@/components/FilterSection";
@@ -16,10 +16,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, MessageSquare, AlertCircle, BarChart3, ExternalLink } from "lucide-react";
+import { FileText, MessageSquare, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { loadAllAnalyses, type AnalysisWithFileId } from "@/lib/loadAnalyses";
+import type { Analysis } from "@/types/analysis";
 import {
   ChartContainer,
   ChartTooltip,
@@ -29,9 +29,19 @@ import {
 } from "@/components/ui/chart";
 import { Pie, PieChart, Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
 
+interface DashboardData {
+  total_messages: number;
+  total_claims: number;
+  results_distribution: Array<{ name: string; value: number }>;
+  modalities_distribution: Array<{ name: string; value: number }>;
+  top_sources: Array<{ source: string; count: number }>;
+}
+
 const Analytics = () => {
-  const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisWithFileId | null>(null);
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
@@ -55,17 +65,70 @@ const Analytics = () => {
     },
   });
 
-  useEffect(() => {
-    loadAllAnalyses()
-      .then((data) => {
-        setAnalyses(data);
-      })
-      .catch((error) => {
-        console.error("Erro ao carregar análises:", error);
-      });
-  }, []);
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-  const getMainResult = (analysis: AnalysisWithFileId) => {
+  const buildQueryParams = useCallback(() => {
+    const params = new URLSearchParams();
+    
+    if (searchTerm) params.append("search", searchTerm);
+    
+    params.append("message_type_whatsapp", String(filters.messageType.whatsapp));
+    params.append("message_type_direct", String(filters.messageType.direct));
+    
+    params.append("modality_text", String(filters.modality.text));
+    params.append("modality_audio", String(filters.modality.audio));
+    params.append("modality_video", String(filters.modality.video));
+    params.append("modality_image", String(filters.modality.image));
+    
+    params.append("result_fake", String(filters.result.fake));
+    params.append("result_true", String(filters.result.true));
+    params.append("result_misleading", String(filters.result.misleading));
+    params.append("result_unknown", String(filters.result.unknown));
+
+    return params;
+  }, [filters, searchTerm]);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = buildQueryParams();
+      
+      // Fetch Dashboard Data
+      const dashboardRes = await fetch(`${apiUrl}/analises/dashboard?${params.toString()}`);
+      if (dashboardRes.ok) {
+        const result = await dashboardRes.json();
+        if (result.success) {
+          setDashboardData(result.data);
+        }
+      }
+
+      // Fetch List Data (Limit 50 for now)
+      params.append("limit", "50");
+      const listRes = await fetch(`${apiUrl}/analises?${params.toString()}`);
+      if (listRes.ok) {
+        const result = await listRes.json();
+        if (result.success) {
+          setAnalyses(result.data.items);
+        }
+      }
+
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiUrl, buildQueryParams]);
+
+  useEffect(() => {
+    // Debounce search to avoid too many requests
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [fetchData]);
+
+  const getMainResult = (analysis: Analysis) => {
     const verdict = analysis.overall_verdict.toUpperCase();
     if (verdict === "VERDADEIRO") return "True";
     if (verdict === "FALSO") return "Fake";
@@ -73,64 +136,7 @@ const Analytics = () => {
     return "Fake";
   };
 
-  // Aplica os filtros nas análises
-  const filteredAnalyses = useMemo(() => {
-    return analyses.filter((analysis) => {
-      // Filtro de busca por texto
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const allTopics = Array.from(
-          new Set(analysis.claims.flatMap(claim => claim.topics))
-        );
-        const matchesSearch =
-          analysis.user_message_text.toLowerCase().includes(searchLower) ||
-          analysis.full_combined_text.toLowerCase().includes(searchLower) ||
-          allTopics.some(topic => topic.toLowerCase().includes(searchLower)) ||
-          analysis.fileId.includes(searchTerm) ||
-          analysis.document_id.toLowerCase().includes(searchLower);
-
-        if (!matchesSearch) return false;
-      }
-
-      // Filtro de tipo de mensagem
-      const messageTypeMatch =
-        (filters.messageType.whatsapp && analysis.source_type === "FromWhatsappGroup") ||
-        (filters.messageType.direct && analysis.source_type === "FromDirectMessage");
-
-      if (!messageTypeMatch) return false;
-
-      // Filtro de modalidade
-      const modalityMatch =
-        (filters.modality.text && analysis.user_message_text) ||
-        (filters.modality.audio && analysis.media_info.has_audio) ||
-        (filters.modality.video && analysis.media_info.has_video) ||
-        (filters.modality.image && analysis.media_info.has_image);
-
-      if (!modalityMatch) return false;
-
-      // Filtro de resultado
-      const mainResult = getMainResult(analysis);
-      const resultMatch =
-        (filters.result.fake && mainResult === "Fake") ||
-        (filters.result.true && mainResult === "True") ||
-        (filters.result.misleading && mainResult === "Misleading") ||
-        (filters.result.unknown && mainResult === "Unknown");
-
-      return resultMatch;
-    });
-  }, [analyses, filters, searchTerm]);
-
-  const totalMessages = filteredAnalyses.length;
-  const totalClaims = filteredAnalyses.reduce((acc, a) => acc + a.claims.length, 0);
-  const fakeCount = filteredAnalyses.reduce(
-    (acc, a) =>
-      acc +
-      a.claims.filter((claim) => claim.verdict === "Fake").length,
-    0
-  );
-  const fakePercentage = totalClaims > 0 ? Math.round((fakeCount / totalClaims) * 100) : 0;
-
-  const handleRowClick = (analysis: AnalysisWithFileId) => {
+  const handleRowClick = (analysis: Analysis) => {
     setSelectedAnalysis(analysis);
     setDialogOpen(true);
   };
@@ -140,134 +146,38 @@ const Analytics = () => {
     setSourceDialogOpen(true);
   };
 
-  // Processar fontes e suas citações
-  const sourcesData = useMemo(() => {
-    const sourceMap = new Map<string, Array<{
-      analysis: AnalysisWithFileId;
-      claimId: string;
-      claimText: string;
-      result: string;
-    }>>();
-
-    filteredAnalyses.forEach((analysis) => {
-      analysis.claims.forEach((claim) => {
-        claim.sources.forEach((source) => {
-          if (!sourceMap.has(source)) {
-            sourceMap.set(source, []);
-          }
-          sourceMap.get(source)!.push({
-            analysis,
-            claimId: claim.claim_id,
-            claimText: claim.text,
-            result: claim.verdict,
-          });
-        });
-      });
-    });
-
-    return Array.from(sourceMap.entries())
-      .map(([source, citations]) => ({
-        source,
-        citations,
-        count: citations.length,
-      }))
-      .sort((a, b) => b.count - a.count);
-  }, [filteredAnalyses]);
-
-  const selectedSourceData = useMemo(() => {
-    if (!selectedSource) return { citations: [], totalCitations: 0 };
-    const sourceData = sourcesData.find(s => s.source === selectedSource);
-    return {
-      citations: sourceData?.citations || [],
-      totalCitations: sourceData?.count || 0,
-    };
-  }, [selectedSource, sourcesData]);
-
-  // Dados para os gráficos
+  // Dados para os gráficos (vindos do backend)
   const resultsChartData = useMemo(() => {
-    const fakeCount = filteredAnalyses.reduce(
-      (acc, a) => acc + a.claims.filter((claim) => claim.verdict === "Fake").length,
-      0
-    );
-    const trueCount = filteredAnalyses.reduce(
-      (acc, a) => acc + a.claims.filter((claim) => claim.verdict === "True").length,
-      0
-    );
-    const misleadingCount = filteredAnalyses.reduce(
-      (acc, a) => acc + a.claims.filter((claim) => claim.verdict === "Misleading").length,
-      0
-    );
-
-    return [
-      { name: "Falso", value: fakeCount, fill: "hsl(var(--chart-1))" },
-      { name: "Verdadeiro", value: trueCount, fill: "hsl(var(--chart-2))" },
-      { name: "Enganoso", value: misleadingCount, fill: "hsl(var(--chart-3))" },
-    ].filter(item => item.value > 0);
-  }, [filteredAnalyses]);
+    if (!dashboardData) return [];
+    return dashboardData.results_distribution.map(item => ({
+      ...item,
+      fill: item.name === "Falso" ? "hsl(var(--chart-1))" : 
+            item.name === "Verdadeiro" ? "hsl(var(--chart-2))" : 
+            "hsl(var(--chart-3))"
+    })).filter(item => item.value > 0);
+  }, [dashboardData]);
 
   const modalitiesChartData = useMemo(() => {
-    return [
-      {
-        name: "Texto",
-        value: filteredAnalyses.filter((a) => a.user_message_text).length,
-        fill: "hsl(var(--chart-1))",
-      },
-      {
-        name: "Áudio",
-        value: filteredAnalyses.filter((a) => a.media_info.has_audio).length,
-        fill: "hsl(var(--chart-2))",
-      },
-      {
-        name: "Vídeo",
-        value: filteredAnalyses.filter((a) => a.media_info.has_video).length,
-        fill: "hsl(var(--chart-3))",
-      },
-      {
-        name: "Imagem",
-        value: filteredAnalyses.filter((a) => a.media_info.has_image).length,
-        fill: "hsl(var(--chart-4))",
-      },
-    ].filter(item => item.value > 0);
-  }, [filteredAnalyses]);
+    if (!dashboardData) return [];
+    return dashboardData.modalities_distribution.map((item, index) => ({
+      ...item,
+      fill: `hsl(var(--chart-${index + 1}))`
+    })).filter(item => item.value > 0);
+  }, [dashboardData]);
 
   const resultsChartConfig = {
-    value: {
-      label: "Quantidade",
-    },
-    Falso: {
-      label: "Falso",
-      color: "hsl(var(--chart-1))",
-    },
-    Verdadeiro: {
-      label: "Verdadeiro",
-      color: "hsl(var(--chart-2))",
-    },
-    Enganoso: {
-      label: "Enganoso",
-      color: "hsl(var(--chart-3))",
-    },
+    value: { label: "Quantidade" },
+    Falso: { label: "Falso", color: "hsl(var(--chart-1))" },
+    Verdadeiro: { label: "Verdadeiro", color: "hsl(var(--chart-2))" },
+    Enganoso: { label: "Enganoso", color: "hsl(var(--chart-3))" },
   };
 
   const modalitiesChartConfig = {
-    value: {
-      label: "Análises",
-    },
-    Texto: {
-      label: "Texto",
-      color: "hsl(var(--chart-1))",
-    },
-    Áudio: {
-      label: "Áudio",
-      color: "hsl(var(--chart-2))",
-    },
-    Vídeo: {
-      label: "Vídeo",
-      color: "hsl(var(--chart-3))",
-    },
-    Imagem: {
-      label: "Imagem",
-      color: "hsl(var(--chart-4))",
-    },
+    value: { label: "Análises" },
+    Texto: { label: "Texto", color: "hsl(var(--chart-1))" },
+    Áudio: { label: "Áudio", color: "hsl(var(--chart-2))" },
+    Vídeo: { label: "Vídeo", color: "hsl(var(--chart-3))" },
+    Imagem: { label: "Imagem", color: "hsl(var(--chart-4))" },
   };
 
   const resultColors = {
@@ -310,12 +220,12 @@ const Analytics = () => {
                 <div className="grid gap-4 md:grid-cols-2">
                   <MetricsCard
                     title="Total de Mensagens"
-                    value={totalMessages}
+                    value={dashboardData?.total_messages || 0}
                     icon={MessageSquare}
                   />
                   <MetricsCard
                     title="Total de Claims"
-                    value={totalClaims}
+                    value={dashboardData?.total_claims || 0}
                     icon={FileText}
                   />
                 </div>
@@ -328,7 +238,11 @@ const Analytics = () => {
                       <CardTitle>Distribuição de Resultados</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {resultsChartData.length > 0 ? (
+                      {loading ? (
+                        <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                          Carregando...
+                        </div>
+                      ) : resultsChartData.length > 0 ? (
                         <ChartContainer config={resultsChartConfig} className="h-[250px]">
                           <PieChart>
                             <ChartTooltip content={<ChartTooltipContent />} />
@@ -358,7 +272,11 @@ const Analytics = () => {
                       <CardTitle>Análises por Modalidade</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {modalitiesChartData.length > 0 ? (
+                      {loading ? (
+                         <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                           Carregando...
+                         </div>
+                      ) : modalitiesChartData.length > 0 ? (
                         <ChartContainer config={modalitiesChartConfig} className="h-[250px]">
                           <BarChart data={modalitiesChartData}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -391,59 +309,77 @@ const Analytics = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAnalyses.map((analysis) => {
-                      const allTopics = Array.from(
-                        new Set(analysis.claims.flatMap(claim => claim.topics))
-                      );
-                      return (
-                        <TableRow
-                          key={analysis.document_id}
-                          className="cursor-pointer"
-                          onClick={() => handleRowClick(analysis)}
-                        >
-                          <TableCell>
-                            {format(new Date(analysis.processed_at), "dd/MM/yyyy", { locale: ptBR })}
-                          </TableCell>
-                          <TableCell>
-                            {analysis.source_type === "FromWhatsappGroup"
-                              ? "WhatsApp"
-                              : "Direta"}
-                          </TableCell>
-                          <TableCell>{analysis.claims.length}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={resultColors[getMainResult(analysis)]}
-                            >
-                              {getMainResult(analysis) === "Fake" && "Falso"}
-                              {getMainResult(analysis) === "True" && "Verdadeiro"}
-                              {getMainResult(analysis) === "Misleading" && "Enganoso"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1 flex-wrap">
-                              {allTopics.slice(0, 2).map((topic) => (
-                                <Badge key={topic} variant="secondary" className="text-xs">
-                                  {topic}
-                                </Badge>
-                              ))}
-                              {allTopics.length > 2 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  +{allTopics.length - 2}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8">
+                          Carregando mensagens...
+                        </TableCell>
+                      </TableRow>
+                    ) : analyses.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8">
+                          Nenhuma mensagem encontrada.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      analyses.map((analysis) => {
+                        const allTopics = Array.from(
+                          new Set(analysis.claims.flatMap(claim => claim.topics))
+                        );
+                        return (
+                          <TableRow
+                            key={analysis.document_id}
+                            className="cursor-pointer"
+                            onClick={() => handleRowClick(analysis)}
+                          >
+                            <TableCell>
+                              {format(new Date(analysis.processed_at), "dd/MM/yyyy", { locale: ptBR })}
+                            </TableCell>
+                            <TableCell>
+                              {analysis.source_type === "FromWhatsappGroup"
+                                ? "WhatsApp"
+                                : "Direta"}
+                            </TableCell>
+                            <TableCell>{analysis.claims.length}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={resultColors[getMainResult(analysis)]}
+                              >
+                                {getMainResult(analysis) === "Fake" && "Falso"}
+                                {getMainResult(analysis) === "True" && "Verdadeiro"}
+                                {getMainResult(analysis) === "Misleading" && "Enganoso"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap">
+                                {allTopics.slice(0, 2).map((topic) => (
+                                  <Badge key={topic} variant="secondary" className="text-xs">
+                                    {topic}
+                                  </Badge>
+                                ))}
+                                {allTopics.length > 2 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{allTopics.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
                   </TableBody>
                 </Table>
               </TabsContent>
 
               {/* Aba Fontes */}
               <TabsContent value="sources" className="space-y-6">
-                {sourcesData.length === 0 ? (
+                {loading ? (
+                   <div className="text-center py-12 text-muted-foreground">
+                     Carregando fontes...
+                   </div>
+                ) : !dashboardData?.top_sources || dashboardData.top_sources.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <ExternalLink className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Nenhuma fonte encontrada com os filtros atuais</p>
@@ -457,7 +393,7 @@ const Analytics = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sourcesData.map(({ source, count }) => (
+                      {dashboardData.top_sources.map(({ source, count }) => (
                         <TableRow
                           key={source}
                           className="cursor-pointer hover:bg-muted/50"
@@ -484,15 +420,15 @@ const Analytics = () => {
 
       <MessageDetailDialog
         analysis={selectedAnalysis}
-        fileId={selectedAnalysis?.fileId}
+        fileId={selectedAnalysis?.document_id}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
 
       <SourceDetailDialog
         source={selectedSource}
-        citations={selectedSourceData.citations}
-        totalCitations={selectedSourceData.totalCitations}
+        citations={[]} // TODO: Implementar busca de citações por fonte se necessário, ou passar dados se já tivermos
+        totalCitations={0} // Placeholder
         open={sourceDialogOpen}
         onOpenChange={setSourceDialogOpen}
       />

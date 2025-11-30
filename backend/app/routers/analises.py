@@ -63,32 +63,113 @@ async def get_stats() -> Dict[str, Any]:
 
 
 @router.get(
+    "/dashboard",
+    summary="Obter dados do dashboard",
+    description="Retorna dados agregados para o dashboard com filtros opcionais"
+)
+async def get_dashboard(
+    search: str = Query(None, description="Termo de busca"),
+    message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
+    message_type_direct: bool = Query(True, description="Incluir Direct"),
+    modality_text: bool = Query(True, description="Incluir Texto"),
+    modality_audio: bool = Query(True, description="Incluir Áudio"),
+    modality_video: bool = Query(True, description="Incluir Vídeo"),
+    modality_image: bool = Query(True, description="Incluir Imagem"),
+    result_fake: bool = Query(True, description="Incluir Falso"),
+    result_true: bool = Query(True, description="Incluir Verdadeiro"),
+    result_misleading: bool = Query(True, description="Incluir Enganoso"),
+    result_unknown: bool = Query(True, description="Incluir Desconhecido/Outros"),
+) -> Dict[str, Any]:
+    """
+    Endpoint para obter dados do dashboard (gráficos e totais).
+    """
+    try:
+        filters = {
+            "search": search,
+            "message_type_whatsapp": message_type_whatsapp,
+            "message_type_direct": message_type_direct,
+            "modality_text": modality_text,
+            "modality_audio": modality_audio,
+            "modality_video": modality_video,
+            "modality_image": modality_image,
+            "result_fake": result_fake,
+            "result_true": result_true,
+            "result_misleading": result_misleading,
+            "result_unknown": result_unknown,
+        }
+
+        print("\n" + "="*60)
+        print("📊 Buscando dados do dashboard...")
+        print(f"   Filtros: {filters}")
+        print("="*60)
+
+        data = bigquery_service.get_analytics_dashboard(filters)
+
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao buscar dados do dashboard"
+            )
+
+        return {
+            "success": True,
+            "data": data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao buscar dashboard: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
+@router.get(
     "",
     summary="Listar análises",
-    description="Lista análises com paginação (ordenadas por data, mais recentes primeiro)"
+    description="Lista análises com paginação e filtros"
 )
 async def list_analises(
     limit: int = Query(default=10, ge=1, le=100, description="Número de resultados por página"),
-    offset: int = Query(default=0, ge=0, description="Número de resultados a pular")
+    offset: int = Query(default=0, ge=0, description="Número de resultados a pular"),
+    search: str = Query(None, description="Termo de busca"),
+    message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
+    message_type_direct: bool = Query(True, description="Incluir Direct"),
+    modality_text: bool = Query(True, description="Incluir Texto"),
+    modality_audio: bool = Query(True, description="Incluir Áudio"),
+    modality_video: bool = Query(True, description="Incluir Vídeo"),
+    modality_image: bool = Query(True, description="Incluir Imagem"),
+    result_fake: bool = Query(True, description="Incluir Falso"),
+    result_true: bool = Query(True, description="Incluir Verdadeiro"),
+    result_misleading: bool = Query(True, description="Incluir Enganoso"),
+    result_unknown: bool = Query(True, description="Incluir Desconhecido/Outros"),
 ) -> Dict[str, Any]:
     """
-    Endpoint para listar análises com paginação.
-
-    Args:
-        limit: Número máximo de resultados (padrão: 10, máx: 100)
-        offset: Número de resultados a pular (padrão: 0)
-
-    Returns:
-        Dict com:
-        - success: boolean
-        - data: objeto com items, total, limit, offset
+    Endpoint para listar análises com paginação e filtros.
     """
     try:
+        filters = {
+            "search": search,
+            "message_type_whatsapp": message_type_whatsapp,
+            "message_type_direct": message_type_direct,
+            "modality_text": modality_text,
+            "modality_audio": modality_audio,
+            "modality_video": modality_video,
+            "modality_image": modality_image,
+            "result_fake": result_fake,
+            "result_true": result_true,
+            "result_misleading": result_misleading,
+            "result_unknown": result_unknown,
+        }
+
         print("\n" + "="*60)
         print(f"📄 Listando análises (limit={limit}, offset={offset})...")
+        print(f"   Filtros: {filters}")
         print("="*60)
 
-        result = bigquery_service.list_analises(limit=limit, offset=offset)
+        result = bigquery_service.list_analises(limit=limit, offset=offset, filters=filters)
 
         if result is None:
             raise HTTPException(
