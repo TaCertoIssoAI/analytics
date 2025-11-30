@@ -7,7 +7,8 @@ from app.models.new_format import (
     ClaimNewFormat,
     ScrapedLinkNewFormat,
     MediaInfo,
-    SourceNewFormat
+    SourceNewFormat,
+    AnalysisMetrics
 )
 from app.services.iptc_service import get_iptc_service
 from app.services.llm_service import llm_service
@@ -77,7 +78,10 @@ class AnaliseTransformer:
         base_text = input_analise.PureText or input_analise.FinalTranscribedText or ""
         analysis_title = llm_service.generate_title(base_text)
 
-        # 7. Cria AnaliseNewFormat
+        # 7. Calcula métricas
+        analysis_metrics = AnaliseTransformer._calculate_metrics(claims_list)
+
+        # 8. Cria AnaliseNewFormat
         return AnaliseNewFormat(
             document_id=input_analise.DocumentId,
             processed_at=AnaliseTransformer._format_datetime(input_analise.Date),
@@ -89,6 +93,7 @@ class AnaliseTransformer:
             overall_verdict=overall_verdict,
             final_comment=final_comment,
             media_info=media_info,
+            analysis_metrics=analysis_metrics,
             claims=claims_list
         )
 
@@ -258,6 +263,30 @@ class AnaliseTransformer:
             except ValueError:
                 print(f"⚠️  Formato de data inválido: {date_str}, usando data atual")
                 return datetime.utcnow().isoformat() + "+00:00"
+
+    @staticmethod
+    def _calculate_metrics(claims: List[ClaimNewFormat]) -> AnalysisMetrics:
+        """Calcula métricas da análise baseada nas claims."""
+        total_claims = len(claims)
+        
+        if total_claims == 0:
+            return AnalysisMetrics()
+
+        true_count = sum(1 for c in claims if c.verdict == "VERDADEIRO")
+        fake_count = sum(1 for c in claims if c.verdict == "FALSO")
+        # Considera UNVERIFIED, CHECK, ENGANOSO como "unverified" para fins de score simplificado,
+        # ou podemos ser mais específicos. Aqui vou agrupar o restante.
+        unverified_count = total_claims - true_count - fake_count
+
+        return AnalysisMetrics(
+            total_claims=total_claims,
+            true_count=true_count,
+            fake_count=fake_count,
+            unverified_count=unverified_count,
+            truth_score=round((true_count / total_claims) * 100, 2),
+            fake_score=round((fake_count / total_claims) * 100, 2),
+            unverified_score=round((unverified_count / total_claims) * 100, 2)
+        )
 
 
 # Instância global

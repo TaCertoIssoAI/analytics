@@ -40,7 +40,20 @@ class MediaInfo(BaseModel):
 
     has_video: bool = False
     video_uri: Optional[str] = None
+    video_uri: Optional[str] = None
     video_text: Optional[str] = None
+
+
+class AnalysisMetrics(BaseModel):
+    """Métricas da análise"""
+    total_claims: int = 0
+    true_count: int = 0
+    fake_count: int = 0
+    unverified_count: int = 0
+    
+    truth_score: float = 0.0
+    fake_score: float = 0.0
+    unverified_score: float = 0.0
 
 
 class AnaliseNewFormat(BaseModel):
@@ -61,6 +74,7 @@ class AnaliseNewFormat(BaseModel):
     final_comment: str  # Comentário final sobre a análise
 
     media_info: MediaInfo
+    analysis_metrics: "AnalysisMetrics"
     claims: List[ClaimNewFormat] = []
 
     class Config:
