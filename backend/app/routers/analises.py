@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Query
 from typing import Dict, Any, List
 
-from app.models.old_format import AnaliseOldFormat
+from app.models.input_format import AnaliseInputFormat
 from app.models.new_format import AnaliseNewFormat
 from app.models.responses import (
     AnaliseCreateResponse,
@@ -218,23 +218,23 @@ async def list_analises(
     status_code=status.HTTP_201_CREATED,
     summary="Criar nova análise",
     description="""
-    Recebe uma análise no formato antigo (PascalCase do bot),
-    converte para o formato novo (snake_case), classifica tópicos,
+    Recebe uma análise no formato novo (snake_case, com ResponseByDataSource),
+    converte para o formato interno, classifica tópicos,
     salva no BigQuery e retorna a URL de verificação.
     """
 )
-async def create_analise(analise_old: AnaliseOldFormat) -> AnaliseCreateResponse:
+async def create_analise(analise_input: AnaliseInputFormat) -> AnaliseCreateResponse:
     """
     Endpoint para criar uma nova análise.
 
     Fluxo:
-    1. Recebe AnaliseOldFormat do bot
+    1. Recebe AnaliseInputFormat do bot
     2. Transforma para AnaliseNewFormat
     3. Salva no BigQuery
     4. Retorna URL de verificação
 
     Args:
-        analise_old: Análise no formato antigo (PascalCase)
+        analise_input: Análise no formato de entrada
 
     Returns:
         AnaliseCreateResponse com URL de verificação
@@ -244,7 +244,7 @@ async def create_analise(analise_old: AnaliseOldFormat) -> AnaliseCreateResponse
         HTTPException 500: Se houver erro ao salvar
     """
     try:
-        document_id = analise_old.DocumentId
+        document_id = analise_input.DocumentId
 
         # Verifica se já existe
         if bigquery_service.analise_exists(document_id):
@@ -259,7 +259,7 @@ async def create_analise(analise_old: AnaliseOldFormat) -> AnaliseCreateResponse
 
         # Transforma para o formato novo
         print(f"🔄 Transformando análise...")
-        analise_new = transformer.transform(analise_old)
+        analise_new = transformer.transform(analise_input)
 
         # Salva no BigQuery
         print(f"💾 Salvando no BigQuery...")
