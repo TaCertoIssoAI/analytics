@@ -133,7 +133,7 @@ const Analytics = () => {
     if (verdict === "VERDADEIRO") return "True";
     if (verdict === "FALSO") return "Fake";
     if (verdict === "ENGANOSO") return "Misleading";
-    return "Fake";
+    return "Unknown";
   };
 
   const handleRowClick = (analysis: Analysis) => {
@@ -184,6 +184,7 @@ const Analytics = () => {
     Fake: "bg-status-false/10 text-status-false border-status-false/20",
     True: "bg-status-true/10 text-status-true border-status-true/20",
     Misleading: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
+    Unknown: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   };
 
   return (
@@ -349,6 +350,7 @@ const Analytics = () => {
                                 {getMainResult(analysis) === "Fake" && "Falso"}
                                 {getMainResult(analysis) === "True" && "Verdadeiro"}
                                 {getMainResult(analysis) === "Misleading" && "Enganoso"}
+                                {getMainResult(analysis) === "Unknown" && "Desconhecido"}
                               </Badge>
                             </TableCell>
                             <TableCell>

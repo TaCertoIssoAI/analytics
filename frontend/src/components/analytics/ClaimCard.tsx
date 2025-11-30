@@ -8,31 +8,36 @@ interface ClaimCardProps {
   claim: Claim;
 }
 
-const resultConfig = {
-  Fake: {
-    label: "Falso",
-    icon: XCircle,
-    className: "bg-status-false/10 text-status-false border-status-false/20",
-  },
-  True: {
+const resultConfig: Record<string, { label: string; icon: any; className: string }> = {
+  VERDADEIRO: {
     label: "Verdadeiro",
     icon: CheckCircle2,
     className: "bg-status-true/10 text-status-true border-status-true/20",
   },
-  Misleading: {
+  FALSO: {
+    label: "Falso",
+    icon: XCircle,
+    className: "bg-status-false/10 text-status-false border-status-false/20",
+  },
+  ENGANOSO: {
     label: "Enganoso",
     icon: AlertTriangle,
     className: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
   },
-  Unknown: {
-    label: "Desconhecido",
+  CHECK: {
+    label: "Não Verificável",
+    icon: HelpCircle,
+    className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+  },
+  UNVERIFIED: {
+    label: "Não Verificável",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
 };
 
 export const ClaimCard = ({ claim }: ClaimCardProps) => {
-  const config = resultConfig[claim.verdict];
+  const config = resultConfig[claim.verdict.toUpperCase()] || resultConfig["CHECK"];
   const Icon = config.icon;
 
   return (
@@ -73,13 +78,13 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
                 {claim.sources.map((source, index) => (
                   <a
                     key={index}
-                    href={source}
+                    href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs bg-secondary hover:bg-secondary/80 px-2 py-1 rounded-md transition-colors"
                   >
                     <ExternalLink className="h-3 w-3" />
-                    {new URL(source).hostname}
+                    {source.publisher || new URL(source.url).hostname}
                   </a>
                 ))}
               </div>

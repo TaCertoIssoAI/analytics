@@ -20,13 +20,20 @@ export interface MediaInfo {
   video_text: string | null;
 }
 
+export interface Source {
+  url: string;
+  title: string | null;
+  publisher: string | null;
+  citation_text: string | null;
+}
+
 export interface Claim {
   claim_id: string;
   text: string;
   verdict: VerificationResult;
   reasoning: string;
   topics: string[];
-  sources: string[];
+  sources: Source[];
 }
 
 export interface Analysis {
