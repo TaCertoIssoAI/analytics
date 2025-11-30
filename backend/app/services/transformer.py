@@ -6,7 +6,8 @@ from app.models.new_format import (
     AnaliseNewFormat,
     ClaimNewFormat,
     ScrapedLinkNewFormat,
-    MediaInfo
+    MediaInfo,
+    SourceNewFormat
 )
 from app.services.iptc_service import get_iptc_service
 from app.services.verdict_service import VerdictService
@@ -137,14 +138,22 @@ class AnaliseTransformer:
                 
                 # Adiciona fontes
                 for source in verdict.reasoningSources:
-                    if source.url and source.url not in claims_map[claim_id]["sources"]:
-                        claims_map[claim_id]["sources"].append(source.url)
+                    # Verifica duplicatas por URL
+                    existing_urls = [s.url for s in claims_map[claim_id]["sources"]]
+                    if source.url and source.url not in existing_urls:
+                        # Cria objeto SourceNewFormat
+                        source_obj = SourceNewFormat(
+                            url=source.url,
+                            title=source.title,
+                            publisher=source.publisher,
+                            citation_text=source.citation_text
+                        )
+                        claims_map[claim_id]["sources"].append(source_obj)
 
         # Constrói a lista final de ClaimNewFormat
         final_claims = []
         for claim_id, data in claims_map.items():
             # Decide o veredito final da claim (por enquanto, pega o primeiro ou UNKNOWN)
-            # TODO: Implementar lógica de consenso se houver múltiplos vereditos conflitantes
             final_verdict = data["verdicts"][0] if data["verdicts"] else "UNVERIFIED"
             
             # Normaliza veredito (ex: "Verdadeiro" -> "VERDADEIRO")

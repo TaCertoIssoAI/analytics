@@ -10,6 +10,14 @@ class ScrapedLinkNewFormat(BaseModel):
     scraped_text: Optional[str] = None  # Renomeado de 'text' para 'scraped_text'
 
 
+class SourceNewFormat(BaseModel):
+    """Fonte de uma claim (formato rico)"""
+    url: Optional[str] = None
+    title: Optional[str] = None
+    publisher: Optional[str] = None
+    citation_text: Optional[str] = None
+
+
 class ClaimNewFormat(BaseModel):
     """Claim processada no formato novo"""
     claim_id: str
@@ -17,7 +25,7 @@ class ClaimNewFormat(BaseModel):
     verdict: str  # "Fake", "True", "Misleading", "Unknown" (normalizado)
     reasoning: str
     topics: List[str] = []  # Classificados automaticamente pelo IPTC se vazio
-    sources: List[str] = []  # URLs das fontes consultadas
+    sources: List[SourceNewFormat] = []  # Fontes ricas
 
 
 class MediaInfo(BaseModel):

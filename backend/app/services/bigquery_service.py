@@ -407,9 +407,10 @@ class BigQueryService:
                     UNNEST(claims) as c,
                     UNNEST(c.sources) as source
                 )
-                SELECT source, COUNT(*) as count
+                SELECT source.url as source, COUNT(*) as count
                 FROM all_sources
-                GROUP BY source
+                WHERE source.url IS NOT NULL
+                GROUP BY source.url
                 ORDER BY count DESC
                 LIMIT 20
             """
