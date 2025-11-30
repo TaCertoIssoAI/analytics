@@ -14,11 +14,6 @@ export interface AnalysisFilters {
     video: boolean;
     image: boolean;
   };
-  result: {
-    fake: boolean;
-    true: boolean;
-    unknown: boolean;
-  };
   percentage: {
     minTruthScore: number;  // 0-100
     maxTruthScore: number;  // 0-100
@@ -53,15 +48,6 @@ export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProp
     });
   };
 
-  const handleResultChange = (result: 'fake' | 'true' | 'unknown', checked: boolean) => {
-    onFilterChange({
-      ...filters,
-      result: {
-        ...filters.result,
-        [result]: checked,
-      },
-    });
-  };
 
   return (
     <Card className="h-fit sticky top-4">
@@ -144,41 +130,6 @@ export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProp
           </div>
         </div>
 
-        <div className="space-y-3">
-          <Label className="text-base font-semibold">Resultado</Label>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="fake"
-                checked={filters.result.fake}
-                onCheckedChange={(checked) => handleResultChange('fake', checked as boolean)}
-              />
-              <label htmlFor="fake" className="text-sm cursor-pointer">
-                Falso
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="true"
-                checked={filters.result.true}
-                onCheckedChange={(checked) => handleResultChange('true', checked as boolean)}
-              />
-              <label htmlFor="true" className="text-sm cursor-pointer">
-                Verdadeiro
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="unknown"
-                checked={filters.result.unknown}
-                onCheckedChange={(checked) => handleResultChange('unknown', checked as boolean)}
-              />
-              <label htmlFor="unknown" className="text-sm cursor-pointer">
-                Não Verificável
-              </label>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

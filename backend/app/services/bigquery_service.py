@@ -272,20 +272,21 @@ class BigQueryService:
              # Se filtros foram passados mas nenhum selecionado
             clauses.append("1=0")
 
-        # Filtro de resultado (overall_verdict)
-        verdicts = []
-        if filters.get("result_fake"):
-            verdicts.append("'FALSO'")
-        if filters.get("result_true"):
-            verdicts.append("'VERDADEIRO'")
-        if filters.get("result_unknown"):
-            verdicts.extend(["'CHECK'", "'UNVERIFIED'", "'DESCONHECIDO'"])
+        # Filtro de resultado (overall_verdict) - REMOVIDO
+        # Agora usamos filtros de porcentagem (analysis_metrics)
+        # verdicts = []
+        # if filters.get("result_fake"):
+        #     verdicts.append("'FALSO'")
+        # if filters.get("result_true"):
+        #     verdicts.append("'VERDADEIRO'")
+        # if filters.get("result_unknown"):
+        #     verdicts.extend(["'CHECK'", "'UNVERIFIED'", "'DESCONHECIDO'"])
 
-        if verdicts:
-            clauses.append(f"overall_verdict IN ({', '.join(verdicts)})")
-        elif any(k.startswith("result_") and k != "result_misleading" for k in filters.keys()):
-             # Se filtros foram passados mas nenhum selecionado
-            clauses.append("1=0")
+        # if verdicts:
+        #     clauses.append(f"overall_verdict IN ({', '.join(verdicts)})")
+        # elif any(k.startswith("result_") and k != "result_misleading" for k in filters.keys()):
+        #      # Se filtros foram passados mas nenhum selecionado
+        #     clauses.append("1=0")
 
         # Filtros de porcentagem (usando analysis_metrics)
         min_truth = filters.get("min_truth_score")
@@ -311,6 +312,7 @@ class BigQueryService:
         try:
             filters = filters or {}
             where_clause = self._build_filter_clause(filters)
+            print(f"🔍 WHERE clause: {where_clause}")
 
             # Query para contar total com filtros
             count_query = f"""

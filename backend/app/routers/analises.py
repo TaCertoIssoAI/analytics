@@ -9,7 +9,12 @@ from app.models.responses import (
     ErrorResponse
 )
 from app.services.transformer import transformer
+from app.services.firestore_service import firestore_service
 from app.services.bigquery_service import bigquery_service
+
+# ... (imports)
+
+# ... (inside create_analise)
 from app.config import settings
 
 router = APIRouter(prefix="/analises", tags=["Análises"])
@@ -191,12 +196,14 @@ async def list_analises(
 
         # Converte cada item para AnaliseNewFormat
         items = []
+        conversion_errors = []
         for item_data in result["items"]:
             try:
                 analise = AnaliseNewFormat(**item_data)
                 items.append(analise)
             except Exception as e:
                 print(f"⚠️  Erro ao converter análise: {e}")
+                conversion_errors.append(str(e))
                 continue
 
         print(f"✅ {len(items)} análises listadas!")
@@ -206,6 +213,7 @@ async def list_analises(
             "success": True,
             "data": {
                 "items": items,
+                "conversion_errors": conversion_errors,
                 "total": result["total"],
                 "limit": result["limit"],
                 "offset": result["offset"],
@@ -282,6 +290,10 @@ async def create_analise(analise_input: AnaliseInputFormat) -> AnaliseCreateResp
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Erro ao salvar análise no BigQuery"
             )
+
+        # Salva no Firestore (Backup / Fast Retrieval)
+        print(f"🔥 Salvando no Firestore...")
+        firestore_service.save_analise(analise_new)
 
         # Monta URL de verificação
         verification_url = f"{settings.VERIFICATION_URL_BASE}/{document_id}"

@@ -58,24 +58,12 @@ export const FilterSection = ({
     }
   };
 
-  const handleResultChange = (result: 'fake' | 'true' | 'unknown', checked: boolean) => {
-    if (filters && onFilterChange) {
-      onFilterChange({
-        ...filters,
-        result: {
-          ...filters.result,
-          [result]: checked,
-        },
-      });
-    }
-  };
 
   const handleClearFilters = () => {
     if (onFilterChange) {
       onFilterChange({
         messageType: { whatsapp: true, direct: true },
         modality: { text: true, audio: true, video: true, image: true },
-        result: { fake: true, true: true, unknown: true },
         percentage: { minTruthScore: 0, maxTruthScore: 100, minFakeScore: 0, maxFakeScore: 100 },
       });
     }
@@ -207,42 +195,6 @@ export const FilterSection = ({
             </div>
           </div>
 
-          {/* Resultado */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Resultado</Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fake"
-                  checked={filters.result.fake}
-                  onCheckedChange={(checked) => handleResultChange('fake', checked as boolean)}
-                />
-                <label htmlFor="fake" className="text-sm cursor-pointer">
-                  Falso
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="true-result"
-                  checked={filters.result.true}
-                  onCheckedChange={(checked) => handleResultChange('true', checked as boolean)}
-                />
-                <label htmlFor="true-result" className="text-sm cursor-pointer">
-                  Verdadeiro
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="unknown"
-                  checked={filters.result.unknown}
-                  onCheckedChange={(checked) => handleResultChange('unknown', checked as boolean)}
-                />
-                <label htmlFor="unknown" className="text-sm cursor-pointer">
-                  Não Verificável
-                </label>
-              </div>
-            </div>
-          </div>
           </div>
 
           {/* Filtros por Porcentagem */}

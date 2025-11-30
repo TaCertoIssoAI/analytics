@@ -194,8 +194,6 @@ class AnaliseTransformer:
             return "VERDADEIRO"
         if "FALSO" in v or "FAKE" in v:
             return "FALSO"
-        if "ENGANOSO" in v or "MISLEADING" in v:
-            return "ENGANOSO"
         return "CHECK"
 
     @staticmethod

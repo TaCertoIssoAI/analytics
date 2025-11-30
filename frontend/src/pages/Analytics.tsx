@@ -57,11 +57,6 @@ const Analytics = () => {
       video: true,
       image: true,
     },
-    result: {
-      fake: true,
-      true: true,
-      unknown: true,
-    },
     percentage: {
       minTruthScore: 0,
       maxTruthScore: 100,
@@ -84,10 +79,6 @@ const Analytics = () => {
     params.append("modality_audio", String(filters.modality.audio));
     params.append("modality_video", String(filters.modality.video));
     params.append("modality_image", String(filters.modality.image));
-
-    params.append("result_fake", String(filters.result.fake));
-    params.append("result_true", String(filters.result.true));
-    params.append("result_unknown", String(filters.result.unknown));
 
     // Filtros de porcentagem
     params.append("min_truth_score", String(filters.percentage.minTruthScore));
