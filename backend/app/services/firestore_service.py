@@ -61,6 +61,81 @@ class FirestoreService:
             print(f"❌ Erro ao salvar no Firestore: {e}")
             return False
 
+    def list_analises(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+        """
+        Lista análises do Firestore com paginação e filtros básicos.
+        Nota: Firestore tem limitações de query. Filtros complexos podem precisar de processamento em memória
+        ou índices compostos.
+        """
+        if not self.client:
+            return None
+
+        try:
+            # Referência para a coleção
+            query = self.client.collection(self.collection_name)
+
+            # Ordenação padrão por data (mais recente primeiro)
+            query = query.order_by("processed_at", direction=firestore.Query.DESCENDING)
+
+            # --- Aplicação de Filtros (Básico) ---
+            # Nota: Firestore exige índices compostos para filtros de igualdade + range + sort.
+            # Para evitar erros de índice agora, vamos fazer a filtragem EM MEMÓRIA para este MVP,
+            # exceto limit/offset que aplicamos no final.
+            # Se a coleção crescer muito, precisaremos criar índices no Firebase Console.
+            
+            # Pega TODOS os documentos (limitado a um número razoável para não estourar memória, ex: 1000)
+            # Idealmente, usaríamos query.where() aqui, mas vamos simplificar para garantir funcionamento sem índices manuais.
+            docs_stream = query.limit(200).stream() 
+            
+            items = []
+            for doc in docs_stream:
+                data = doc.to_dict()
+                
+                # --- Filtragem em Memória ---
+                if filters:
+                    # Busca textual (case insensitive)
+                    if filters.get("search"):
+                        term = filters["search"].lower()
+                        text = (data.get("user_message_text") or "").lower()
+                        title = (data.get("analysis_title") or "").lower()
+                        if term not in text and term not in title:
+                            continue
+
+                    # Filtro de Message Type
+                    msg_type = data.get("source_type")
+                    if filters.get("message_type_whatsapp") is False and msg_type == "FromWhatsappGroup":
+                        continue
+                    if filters.get("message_type_direct") is False and msg_type == "FromDirectMessage":
+                        continue
+
+                    # Filtro de Scores
+                    metrics = data.get("analysis_metrics", {})
+                    if metrics:
+                        truth = metrics.get("truth_score", 0)
+                        fake = metrics.get("fake_score", 0)
+                        
+                        if truth < filters.get("min_truth_score", 0) or truth > filters.get("max_truth_score", 100):
+                            continue
+                        if fake < filters.get("min_fake_score", 0) or fake > filters.get("max_fake_score", 100):
+                            continue
+
+                items.append(data)
+
+            # --- Paginação em Memória ---
+            total_filtered = len(items)
+            paginated_items = items[offset : offset + limit]
+
+            return {
+                "items": paginated_items,
+                "total": total_filtered, # Nota: Total aproximado (baseado no limit de fetch inicial)
+                "limit": limit,
+                "offset": offset
+            }
+
+        except Exception as e:
+            print(f"❌ Erro ao listar do Firestore: {e}")
+            return None
+
     def get_analise(self, document_id: str) -> Optional[Dict[str, Any]]:
         """
         Busca uma análise no Firestore pelo document_id.

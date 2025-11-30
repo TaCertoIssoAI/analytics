@@ -186,7 +186,8 @@ async def list_analises(
         print(f"   Filtros: {filters}")
         print("="*60)
 
-        result = bigquery_service.list_analises(limit=limit, offset=offset, filters=filters)
+        # [MODIFIED] Usa Firestore em vez de BigQuery
+        result = firestore_service.list_analises(limit=limit, offset=offset, filters=filters)
 
         if result is None:
             raise HTTPException(
@@ -347,8 +348,8 @@ async def get_analise(document_id: str) -> AnaliseGetResponse:
         print(f"🔍 Buscando análise: {document_id}")
         print(f"{'='*60}")
 
-        # Busca no BigQuery
-        data = bigquery_service.get_analise(document_id)
+        # [MODIFIED] Busca no Firestore em vez de BigQuery
+        data = firestore_service.get_analise(document_id)
 
         if not data:
             print(f"❌ Análise não encontrada")
