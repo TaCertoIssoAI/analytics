@@ -45,13 +45,23 @@ const Verification = () => {
   useEffect(() => {
     const loadAnalysis = async () => {
       try {
-        const response = await fetch(`/analises/${id}.json`);
+        // Usa a API do backend ao invés de JSONs estáticos
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/analises/${id}`);
+
         if (!response.ok) {
           navigate("/verificacao-nao-encontrada");
           return;
         }
-        const data = await response.json();
-        setAnalysis(data);
+
+        const result = await response.json();
+
+        // A API retorna { success: true, data: {...}, message: "..." }
+        if (result.success && result.data) {
+          setAnalysis(result.data);
+        } else {
+          navigate("/verificacao-nao-encontrada");
+        }
       } catch (error) {
         console.error("Erro ao carregar análise:", error);
         navigate("/verificacao-nao-encontrada");

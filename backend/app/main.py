@@ -76,6 +76,8 @@ app.add_middleware(
         settings.FRONTEND_URL,  # Frontend em desenvolvimento
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:8081",  # Porta alternativa do Vite
+        "http://127.0.0.1:8081",
         # Adicione aqui o domínio de produção quando deploy
     ],
     allow_credentials=True,
