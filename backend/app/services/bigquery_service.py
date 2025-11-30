@@ -278,16 +278,29 @@ class BigQueryService:
             verdicts.append("'FALSO'")
         if filters.get("result_true"):
             verdicts.append("'VERDADEIRO'")
-        if filters.get("result_misleading"):
-            verdicts.append("'ENGANOSO'")
         if filters.get("result_unknown"):
-            verdicts.extend(["'CHECK'", "'UNVERIFIED'"])
-            
+            verdicts.extend(["'CHECK'", "'UNVERIFIED'", "'DESCONHECIDO'"])
+
         if verdicts:
             clauses.append(f"overall_verdict IN ({', '.join(verdicts)})")
-        elif any(k.startswith("result_") for k in filters.keys()):
+        elif any(k.startswith("result_") and k != "result_misleading" for k in filters.keys()):
              # Se filtros foram passados mas nenhum selecionado
             clauses.append("1=0")
+
+        # Filtros de porcentagem (usando analysis_metrics)
+        min_truth = filters.get("min_truth_score")
+        max_truth = filters.get("max_truth_score")
+        min_fake = filters.get("min_fake_score")
+        max_fake = filters.get("max_fake_score")
+
+        if min_truth is not None and min_truth > 0:
+            clauses.append(f"analysis_metrics.truth_score >= {min_truth}")
+        if max_truth is not None and max_truth < 100:
+            clauses.append(f"analysis_metrics.truth_score <= {max_truth}")
+        if min_fake is not None and min_fake > 0:
+            clauses.append(f"analysis_metrics.fake_score >= {min_fake}")
+        if max_fake is not None and max_fake < 100:
+            clauses.append(f"analysis_metrics.fake_score <= {max_fake}")
 
         return " AND ".join(clauses) if clauses else "1=1"
 

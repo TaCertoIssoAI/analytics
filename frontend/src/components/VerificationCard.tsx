@@ -8,7 +8,7 @@ import { AnalysisMetrics } from "@/types/analysis";
 interface VerificationCardProps {
   id: string;
   title: string;
-  status: "true" | "false" | "misleading" | "unverifiable";
+  status: "true" | "false" | "unverifiable";
   date: string;
   tags: string[];
   excerpt: string;
@@ -25,11 +25,6 @@ const statusConfig = {
     label: "Falso",
     icon: XCircle,
     className: "bg-status-false/10 text-status-false border-status-false/20",
-  },
-  misleading: {
-    label: "Enganoso",
-    icon: AlertTriangle,
-    className: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
   },
   unverifiable: {
     label: "Não Verificável",

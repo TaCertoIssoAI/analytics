@@ -22,12 +22,17 @@ const statusConfig = {
     icon: XCircle,
     className: "bg-status-false/10 text-status-false border-status-false/20",
   },
-  "ENGANOSO": {
-    label: "Enganoso",
-    icon: AlertTriangle,
-    className: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
-  },
   "DESCONHECIDO": {
+    label: "Desconhecido",
+    icon: HelpCircle,
+    className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+  },
+  "CHECK": {
+    label: "Não Verificável",
+    icon: HelpCircle,
+    className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+  },
+  "UNVERIFIED": {
     label: "Não Verificável",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",

@@ -49,11 +49,12 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
     onOpenChange(false);
   };
 
-  const resultColors = {
-    Fake: "bg-status-false/10 text-status-false border-status-false/20",
-    True: "bg-status-true/10 text-status-true border-status-true/20",
-    Misleading: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
-    Unknown: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+  const resultColors: Record<string, string> = {
+    VERDADEIRO: "bg-status-true/10 text-status-true border-status-true/20",
+    FALSO: "bg-status-false/10 text-status-false border-status-false/20",
+    ENGANOSO: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+    CHECK: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+    UNVERIFIED: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   };
 
   return (
@@ -127,17 +128,15 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
                                 <Badge
                                   variant="outline"
                                   className={
-                                    resultColors[claim.result as keyof typeof resultColors] ||
-                                    resultColors.Unknown
+                                    resultColors[claim.result.toUpperCase()] ||
+                                    resultColors.CHECK
                                   }
                                 >
-                                  {claim.result === "Fake"
+                                  {claim.result === "FALSO"
                                     ? "Falso"
-                                    : claim.result === "True"
+                                    : claim.result === "VERDADEIRO"
                                     ? "Verdadeiro"
-                                    : claim.result === "Misleading"
-                                    ? "Enganoso"
-                                    : "Desconhecido"}
+                                    : "Não Verificável"}
                                 </Badge>
                                 <p className="text-xs text-muted-foreground flex-1">
                                   {claim.claimText}

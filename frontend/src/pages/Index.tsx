@@ -91,11 +91,10 @@ const Index = () => {
     );
 
     // Determina status baseado no overall_verdict
-    let status: 'true' | 'false' | 'misleading' = 'false';
+    let status: 'true' | 'false' | 'unverifiable' = 'unverifiable';
     const verdict = analysis.overall_verdict.toUpperCase();
     if (verdict === 'VERDADEIRO') status = 'true';
     else if (verdict === 'FALSO') status = 'false';
-    else if (verdict === 'ENGANOSO') status = 'misleading';
 
     return {
       id: analysis.document_id,

@@ -41,14 +41,13 @@ export async function loadAllAnalyses(): Promise<AnalysisWithFileId[]> {
 /**
  * Obtém o status geral de uma análise baseado no overall_verdict
  */
-export function getAnalysisStatus(analysis: Analysis): 'true' | 'false' | 'misleading' {
+export function getAnalysisStatus(analysis: Analysis): 'true' | 'false' | 'unverifiable' {
   const verdict = analysis.overall_verdict.toUpperCase();
 
   if (verdict === 'VERDADEIRO') return 'true';
   if (verdict === 'FALSO') return 'false';
-  if (verdict === 'ENGANOSO') return 'misleading';
 
-  return 'false';
+  return 'unverifiable';
 }
 
 /**

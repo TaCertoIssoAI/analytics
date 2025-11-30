@@ -60,8 +60,13 @@ const Analytics = () => {
     result: {
       fake: true,
       true: true,
-      misleading: true,
       unknown: true,
+    },
+    percentage: {
+      minTruthScore: 0,
+      maxTruthScore: 100,
+      minFakeScore: 0,
+      maxFakeScore: 100,
     },
   });
 
@@ -69,21 +74,26 @@ const Analytics = () => {
 
   const buildQueryParams = useCallback(() => {
     const params = new URLSearchParams();
-    
+
     if (searchTerm) params.append("search", searchTerm);
-    
+
     params.append("message_type_whatsapp", String(filters.messageType.whatsapp));
     params.append("message_type_direct", String(filters.messageType.direct));
-    
+
     params.append("modality_text", String(filters.modality.text));
     params.append("modality_audio", String(filters.modality.audio));
     params.append("modality_video", String(filters.modality.video));
     params.append("modality_image", String(filters.modality.image));
-    
+
     params.append("result_fake", String(filters.result.fake));
     params.append("result_true", String(filters.result.true));
-    params.append("result_misleading", String(filters.result.misleading));
     params.append("result_unknown", String(filters.result.unknown));
+
+    // Filtros de porcentagem
+    params.append("min_truth_score", String(filters.percentage.minTruthScore));
+    params.append("max_truth_score", String(filters.percentage.maxTruthScore));
+    params.append("min_fake_score", String(filters.percentage.minFakeScore));
+    params.append("max_fake_score", String(filters.percentage.maxFakeScore));
 
     return params;
   }, [filters, searchTerm]);
@@ -132,7 +142,6 @@ const Analytics = () => {
     const verdict = analysis.overall_verdict.toUpperCase();
     if (verdict === "VERDADEIRO") return "True";
     if (verdict === "FALSO") return "Fake";
-    if (verdict === "ENGANOSO") return "Misleading";
     return "Unknown";
   };
 
@@ -169,7 +178,7 @@ const Analytics = () => {
     value: { label: "Quantidade" },
     Falso: { label: "Falso", color: "hsl(var(--chart-1))" },
     Verdadeiro: { label: "Verdadeiro", color: "hsl(var(--chart-2))" },
-    Enganoso: { label: "Enganoso", color: "hsl(var(--chart-3))" },
+    Desconhecido: { label: "Desconhecido", color: "hsl(var(--chart-3))" },
   };
 
   const modalitiesChartConfig = {
@@ -183,7 +192,6 @@ const Analytics = () => {
   const resultColors = {
     Fake: "bg-status-false/10 text-status-false border-status-false/20",
     True: "bg-status-true/10 text-status-true border-status-true/20",
-    Misleading: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
     Unknown: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   };
 
@@ -347,15 +355,37 @@ const Analytics = () => {
                             </TableCell>
                             <TableCell>{analysis.claims.length}</TableCell>
                             <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={resultColors[getMainResult(analysis)]}
-                              >
-                                {getMainResult(analysis) === "Fake" && "Falso"}
-                                {getMainResult(analysis) === "True" && "Verdadeiro"}
-                                {getMainResult(analysis) === "Misleading" && "Enganoso"}
-                                {getMainResult(analysis) === "Unknown" && "Desconhecido"}
-                              </Badge>
+                              {analysis.analysis_metrics ? (
+                                <div className="flex items-center gap-1.5">
+                                  {analysis.analysis_metrics.true_count > 0 && (
+                                    <div
+                                      className="h-3 w-3 rounded-full bg-status-true"
+                                      title={`Verdadeiro: ${analysis.analysis_metrics.truth_score}%`}
+                                    />
+                                  )}
+                                  {analysis.analysis_metrics.fake_count > 0 && (
+                                    <div
+                                      className="h-3 w-3 rounded-full bg-status-false"
+                                      title={`Falso: ${analysis.analysis_metrics.fake_score}%`}
+                                    />
+                                  )}
+                                  {analysis.analysis_metrics.unverified_count > 0 && (
+                                    <div
+                                      className="h-3 w-3 rounded-full bg-status-unverifiable"
+                                      title={`Não Verificável: ${analysis.analysis_metrics.unverified_score}%`}
+                                    />
+                                  )}
+                                </div>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className={resultColors[getMainResult(analysis)]}
+                                >
+                                  {getMainResult(analysis) === "Fake" && "Falso"}
+                                  {getMainResult(analysis) === "True" && "Verdadeiro"}
+                                  {getMainResult(analysis) === "Unknown" && "Desconhecido"}
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1 flex-wrap">

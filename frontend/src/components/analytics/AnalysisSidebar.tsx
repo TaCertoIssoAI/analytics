@@ -17,8 +17,13 @@ export interface AnalysisFilters {
   result: {
     fake: boolean;
     true: boolean;
-    misleading: boolean;
     unknown: boolean;
+  };
+  percentage: {
+    minTruthScore: number;  // 0-100
+    maxTruthScore: number;  // 0-100
+    minFakeScore: number;   // 0-100
+    maxFakeScore: number;   // 0-100
   };
 }
 
@@ -48,7 +53,7 @@ export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProp
     });
   };
 
-  const handleResultChange = (result: 'fake' | 'true' | 'misleading' | 'unknown', checked: boolean) => {
+  const handleResultChange = (result: 'fake' | 'true' | 'unknown', checked: boolean) => {
     onFilterChange({
       ...filters,
       result: {
@@ -160,16 +165,6 @@ export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProp
               />
               <label htmlFor="true" className="text-sm cursor-pointer">
                 Verdadeiro
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="misleading"
-                checked={filters.result.misleading}
-                onCheckedChange={(checked) => handleResultChange('misleading', checked as boolean)}
-              />
-              <label htmlFor="misleading" className="text-sm cursor-pointer">
-                Enganoso
               </label>
             </div>
             <div className="flex items-center space-x-2">

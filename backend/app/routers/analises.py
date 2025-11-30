@@ -77,8 +77,11 @@ async def get_dashboard(
     modality_image: bool = Query(True, description="Incluir Imagem"),
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
-    result_misleading: bool = Query(True, description="Incluir Enganoso"),
     result_unknown: bool = Query(True, description="Incluir Desconhecido/Outros"),
+    min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
+    max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
+    min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
+    max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
 ) -> Dict[str, Any]:
     """
     Endpoint para obter dados do dashboard (gráficos e totais).
@@ -94,8 +97,11 @@ async def get_dashboard(
             "modality_image": modality_image,
             "result_fake": result_fake,
             "result_true": result_true,
-            "result_misleading": result_misleading,
             "result_unknown": result_unknown,
+            "min_truth_score": min_truth_score,
+            "max_truth_score": max_truth_score,
+            "min_fake_score": min_fake_score,
+            "max_fake_score": max_fake_score,
         }
 
         print("\n" + "="*60)
@@ -143,8 +149,11 @@ async def list_analises(
     modality_image: bool = Query(True, description="Incluir Imagem"),
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
-    result_misleading: bool = Query(True, description="Incluir Enganoso"),
     result_unknown: bool = Query(True, description="Incluir Desconhecido/Outros"),
+    min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
+    max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
+    min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
+    max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
 ) -> Dict[str, Any]:
     """
     Endpoint para listar análises com paginação e filtros.
@@ -160,8 +169,11 @@ async def list_analises(
             "modality_image": modality_image,
             "result_fake": result_fake,
             "result_true": result_true,
-            "result_misleading": result_misleading,
             "result_unknown": result_unknown,
+            "min_truth_score": min_truth_score,
+            "max_truth_score": max_truth_score,
+            "min_fake_score": min_fake_score,
+            "max_fake_score": max_fake_score,
         }
 
         print("\n" + "="*60)

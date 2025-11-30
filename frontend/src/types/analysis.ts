@@ -1,6 +1,6 @@
 export type MessageType = "FromWhatsappGroup" | "FromDirectMessage";
 
-export type VerificationResult = "Fake" | "True" | "Misleading" | "Unknown";
+export type VerificationResult = "VERDADEIRO" | "FALSO" | "ENGANOSO" | "CHECK" | "UNVERIFIED";
 
 export interface ScrapedLink {
   url: string;

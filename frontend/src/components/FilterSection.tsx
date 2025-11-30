@@ -21,6 +21,19 @@ export const FilterSection = ({
   onSearchChange
 }: FilterSectionProps) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const handlePercentageChange = (field: 'minTruthScore' | 'maxTruthScore' | 'minFakeScore' | 'maxFakeScore', value: number) => {
+    if (filters && onFilterChange) {
+      onFilterChange({
+        ...filters,
+        percentage: {
+          ...filters.percentage,
+          [field]: value,
+        },
+      });
+    }
+  };
+
   const handleMessageTypeChange = (type: 'whatsapp' | 'direct', checked: boolean) => {
     if (filters && onFilterChange) {
       onFilterChange({
@@ -45,7 +58,7 @@ export const FilterSection = ({
     }
   };
 
-  const handleResultChange = (result: 'fake' | 'true' | 'misleading' | 'unknown', checked: boolean) => {
+  const handleResultChange = (result: 'fake' | 'true' | 'unknown', checked: boolean) => {
     if (filters && onFilterChange) {
       onFilterChange({
         ...filters,
@@ -62,7 +75,8 @@ export const FilterSection = ({
       onFilterChange({
         messageType: { whatsapp: true, direct: true },
         modality: { text: true, audio: true, video: true, image: true },
-        result: { fake: true, true: true, misleading: true, unknown: true },
+        result: { fake: true, true: true, unknown: true },
+        percentage: { minTruthScore: 0, maxTruthScore: 100, minFakeScore: 0, maxFakeScore: 100 },
       });
     }
     if (onSearchChange) {
@@ -117,9 +131,10 @@ export const FilterSection = ({
 
       {/* Filtros em Grid */}
       {filters && showAdvancedFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Tipo de Mensagem */}
-          <div className="space-y-3">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Tipo de Mensagem */}
+            <div className="space-y-3">
             <Label className="text-base font-semibold">Tipo de Mensagem</Label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
@@ -218,16 +233,6 @@ export const FilterSection = ({
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="misleading"
-                  checked={filters.result.misleading}
-                  onCheckedChange={(checked) => handleResultChange('misleading', checked as boolean)}
-                />
-                <label htmlFor="misleading" className="text-sm cursor-pointer">
-                  Enganoso
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
                   id="unknown"
                   checked={filters.result.unknown}
                   onCheckedChange={(checked) => handleResultChange('unknown', checked as boolean)}
@@ -235,6 +240,75 @@ export const FilterSection = ({
                 <label htmlFor="unknown" className="text-sm cursor-pointer">
                   Desconhecido
                 </label>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          {/* Filtros por Porcentagem */}
+          <div className="border-t pt-6">
+            <Label className="text-base font-semibold mb-4 block">Filtrar por Porcentagem</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Porcentagem de Claims Verdadeiras */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Claims Verdadeiras (%)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="minTruth" className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      id="minTruth"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.minTruthScore}
+                      onChange={(e) => handlePercentageChange('minTruthScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="maxTruth" className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      id="maxTruth"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.maxTruthScore}
+                      onChange={(e) => handlePercentageChange('maxTruthScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Porcentagem de Claims Falsas */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Claims Falsas (%)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="minFake" className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      id="minFake"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.minFakeScore}
+                      onChange={(e) => handlePercentageChange('minFakeScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="maxFake" className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      id="maxFake"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.maxFakeScore}
+                      onChange={(e) => handlePercentageChange('maxFakeScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
