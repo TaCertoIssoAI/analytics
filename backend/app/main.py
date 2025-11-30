@@ -78,7 +78,7 @@ app.add_middleware(
         "http://127.0.0.1:8080",
         "http://localhost:8081",  # Porta alternativa do Vite
         "http://127.0.0.1:8081",
-        # Adicione aqui o domínio de produção quando deploy
+        "https://tacertoissoai.netlify.app", # Produção Netlify
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Permite todos os métodos (GET, POST, etc.)
