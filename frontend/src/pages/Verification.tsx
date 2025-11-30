@@ -23,7 +23,7 @@ const statusConfig = {
     className: "bg-status-false/10 text-status-false border-status-false/20",
   },
   "DESCONHECIDO": {
-    label: "Desconhecido",
+    label: "Não Verificável",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },

@@ -174,7 +174,7 @@ export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProp
                 onCheckedChange={(checked) => handleResultChange('unknown', checked as boolean)}
               />
               <label htmlFor="unknown" className="text-sm cursor-pointer">
-                Desconhecido
+                Não Verificável
               </label>
             </div>
           </div>

@@ -178,7 +178,7 @@ const Analytics = () => {
     value: { label: "Quantidade" },
     Falso: { label: "Falso", color: "hsl(var(--chart-1))" },
     Verdadeiro: { label: "Verdadeiro", color: "hsl(var(--chart-2))" },
-    Desconhecido: { label: "Desconhecido", color: "hsl(var(--chart-3))" },
+    "Não Verificável": { label: "Não Verificável", color: "hsl(var(--chart-3))" },
   };
 
   const modalitiesChartConfig = {
@@ -383,7 +383,7 @@ const Analytics = () => {
                                 >
                                   {getMainResult(analysis) === "Fake" && "Falso"}
                                   {getMainResult(analysis) === "True" && "Verdadeiro"}
-                                  {getMainResult(analysis) === "Unknown" && "Desconhecido"}
+                                  {getMainResult(analysis) === "Unknown" && "Não Verificável"}
                                 </Badge>
                               )}
                             </TableCell>
