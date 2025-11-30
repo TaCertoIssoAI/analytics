@@ -29,7 +29,7 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
 
   // Agrupar por análise única
   const uniqueAnalyses = citations.reduce((acc, citation) => {
-    const existing = acc.find(item => item.analysis.DocumentId === citation.analysis.DocumentId);
+    const existing = acc.find(item => item.analysis.document_id === citation.analysis.document_id);
     if (!existing) {
       acc.push({
         analysis: citation.analysis,
@@ -107,7 +107,7 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
             <div className="space-y-4">
               {uniqueAnalyses.map(({ analysis, claims }) => (
                 <Card
-                  key={analysis.DocumentId}
+                  key={analysis.document_id}
                   className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50"
                   onClick={() => handleAnalysisClick(analysis.fileId)}
                 >
@@ -115,8 +115,11 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {analysis.PureText}
+                          <p className="text-sm font-medium mb-1">
+                            {analysis.analysis_title || "Sem título"}
+                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                            {analysis.user_message_text}
                           </p>
                           <div className="space-y-2">
                             {claims.map((claim, idx) => (
@@ -148,7 +151,7 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
                       <div className="flex items-center gap-4 text-xs text-muted-foreground border-t pt-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {format(new Date(analysis.Date), "dd/MM/yyyy", {
+                          {format(new Date(analysis.processed_at), "dd/MM/yyyy", {
                             locale: ptBR,
                           })}
                         </div>

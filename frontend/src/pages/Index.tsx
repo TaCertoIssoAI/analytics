@@ -98,8 +98,8 @@ const Index = () => {
     else if (verdict === 'ENGANOSO') status = 'misleading';
 
     return {
-      id: analysis.document_id, // Usa o document_id real do BigQuery
-      title: analysis.user_message_text?.substring(0, 100) + (analysis.user_message_text && analysis.user_message_text.length > 100 ? '...' : ''),
+      id: analysis.document_id,
+      title: analysis.analysis_title || (analysis.user_message_text?.substring(0, 100) + (analysis.user_message_text && analysis.user_message_text.length > 100 ? '...' : '')),
       status,
       date: formatDate(analysis.processed_at),
       tags: allTopics.slice(0, 3), // Limita a 3 tags para não poluir

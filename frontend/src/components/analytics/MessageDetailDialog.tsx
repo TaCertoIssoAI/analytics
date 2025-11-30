@@ -48,7 +48,7 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Detalhes da Análise</DialogTitle>
+            <DialogTitle>{analysis.analysis_title || "Detalhes da Análise"}</DialogTitle>
             {fileId && (
               <Button onClick={handleExpandClick} variant="outline" size="sm" className="gap-2">
                 <ExternalLink className="h-4 w-4" />
