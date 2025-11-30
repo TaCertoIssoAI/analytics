@@ -27,13 +27,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copiar código da aplicação
 COPY . .
 
-# Criar usuário não-root
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-
-# Mudar para usuário não-root
-USER appuser
-
 # Expor porta
 EXPOSE 8000
 

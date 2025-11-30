@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -9,10 +10,10 @@ class Settings(BaseSettings):
     PROJECT_ID: str = "sitegrupysanca"
     DATASET_ID: str = "analytics_whatsapp"
     TABLE_ID: str = "analises_complexas"
-    GOOGLE_APPLICATION_CREDENTIALS: str
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
     # OpenAI
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: Optional[str] = None
 
     # API
     API_HOST: str = "0.0.0.0"
