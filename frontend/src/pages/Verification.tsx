@@ -4,29 +4,30 @@ import { Header } from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText } from "lucide-react";
-import { Analysis } from "@/types/analysis";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText, Link as LinkIcon, Eye } from "lucide-react";
+import { Analysis, ScrapedLink } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
+import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const statusConfig = {
-  true: {
+  "VERDADEIRO": {
     label: "Verdadeiro",
     icon: CheckCircle2,
     className: "bg-status-true/10 text-status-true border-status-true/20",
   },
-  false: {
+  "FALSO": {
     label: "Falso",
     icon: XCircle,
     className: "bg-status-false/10 text-status-false border-status-false/20",
   },
-  misleading: {
+  "ENGANOSO": {
     label: "Enganoso",
     icon: AlertTriangle,
     className: "bg-status-misleading/10 text-status-misleading border-status-misleading/20",
   },
-  unverifiable: {
+  "DESCONHECIDO": {
     label: "Não Verificável",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
@@ -38,6 +39,8 @@ const Verification = () => {
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedLink, setSelectedLink] = useState<ScrapedLink | null>(null);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -72,29 +75,25 @@ const Verification = () => {
 
   if (!analysis) return null;
 
-  // Determinar resultado principal
-  const results = Object.values(analysis.ResponseByClaim).map((r) => r.Result);
-  const fakeCount = results.filter((r) => r === "Fake").length;
-  const trueCount = results.filter((r) => r === "True").length;
-  let mainStatus: "true" | "false" | "misleading" | "unverifiable" = "unverifiable";
-  
-  if (fakeCount > trueCount) mainStatus = "false";
-  else if (trueCount > fakeCount) mainStatus = "true";
-  else if (results.some(r => r === "Misleading")) mainStatus = "misleading";
-
-  const config = statusConfig[mainStatus];
+  const statusKey = analysis.overall_verdict.toUpperCase() as keyof typeof statusConfig;
+  const config = statusConfig[statusKey] || statusConfig["DESCONHECIDO"];
   const StatusIcon = config.icon;
 
   const modalityIcons = [];
-  if (analysis.HadAudio) modalityIcons.push({ icon: Mic, label: "Áudio" });
-  if (analysis.HadImage) modalityIcons.push({ icon: ImageIcon, label: "Imagem" });
-  if (analysis.HadVideo) modalityIcons.push({ icon: Camera, label: "Vídeo" });
-  if (analysis.PureText) modalityIcons.push({ icon: FileText, label: "Texto" });
+  if (analysis.media_info.has_audio) modalityIcons.push({ icon: Mic, label: "Áudio" });
+  if (analysis.media_info.has_image) modalityIcons.push({ icon: ImageIcon, label: "Imagem" });
+  if (analysis.media_info.has_video) modalityIcons.push({ icon: Camera, label: "Vídeo" });
+  if (analysis.user_message_text) modalityIcons.push({ icon: FileText, label: "Texto" });
+
+  // Coletar todos os tópicos únicos das claims
+  const allTopics = Array.from(
+    new Set(analysis.claims.flatMap(claim => claim.topics))
+  );
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <article className="container py-12 max-w-4xl">
         <div className="space-y-8">
           {/* Header */}
@@ -103,19 +102,19 @@ const Verification = () => {
               <StatusIcon className="h-4 w-4 mr-2" />
               {config.label}
             </Badge>
-            
+
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              {analysis.FinalTranscribedText}
+              {analysis.full_combined_text}
             </h1>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                {format(new Date(analysis.Date), "PPP 'às' HH:mm", { locale: ptBR })}
+                {format(new Date(analysis.processed_at), "PPP 'às' HH:mm", { locale: ptBR })}
               </div>
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4" />
-                ID: {analysis.DocumentId.slice(0, 8)}
+                ID: {analysis.document_id.slice(0, 8)}
               </div>
             </div>
 
@@ -130,9 +129,9 @@ const Verification = () => {
             </div>
 
             {/* Tópicos */}
-            {analysis.Topics.length > 0 && (
+            {allTopics.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                {analysis.Topics.map((topic) => (
+                {allTopics.map((topic) => (
                   <Badge key={topic} variant="outline">
                     {topic}
                   </Badge>
@@ -158,26 +157,66 @@ const Verification = () => {
               <h2 className="text-2xl font-semibold">Conteúdo Verificado</h2>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-foreground">{analysis.FinalTranscribedText}</p>
-              
-              {analysis.HadAudio && analysis.AudioText && (
+              <div>
+                <h4 className="font-semibold text-sm mb-1">Mensagem Original</h4>
+                <p className="text-foreground">{analysis.user_message_text}</p>
+              </div>
+
+              {analysis.media_info.has_audio && analysis.media_info.audio_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Transcrição do Áudio</h4>
-                  <p className="text-sm text-muted-foreground">{analysis.AudioText}</p>
+                  <p className="text-sm text-muted-foreground">{analysis.media_info.audio_text}</p>
                 </div>
               )}
-              
-              {analysis.HadImage && analysis.ImageText && (
+
+              {analysis.media_info.has_image && analysis.media_info.image_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Texto da Imagem</h4>
-                  <p className="text-sm text-muted-foreground">{analysis.ImageText}</p>
+                  <p className="text-sm text-muted-foreground">{analysis.media_info.image_text}</p>
                 </div>
               )}
-              
-              {analysis.HadVideo && analysis.VideoText && (
+
+              {analysis.media_info.has_video && analysis.media_info.video_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Texto do Vídeo</h4>
-                  <p className="text-sm text-muted-foreground">{analysis.VideoText}</p>
+                  <p className="text-sm text-muted-foreground">{analysis.media_info.video_text}</p>
+                </div>
+              )}
+
+              {analysis.scraped_links.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Links Encontrados</h4>
+                  <div className="space-y-2">
+                    {analysis.scraped_links.map((link, index) => (
+                      <div key={index} className="border rounded-lg p-3 bg-muted/30">
+                        <div className="flex items-center justify-between gap-3">
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm font-medium hover:underline text-primary flex-1 min-w-0"
+                          >
+                            <LinkIcon className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{link.title}</span>
+                          </a>
+                          {link.scraped_text && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedLink(link);
+                                setLinkModalOpen(true);
+                              }}
+                              className="gap-2 flex-shrink-0"
+                            >
+                              <Eye className="h-3 w-3" />
+                              Ver Scraped Text
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -187,39 +226,32 @@ const Verification = () => {
           <div>
             <h2 className="text-2xl font-semibold mb-4">Afirmações Verificadas</h2>
             <div className="space-y-4">
-              {Object.entries(analysis.Claims).map(([id, claim]) => (
+              {analysis.claims.map((claim) => (
                 <ClaimCard
-                  key={id}
-                  claimId={id}
+                  key={claim.claim_id}
                   claim={claim}
-                  response={analysis.ResponseByClaim[id]}
                 />
               ))}
             </div>
           </div>
 
-          {/* Contexto e Resposta Final */}
-          {analysis.CommentAboutCompleteContext && (
-            <Card>
-              <CardHeader>
-                <h2 className="text-2xl font-semibold">Contexto Completo</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-foreground">{analysis.CommentAboutCompleteContext}</p>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* Resposta Final */}
           <Card className="border-2 border-primary/20">
             <CardHeader>
-              <h2 className="text-2xl font-semibold">Resposta Final</h2>
+              <h2 className="text-2xl font-semibold">Conclusão</h2>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-medium text-foreground">{analysis.FinalResponseText}</p>
+              <p className="text-lg font-medium text-foreground">{analysis.final_comment}</p>
             </CardContent>
           </Card>
         </div>
       </article>
+
+      <ScrapedLinkModal
+        link={selectedLink}
+        open={linkModalOpen}
+        onOpenChange={setLinkModalOpen}
+      />
     </div>
   );
 };

@@ -66,12 +66,11 @@ const Analytics = () => {
   }, []);
 
   const getMainResult = (analysis: AnalysisWithFileId) => {
-    const results = Object.values(analysis.ResponseByClaim).map((r) => r.Result);
-    const fakeCount = results.filter((r) => r === "Fake").length;
-    const trueCount = results.filter((r) => r === "True").length;
-    if (fakeCount > trueCount) return "Fake";
-    if (trueCount > fakeCount) return "True";
-    return "Misleading";
+    const verdict = analysis.overall_verdict.toUpperCase();
+    if (verdict === "VERDADEIRO") return "True";
+    if (verdict === "FALSO") return "Fake";
+    if (verdict === "ENGANOSO") return "Misleading";
+    return "Fake";
   };
 
   // Aplica os filtros nas análises
@@ -80,29 +79,32 @@ const Analytics = () => {
       // Filtro de busca por texto
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
+        const allTopics = Array.from(
+          new Set(analysis.claims.flatMap(claim => claim.topics))
+        );
         const matchesSearch =
-          analysis.PureText.toLowerCase().includes(searchLower) ||
-          analysis.FinalTranscribedText.toLowerCase().includes(searchLower) ||
-          analysis.Topics.some(topic => topic.toLowerCase().includes(searchLower)) ||
+          analysis.user_message_text.toLowerCase().includes(searchLower) ||
+          analysis.full_combined_text.toLowerCase().includes(searchLower) ||
+          allTopics.some(topic => topic.toLowerCase().includes(searchLower)) ||
           analysis.fileId.includes(searchTerm) ||
-          analysis.DocumentId.toLowerCase().includes(searchLower);
+          analysis.document_id.toLowerCase().includes(searchLower);
 
         if (!matchesSearch) return false;
       }
 
       // Filtro de tipo de mensagem
       const messageTypeMatch =
-        (filters.messageType.whatsapp && analysis.MessageType === "FromWhatsappGroup") ||
-        (filters.messageType.direct && analysis.MessageType === "FromDirectMessage");
+        (filters.messageType.whatsapp && analysis.source_type === "FromWhatsappGroup") ||
+        (filters.messageType.direct && analysis.source_type === "FromDirectMessage");
 
       if (!messageTypeMatch) return false;
 
       // Filtro de modalidade
       const modalityMatch =
-        (filters.modality.text && analysis.PureText) ||
-        (filters.modality.audio && analysis.HadAudio) ||
-        (filters.modality.video && analysis.HadVideo) ||
-        (filters.modality.image && analysis.HadImage);
+        (filters.modality.text && analysis.user_message_text) ||
+        (filters.modality.audio && analysis.media_info.has_audio) ||
+        (filters.modality.video && analysis.media_info.has_video) ||
+        (filters.modality.image && analysis.media_info.has_image);
 
       if (!modalityMatch) return false;
 
@@ -119,11 +121,11 @@ const Analytics = () => {
   }, [analyses, filters, searchTerm]);
 
   const totalMessages = filteredAnalyses.length;
-  const totalClaims = filteredAnalyses.reduce((acc, a) => acc + Object.keys(a.Claims).length, 0);
+  const totalClaims = filteredAnalyses.reduce((acc, a) => acc + a.claims.length, 0);
   const fakeCount = filteredAnalyses.reduce(
     (acc, a) =>
       acc +
-      Object.values(a.ResponseByClaim).filter((r) => r.Result === "Fake").length,
+      a.claims.filter((claim) => claim.verdict === "Fake").length,
     0
   );
   const fakePercentage = totalClaims > 0 ? Math.round((fakeCount / totalClaims) * 100) : 0;
@@ -148,16 +150,16 @@ const Analytics = () => {
     }>>();
 
     filteredAnalyses.forEach((analysis) => {
-      Object.entries(analysis.ResponseByClaim).forEach(([claimId, response]) => {
-        response.reasoningSources.forEach((source) => {
+      analysis.claims.forEach((claim) => {
+        claim.sources.forEach((source) => {
           if (!sourceMap.has(source)) {
             sourceMap.set(source, []);
           }
           sourceMap.get(source)!.push({
             analysis,
-            claimId,
-            claimText: analysis.Claims[claimId].text,
-            result: response.Result,
+            claimId: claim.claim_id,
+            claimText: claim.text,
+            result: claim.verdict,
           });
         });
       });
@@ -184,15 +186,15 @@ const Analytics = () => {
   // Dados para os gráficos
   const resultsChartData = useMemo(() => {
     const fakeCount = filteredAnalyses.reduce(
-      (acc, a) => acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "Fake").length,
+      (acc, a) => acc + a.claims.filter((claim) => claim.verdict === "Fake").length,
       0
     );
     const trueCount = filteredAnalyses.reduce(
-      (acc, a) => acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "True").length,
+      (acc, a) => acc + a.claims.filter((claim) => claim.verdict === "True").length,
       0
     );
     const misleadingCount = filteredAnalyses.reduce(
-      (acc, a) => acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "Misleading").length,
+      (acc, a) => acc + a.claims.filter((claim) => claim.verdict === "Misleading").length,
       0
     );
 
@@ -207,22 +209,22 @@ const Analytics = () => {
     return [
       {
         name: "Texto",
-        value: filteredAnalyses.filter((a) => a.PureText).length,
+        value: filteredAnalyses.filter((a) => a.user_message_text).length,
         fill: "hsl(var(--chart-1))",
       },
       {
         name: "Áudio",
-        value: filteredAnalyses.filter((a) => a.HadAudio).length,
+        value: filteredAnalyses.filter((a) => a.media_info.has_audio).length,
         fill: "hsl(var(--chart-2))",
       },
       {
         name: "Vídeo",
-        value: filteredAnalyses.filter((a) => a.HadVideo).length,
+        value: filteredAnalyses.filter((a) => a.media_info.has_video).length,
         fill: "hsl(var(--chart-3))",
       },
       {
         name: "Imagem",
-        value: filteredAnalyses.filter((a) => a.HadImage).length,
+        value: filteredAnalyses.filter((a) => a.media_info.has_image).length,
         fill: "hsl(var(--chart-4))",
       },
     ].filter(item => item.value > 0);
@@ -389,45 +391,52 @@ const Analytics = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAnalyses.map((analysis) => (
-                      <TableRow
-                        key={analysis.DocumentId}
-                        className="cursor-pointer"
-                        onClick={() => handleRowClick(analysis)}
-                      >
-                        <TableCell>
-                          {format(new Date(analysis.Date), "dd/MM/yyyy", { locale: ptBR })}
-                        </TableCell>
-                        <TableCell>
-                          {analysis.MessageType === "FromWhatsappGroup"
-                            ? "WhatsApp"
-                            : "Direta"}
-                        </TableCell>
-                        <TableCell>{Object.keys(analysis.Claims).length}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={resultColors[getMainResult(analysis)]}
-                          >
-                            {getMainResult(analysis) === "Fake" ? "Falso" : "Verdadeiro"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 flex-wrap">
-                            {analysis.Topics.slice(0, 2).map((topic) => (
-                              <Badge key={topic} variant="secondary" className="text-xs">
-                                {topic}
-                              </Badge>
-                            ))}
-                            {analysis.Topics.length > 2 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{analysis.Topics.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredAnalyses.map((analysis) => {
+                      const allTopics = Array.from(
+                        new Set(analysis.claims.flatMap(claim => claim.topics))
+                      );
+                      return (
+                        <TableRow
+                          key={analysis.document_id}
+                          className="cursor-pointer"
+                          onClick={() => handleRowClick(analysis)}
+                        >
+                          <TableCell>
+                            {format(new Date(analysis.processed_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell>
+                            {analysis.source_type === "FromWhatsappGroup"
+                              ? "WhatsApp"
+                              : "Direta"}
+                          </TableCell>
+                          <TableCell>{analysis.claims.length}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={resultColors[getMainResult(analysis)]}
+                            >
+                              {getMainResult(analysis) === "Fake" && "Falso"}
+                              {getMainResult(analysis) === "True" && "Verdadeiro"}
+                              {getMainResult(analysis) === "Misleading" && "Enganoso"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 flex-wrap">
+                              {allTopics.slice(0, 2).map((topic) => (
+                                <Badge key={topic} variant="secondary" className="text-xs">
+                                  {topic}
+                                </Badge>
+                              ))}
+                              {allTopics.length > 2 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{allTopics.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TabsContent>

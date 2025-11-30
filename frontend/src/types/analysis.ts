@@ -2,33 +2,42 @@ export type MessageType = "FromWhatsappGroup" | "FromDirectMessage";
 
 export type VerificationResult = "Fake" | "True" | "Misleading" | "Unknown";
 
-export interface Claim {
-  text: string;
-  links: string[];
+export interface ScrapedLink {
+  url: string;
+  title: string;
+  scraped_text: string;
 }
 
-export interface ClaimResponse {
-  Result: VerificationResult;
-  reasoningText: string;
-  reasoningSources: string[];
+export interface MediaInfo {
+  has_audio: boolean;
+  audio_uri: string | null;
+  audio_text: string | null;
+  has_image: boolean;
+  image_uri: string | null;
+  image_text: string | null;
+  has_video: boolean;
+  video_uri: string | null;
+  video_text: string | null;
+}
+
+export interface Claim {
+  claim_id: string;
+  text: string;
+  verdict: VerificationResult;
+  reasoning: string;
+  topics: string[];
+  sources: string[];
 }
 
 export interface Analysis {
-  DocumentId: string;
-  PureText: string;
-  FinalTranscribedText: string;
-  HadAudio: boolean;
-  AudioText: string;
-  HadImage: boolean;
-  ImageText: string;
-  HadVideo: boolean;
-  VideoText: string;
-  Links: string[];
-  MessageType: MessageType;
-  Claims: Record<string, Claim>;
-  Date: string;
-  Topics: string[];
-  ResponseByClaim: Record<string, ClaimResponse>;
-  CommentAboutCompleteContext: string;
-  FinalResponseText: string;
+  document_id: string;
+  processed_at: string;
+  source_type: MessageType;
+  user_message_text: string;
+  full_combined_text: string;
+  scraped_links: ScrapedLink[];
+  overall_verdict: string;
+  final_comment: string;
+  media_info: MediaInfo;
+  claims: Claim[];
 }

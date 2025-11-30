@@ -1,0 +1,55 @@
+{
+  "DocumentId": "uuid_v4_12345",
+  "Date": "2025-11-30T17:00:00",
+  "MessageType": "FromWhatsappGroup",
+  
+  "PureText": "Texto do usuário...",
+  "FinalTranscribedText": "Texto completo...",
+  
+  "FinalResponseText": "FALSO - Resumo...",
+  "CommentAboutCompleteContext": "Explicação...",
+
+  "ScrapedLinks": [
+    {
+      "url": "https://site.com",
+      "title": "Titulo",
+      "text": "Conteudo..."
+    }
+  ],
+
+  "HadAudio": true,
+  "AudioUrl": null,
+  "AudioText": "Transcrição...",
+
+  "HadImage": true,
+  "ImageUrl": null,
+  "ImageText": "OCR...",
+
+  "HadVideo": false,
+  "VideoUrl": null,
+  "VideoText": null,
+
+  "Claims": {
+    "1": {
+      "text": "Texto da claim 1",
+      "links": []
+    },
+    "2": {
+      "text": "Texto da claim 2",
+      "links": []
+    }
+  },
+
+  "ResponseByClaim": {
+    "1": {
+      "Result": "Fake",
+      "reasoningText": "Justificativa...",
+      "reasoningSources": ["https://fonte.com"]
+    },
+    "2": {
+      "Result": "True",
+      "reasoningText": "...",
+      "reasoningSources": []
+    }
+  }
+}

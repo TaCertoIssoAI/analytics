@@ -1,5 +1,4 @@
 import json
-import time
 from pathlib import Path
 from collections import deque
 
@@ -124,25 +123,23 @@ class IptcEmbeddingTree:
         """
         # como qcodes e emb_matrix estao alinhados, podemos operar direto na matriz toda
         mat = self.emb_matrix  # shape (N, D)
-        t0 = time.perf_counter()
         num = mat @ claim_vec  # (N,)
         denom = np.linalg.norm(mat, axis=1) * np.linalg.norm(claim_vec) + 1e-8
         sims = num / denom
-        t1 = time.perf_counter()
-        print(f"[iptc] tempo para calcular similaridade com TODOS os topicos: {t1 - t0:.4f}s")
         return {q: float(s) for q, s in zip(self.qcodes, sims)}
 
     def embed_claim(self, text: str) -> np.ndarray:
-        # gera embedding para um claim
-        t0 = time.perf_counter()
-        resp = self.client.embeddings.create(
-            model=self.embedding_model,
-            input=text,
-        )
-        vec = np.array(resp.data[0].embedding, dtype="float32")
-        t1 = time.perf_counter()
-        print(f"[iptc] tempo para gerar embedding do claim: {t1 - t0:.4f}s")
-        return vec
+            try:
+                resp = self.client.embeddings.create(
+                    model=self.embedding_model,
+                    input=text,
+                )
+                vec = np.array(resp.data[0].embedding, dtype="float32")
+                return vec
+            except Exception as e:
+                print(f"Erro ao gerar embedding: {e}")
+                # Retorna vetor de zeros para não travar o fluxo
+                return np.zeros(1536, dtype="float32")
 
     def classify_claim(
         self,
@@ -151,30 +148,26 @@ class IptcEmbeddingTree:
         top_k_concepts: int = 5,
         rerank_with_llm: bool = False,
         llm_model: str = "gpt-4.1-mini",
-    ) -> list[dict]:
+    ) -> dict:
         """
-        classifica um claim retornando caminhos hierarquicos baseados
-        nos top_k_concepts mais proximos em TODO o vocabulario.
+        classifica um claim retornando a categoria vencedora com suas subcategorias.
 
-        cada item da lista eh:
+        retorna um dict:
         {
-          "score": float,
-          "nodes": [nos...],
-          "build_time_sec": float
+          "main_category": str,
+          "subcategories": [str, str, ...],
+          "score": float
         }
 
-        se rerank_with_llm=True, a llm escolhe o melhor caminho e
-        ele e colocado em primeiro lugar.
+        se rerank_with_llm=True, a llm escolhe o melhor caminho.
         """
-        t_total_start = time.perf_counter()
-
         # 1. embedding do claim
         claim_vec = self.embed_claim(text)
 
         # 2. similaridade com TODOS os topicos
         sims = self._cosine_all(claim_vec)
         if not sims:
-            return []
+            return {"main_category": "", "subcategories": [], "score": 0.0}
 
         # 3. pega os top_k_concepts mais similares (folhas candidatas)
         sorted_concepts = sorted(sims.items(), key=lambda x: x[1], reverse=True)
@@ -184,20 +177,10 @@ class IptcEmbeddingTree:
 
         # 4. para cada conceito candidato, sobe ate a raiz montando o caminho
         for qcode, leaf_sim in top_concepts:
-            t_path_start = time.perf_counter()
             path_nodes = self._build_path_to_root(
                 qcode=qcode,
                 sims=sims,
                 max_depth=max_depth,
-            )
-            t_path_end = time.perf_counter()
-            build_time = t_path_end - t_path_start
-
-            concept = self.concepts_by_qcode.get(qcode, {})
-            name = get_label(concept)
-            print(
-                f"[iptc] tempo para construir caminho global a partir do conceito "
-                f"{qcode} ({name}): {build_time:.4f}s"
             )
 
             if not path_nodes:
@@ -208,47 +191,45 @@ class IptcEmbeddingTree:
                 {
                     "score": score,
                     "nodes": path_nodes,
-                    "build_time_sec": build_time,
                 }
             )
 
         if not paths_with_scores:
-            t_total_end = time.perf_counter()
-            print(f"[iptc] tempo total classify_claim (sem caminhos validos): {t_total_end - t_total_start:.4f}s")
-            return []
+            return {"main_category": "", "subcategories": [], "score": 0.0}
 
         # 5. ordena por score heuristico
         paths_with_scores.sort(key=lambda x: x["score"], reverse=True)
 
-        if not rerank_with_llm:
-            t_total_end = time.perf_counter()
-            print(f"[iptc] tempo total classify_claim (sem llm): {t_total_end - t_total_start:.4f}s")
-            return paths_with_scores
+        if rerank_with_llm:
+            # 6. usa llm para escolher o melhor entre os candidatos
+            best_idx = self._choose_best_with_llm(
+                claim_text=text,
+                candidate_paths=paths_with_scores,
+                model=llm_model,
+            )
 
-        # 6. usa llm para escolher o melhor entre os candidatos
-        t_llm_start = time.perf_counter()
-        best_idx = self._choose_best_with_llm(
-            claim_text=text,
-            candidate_paths=paths_with_scores,
-            model=llm_model,
-        )
-        t_llm_end = time.perf_counter()
-        print(
-            f"[iptc] tempo para decisao da llm entre {len(paths_with_scores)} caminhos: "
-            f"{t_llm_end - t_llm_start:.4f}s"
-        )
+            if best_idx < 0 or best_idx >= len(paths_with_scores):
+                best_idx = 0
 
-        if best_idx < 0 or best_idx >= len(paths_with_scores):
-            best_idx = 0
+            if best_idx != 0:
+                best_item = paths_with_scores.pop(best_idx)
+                paths_with_scores.insert(0, best_item)
 
-        if best_idx != 0:
-            best_item = paths_with_scores.pop(best_idx)
-            paths_with_scores.insert(0, best_item)
+        # 7. retorna apenas o melhor caminho formatado
+        best_path = paths_with_scores[0]
+        nodes = best_path["nodes"]
 
-        t_total_end = time.perf_counter()
-        print(f"[iptc] tempo total classify_claim (com llm): {t_total_end - t_total_start:.4f}s")
+        if not nodes:
+            return {"main_category": "", "subcategories": [], "score": 0.0}
 
-        return paths_with_scores
+        main_category = nodes[0]["name"]
+        subcategories = [node["name"] for node in nodes[1:]]
+
+        return {
+            "main_category": main_category,
+            "subcategories": subcategories,
+            "score": best_path["score"]
+        }
 
     def _build_path_to_root(
         self,

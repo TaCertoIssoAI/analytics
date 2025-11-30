@@ -23,20 +23,25 @@ const Index = () => {
   }, []);
 
   // Converte análises para o formato esperado pelo VerificationCard
-  const verifications = analyses.map((analysis) => ({
-    id: analysis.fileId, // Usa o fileId (001, 002, etc.) para as rotas
-    title: analysis.PureText.substring(0, 100) + (analysis.PureText.length > 100 ? '...' : ''),
-    status: getAnalysisStatus(analysis),
-    date: formatDate(analysis.Date),
-    tags: analysis.Topics,
-    excerpt: analysis.FinalResponseText,
-  }));
+  const verifications = analyses.map((analysis) => {
+    const allTopics = Array.from(
+      new Set(analysis.claims.flatMap(claim => claim.topics))
+    );
+    return {
+      id: analysis.fileId, // Usa o fileId (001, 002, etc.) para as rotas
+      title: analysis.user_message_text.substring(0, 100) + (analysis.user_message_text.length > 100 ? '...' : ''),
+      status: getAnalysisStatus(analysis),
+      date: formatDate(analysis.processed_at),
+      tags: allTopics,
+      excerpt: analysis.final_comment,
+    };
+  });
 
   // Calcula estatísticas
-  const totalClaims = analyses.reduce((acc, a) => acc + Object.keys(a.Claims).length, 0);
+  const totalClaims = analyses.reduce((acc, a) => acc + a.claims.length, 0);
   const fakeCount = analyses.reduce(
     (acc, a) =>
-      acc + Object.values(a.ResponseByClaim).filter((r) => r.Result === "Fake").length,
+      acc + a.claims.filter((claim) => claim.verdict === "Fake").length,
     0
   );
   const fakePercentage = totalClaims > 0 ? Math.round((fakeCount / totalClaims) * 100) : 0;

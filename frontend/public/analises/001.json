@@ -1,47 +1,62 @@
 {
-  "DocumentId": "550e8400-e29b-41d4-a716-446655440001",
-  "PureText": "Presidente anuncia novo programa de auxílio financeiro de R$ 1.500 para todas as famílias brasileiras com início na próxima semana.",
-  "FinalTranscribedText": "Presidente anuncia novo programa de auxílio financeiro de R$ 1.500 para todas as famílias brasileiras com início na próxima semana.",
-  "HadAudio": false,
-  "AudioText": "",
-  "HadImage": true,
-  "ImageText": "Imagem com texto sobre auxílio de R$ 1.500",
-  "HadVideo": false,
-  "VideoText": "",
-  "Links": ["https://example.com/fake-news"],
-  "MessageType": "FromWhatsappGroup",
-  "Claims": {
-    "1": {
-      "text": "Presidente anunciou novo auxílio de R$ 1.500",
-      "links": ["https://example.com/fake-news"]
-    },
-    "2": {
-      "text": "Pagamentos começam na próxima semana",
-      "links": []
+  "document_id": "550e8400-e29b-41d4-a716-446655440001",
+  "processed_at": "2025-11-15T10:30:00+00:00",
+  "source_type": "FromWhatsappGroup",
+  "user_message_text": "Presidente anuncia novo programa de auxílio financeiro de R$ 1.500 para todas as famílias brasileiras com início na próxima semana.",
+  "full_combined_text": "Presidente anuncia novo programa de auxílio financeiro de R$ 1.500 para todas as famílias brasileiras com início na próxima semana. Imagem com texto sobre auxílio de R$ 1.500",
+  "scraped_links": [
+    {
+      "url": "https://example.com/fake-news",
+      "title": "Governo anuncia novo auxílio - Notícia Falsa",
+      "scraped_text": "Conteúdo enganoso sobre programa de auxílio que não existe oficialmente."
     }
+  ],
+  "overall_verdict": "FALSO",
+  "final_comment": "FALSO - Não há nenhum anúncio oficial sobre um novo programa de auxílio financeiro com essas características. Sempre verifique informações em fontes oficiais e desconfie de mensagens que prometem benefícios 'fáceis'. Mensagens semelhantes aparecem periodicamente em grupos de WhatsApp, geralmente com o objetivo de gerar engajamento através de informação sensacional, redirecionar usuários para sites duvidosos ou coletar dados pessoais através de cadastros falsos.",
+  "media_info": {
+    "has_audio": false,
+    "audio_uri": null,
+    "audio_text": null,
+    "has_image": true,
+    "image_uri": null,
+    "image_text": "Imagem com texto sobre auxílio de R$ 1.500",
+    "has_video": false,
+    "video_uri": null,
+    "video_text": null
   },
-  "Date": "2025-11-15T10:30:00Z",
-  "Topics": ["Política", "Economia", "Auxílio Social"],
-  "ResponseByClaim": {
-    "1": {
-      "Result": "Fake",
-      "reasoningText": "Não há nenhum anúncio oficial sobre um novo programa de auxílio financeiro com essas características. Nossa investigação junto aos canais oficiais do governo federal não encontrou nenhuma comunicação sobre este suposto programa.",
-      "reasoningSources": [
+  "claims": [
+    {
+      "claim_id": "1",
+      "text": "Presidente anunciou novo auxílio de R$ 1.500",
+      "verdict": "Fake",
+      "reasoning": "Não há nenhum anúncio oficial sobre um novo programa de auxílio financeiro com essas características. Nossa investigação junto aos canais oficiais do governo federal não encontrou nenhuma comunicação sobre este suposto programa.",
+      "topics": [
+        "Política",
+        "Economia",
+        "Auxílio Social",
+        "Governo Federal"
+      ],
+      "sources": [
         "https://www.gov.br/pt-br",
         "https://www.planalto.gov.br/",
         "https://g1.globo.com/",
         "https://www.uol.com.br/"
       ]
     },
-    "2": {
-      "Result": "Fake",
-      "reasoningText": "Além de não existir o programa, não há data definida para qualquer início de pagamentos relacionado a auxílios emergenciais.",
-      "reasoningSources": [
+    {
+      "claim_id": "2",
+      "text": "Pagamentos começam na próxima semana",
+      "verdict": "Fake",
+      "reasoning": "Além de não existir o programa, não há data definida para qualquer início de pagamentos relacionado a auxílios emergenciais.",
+      "topics": [
+        "Economia",
+        "Auxílio Social",
+        "Calendário de Pagamentos"
+      ],
+      "sources": [
         "https://www.gov.br/pt-br",
         "https://www.caixa.gov.br/"
       ]
     }
-  },
-  "CommentAboutCompleteContext": "Mensagens semelhantes aparecem periodicamente em grupos de WhatsApp, geralmente com o objetivo de gerar engajamento através de informação sensacional, redirecionar usuários para sites duvidosos ou coletar dados pessoais através de cadastros falsos.",
-  "FinalResponseText": "FALSO - Não há nenhum anúncio oficial sobre um novo programa de auxílio financeiro com essas características. Sempre verifique informações em fontes oficiais e desconfie de mensagens que prometem benefícios 'fáceis'."
+  ]
 }

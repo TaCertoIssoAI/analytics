@@ -13,7 +13,7 @@ export async function loadAllAnalyses(): Promise<AnalysisWithFileId[]> {
 
   // Lista de IDs de análises conhecidas (você pode expandir essa lista conforme adiciona mais arquivos)
   // Em produção, isso poderia vir de um endpoint da API
-  const analysisIds = ['001', '002'];
+  const analysisIds = ['001', '002', '003'];
 
   for (const id of analysisIds) {
     try {
@@ -30,24 +30,19 @@ export async function loadAllAnalyses(): Promise<AnalysisWithFileId[]> {
 
   // Ordena por data mais recente primeiro
   return analyses.sort((a, b) => {
-    return new Date(b.Date).getTime() - new Date(a.Date).getTime();
+    return new Date(b.processed_at).getTime() - new Date(a.processed_at).getTime();
   });
 }
 
 /**
- * Obtém o status geral de uma análise baseado nos resultados das claims
+ * Obtém o status geral de uma análise baseado no overall_verdict
  */
 export function getAnalysisStatus(analysis: Analysis): 'true' | 'false' | 'misleading' {
-  const results = Object.values(analysis.ResponseByClaim).map(claim => claim.Result);
+  const verdict = analysis.overall_verdict.toUpperCase();
 
-  // Se todas são verdadeiras, retorna true
-  if (results.every(r => r === 'True')) return 'true';
-
-  // Se alguma é fake, retorna false
-  if (results.some(r => r === 'Fake')) return 'false';
-
-  // Se alguma é misleading ou unknown, retorna misleading
-  if (results.some(r => r === 'Misleading' || r === 'Unknown')) return 'misleading';
+  if (verdict === 'VERDADEIRO') return 'true';
+  if (verdict === 'FALSO') return 'false';
+  if (verdict === 'ENGANOSO') return 'misleading';
 
   return 'false';
 }

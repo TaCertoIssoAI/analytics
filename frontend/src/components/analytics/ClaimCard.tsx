@@ -2,12 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
-import { Claim, ClaimResponse } from "@/types/analysis";
+import { Claim } from "@/types/analysis";
 
 interface ClaimCardProps {
-  claimId: string;
   claim: Claim;
-  response: ClaimResponse;
 }
 
 const resultConfig = {
@@ -33,13 +31,13 @@ const resultConfig = {
   },
 };
 
-export const ClaimCard = ({ claimId, claim, response }: ClaimCardProps) => {
-  const config = resultConfig[response.Result];
+export const ClaimCard = ({ claim }: ClaimCardProps) => {
+  const config = resultConfig[claim.verdict];
   const Icon = config.icon;
 
   return (
     <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value={claimId} className="border rounded-lg px-4">
+      <AccordionItem value={claim.claim_id} className="border rounded-lg px-4">
         <AccordionTrigger className="hover:no-underline">
           <div className="flex items-start gap-3 text-left w-full">
             <Badge variant="outline" className={`${config.className} text-xs shrink-0`}>
@@ -52,14 +50,27 @@ export const ClaimCard = ({ claimId, claim, response }: ClaimCardProps) => {
         <AccordionContent className="space-y-4 pt-4">
           <div>
             <h4 className="font-semibold text-sm mb-2">Análise</h4>
-            <p className="text-sm text-muted-foreground">{response.reasoningText}</p>
+            <p className="text-sm text-muted-foreground">{claim.reasoning}</p>
           </div>
 
-          {response.reasoningSources.length > 0 && (
+          {claim.topics.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Tópicos</h4>
+              <div className="flex flex-wrap gap-2">
+                {claim.topics.map((topic, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {topic}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {claim.sources.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm mb-2">Fontes Consultadas</h4>
               <div className="flex flex-wrap gap-2">
-                {response.reasoningSources.map((source, index) => (
+                {claim.sources.map((source, index) => (
                   <a
                     key={index}
                     href={source}
@@ -69,26 +80,6 @@ export const ClaimCard = ({ claimId, claim, response }: ClaimCardProps) => {
                   >
                     <ExternalLink className="h-3 w-3" />
                     {new URL(source).hostname}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {claim.links.length > 0 && (
-            <div>
-              <h4 className="font-semibold text-sm mb-2">Links da Afirmação</h4>
-              <div className="flex flex-wrap gap-2">
-                {claim.links.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs bg-muted hover:bg-muted/80 px-2 py-1 rounded-md transition-colors"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    {new URL(link).hostname}
                   </a>
                 ))}
               </div>
