@@ -114,7 +114,7 @@ const Verification = () => {
             </Badge>
 
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              {analysis.full_combined_text}
+              {analysis.analysis_title || analysis.full_combined_text}
             </h1>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">

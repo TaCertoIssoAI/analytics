@@ -51,6 +51,7 @@ class AnaliseNewFormat(BaseModel):
     document_id: str
     processed_at: str  # ISO datetime string
     source_type: str  # "FromWhatsappGroup" ou "FromDirectMessage"
+    analysis_title: Optional[str] = None  # Título gerado por IA
 
     user_message_text: Optional[str] = None
     full_combined_text: Optional[str] = None

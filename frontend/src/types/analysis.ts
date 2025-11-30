@@ -40,6 +40,7 @@ export interface Analysis {
   document_id: string;
   processed_at: string;
   source_type: MessageType;
+  analysis_title?: string;
   user_message_text: string;
   full_combined_text: string;
   scraped_links: ScrapedLink[];

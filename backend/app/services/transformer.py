@@ -10,6 +10,7 @@ from app.models.new_format import (
     SourceNewFormat
 )
 from app.services.iptc_service import get_iptc_service
+from app.services.llm_service import llm_service
 from app.services.verdict_service import VerdictService
 
 
@@ -71,11 +72,17 @@ class AnaliseTransformer:
             input_analise.FinalResponseText
         )
 
-        # 6. Cria AnaliseNewFormat
+        # 6. Gera título com LLM
+        # Usa o texto do usuário ou o texto combinado como base
+        base_text = input_analise.PureText or input_analise.FinalTranscribedText or ""
+        analysis_title = llm_service.generate_title(base_text)
+
+        # 7. Cria AnaliseNewFormat
         return AnaliseNewFormat(
             document_id=input_analise.DocumentId,
             processed_at=AnaliseTransformer._format_datetime(input_analise.Date),
-            source_type=input_analise.message_type,  # Já vem como snake_case no novo formato? O exemplo mostra "FromDirectMessage"
+            source_type=input_analise.message_type,
+            analysis_title=analysis_title,
             user_message_text=input_analise.PureText,
             full_combined_text=input_analise.FinalTranscribedText,
             scraped_links=scraped_links,

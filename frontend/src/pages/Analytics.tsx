@@ -304,6 +304,7 @@ const Analytics = () => {
                     <TableRow>
                       <TableHead>Data</TableHead>
                       <TableHead>Tipo</TableHead>
+                      <TableHead>Título</TableHead>
                       <TableHead>Claims</TableHead>
                       <TableHead>Resultado</TableHead>
                       <TableHead>Tópicos</TableHead>
@@ -312,13 +313,13 @@ const Analytics = () => {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
+                        <TableCell colSpan={6} className="text-center py-8">
                           Carregando mensagens...
                         </TableCell>
                       </TableRow>
                     ) : analyses.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
+                        <TableCell colSpan={6} className="text-center py-8">
                           Nenhuma mensagem encontrada.
                         </TableCell>
                       </TableRow>
@@ -340,6 +341,9 @@ const Analytics = () => {
                               {analysis.source_type === "FromWhatsappGroup"
                                 ? "WhatsApp"
                                 : "Direta"}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {analysis.analysis_title || "Sem título"}
                             </TableCell>
                             <TableCell>{analysis.claims.length}</TableCell>
                             <TableCell>
