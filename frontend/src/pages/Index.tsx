@@ -4,47 +4,108 @@ import { Button } from "@/components/ui/button";
 import { Database, FileText, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { loadAllAnalyses, getAnalysisStatus, formatDate, type AnalysisWithFileId } from "@/lib/loadAnalyses";
+import { formatDate } from "@/lib/loadAnalyses";
+import type { Analysis } from "@/types/analysis";
+
+interface Stats {
+  total_verificacoes: number;
+  total_afirmacoes: number;
+  percentual_falso: number;
+}
 
 const Index = () => {
-  const [analyses, setAnalyses] = useState<AnalysisWithFileId[]>([]);
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const LIMIT = 9; // 3x3 grid
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+  // Carrega estatísticas
   useEffect(() => {
-    loadAllAnalyses()
-      .then((data) => {
-        setAnalyses(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Erro ao carregar análises:", error);
-        setLoading(false);
-      });
-  }, []);
+    const loadStats = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/analises/stats`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setStats(result.data);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar estatísticas:", error);
+      }
+    };
+    loadStats();
+  }, [apiUrl]);
+
+  // Carrega análises (verificações recentes)
+  useEffect(() => {
+    loadAnalyses(0);
+  }, [apiUrl]);
+
+  const loadAnalyses = async (currentOffset: number) => {
+    const isLoadingMore = currentOffset > 0;
+    if (isLoadingMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/analises?limit=${LIMIT}&offset=${currentOffset}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const newAnalyses = result.data.items;
+
+          if (isLoadingMore) {
+            setAnalyses(prev => [...prev, ...newAnalyses]);
+          } else {
+            setAnalyses(newAnalyses);
+          }
+
+          setHasMore(result.data.has_more);
+          setOffset(currentOffset + newAnalyses.length);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar análises:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    loadAnalyses(offset);
+  };
 
   // Converte análises para o formato esperado pelo VerificationCard
   const verifications = analyses.map((analysis) => {
     const allTopics = Array.from(
       new Set(analysis.claims.flatMap(claim => claim.topics))
     );
+
+    // Determina status baseado no overall_verdict
+    let status: 'true' | 'false' | 'misleading' = 'false';
+    const verdict = analysis.overall_verdict.toUpperCase();
+    if (verdict === 'VERDADEIRO') status = 'true';
+    else if (verdict === 'FALSO') status = 'false';
+    else if (verdict === 'ENGANOSO') status = 'misleading';
+
     return {
-      id: analysis.fileId, // Usa o fileId (001, 002, etc.) para as rotas
-      title: analysis.user_message_text.substring(0, 100) + (analysis.user_message_text.length > 100 ? '...' : ''),
-      status: getAnalysisStatus(analysis),
+      id: analysis.document_id, // Usa o document_id real do BigQuery
+      title: analysis.user_message_text?.substring(0, 100) + (analysis.user_message_text && analysis.user_message_text.length > 100 ? '...' : ''),
+      status,
       date: formatDate(analysis.processed_at),
-      tags: allTopics,
+      tags: allTopics.slice(0, 3), // Limita a 3 tags para não poluir
       excerpt: analysis.final_comment,
     };
   });
-
-  // Calcula estatísticas
-  const totalClaims = analyses.reduce((acc, a) => acc + a.claims.length, 0);
-  const fakeCount = analyses.reduce(
-    (acc, a) =>
-      acc + a.claims.filter((claim) => claim.verdict === "Fake").length,
-    0
-  );
-  const fakePercentage = totalClaims > 0 ? Math.round((fakeCount / totalClaims) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,21 +142,21 @@ const Index = () => {
             <div className="bg-card rounded-lg border p-6 text-center">
               <Database className="h-8 w-8 text-primary mx-auto mb-3" />
               <div className="text-3xl font-bold">
-                {loading ? "..." : analyses.length.toLocaleString('pt-BR')}
+                {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
               </div>
               <div className="text-sm text-muted-foreground">Verificações Realizadas</div>
             </div>
             <div className="bg-card rounded-lg border p-6 text-center">
               <FileText className="h-8 w-8 text-primary mx-auto mb-3" />
               <div className="text-3xl font-bold">
-                {loading ? "..." : totalClaims.toLocaleString('pt-BR')}
+                {!stats ? "..." : stats.total_afirmacoes.toLocaleString('pt-BR')}
               </div>
               <div className="text-sm text-muted-foreground">Afirmações Analisadas</div>
             </div>
             <div className="bg-card rounded-lg border p-6 text-center">
               <AlertTriangle className="h-8 w-8 text-primary mx-auto mb-3" />
               <div className="text-3xl font-bold">
-                {loading ? "..." : `${fakePercentage}%`}
+                {!stats ? "..." : `${stats.percentual_falso}%`}
               </div>
               <div className="text-sm text-muted-foreground">Conteúdo Falso Detectado</div>
             </div>
@@ -128,11 +189,18 @@ const Index = () => {
               ))}
             </div>
 
-            <div className="mt-8 text-center">
-              <Button variant="outline" size="lg">
-                Carregar Mais Verificações
-              </Button>
-            </div>
+            {hasMore && (
+              <div className="mt-8 text-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? "Carregando..." : "Carregar Mais Verificações"}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </section>

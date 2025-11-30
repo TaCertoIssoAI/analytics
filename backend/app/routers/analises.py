@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, status, Query
+from typing import Dict, Any, List
 
 from app.models.old_format import AnaliseOldFormat
 from app.models.new_format import AnaliseNewFormat
@@ -13,6 +13,122 @@ from app.services.bigquery_service import bigquery_service
 from app.config import settings
 
 router = APIRouter(prefix="/analises", tags=["Análises"])
+
+
+@router.get(
+    "/stats",
+    summary="Obter estatísticas gerais",
+    description="Retorna estatísticas agregadas de todas as análises"
+)
+async def get_stats() -> Dict[str, Any]:
+    """
+    Endpoint para obter estatísticas gerais.
+
+    Returns:
+        Dict com estatísticas:
+        - total_verificacoes: número total de análises
+        - total_afirmacoes: número total de claims
+        - percentual_falso: percentual de claims falsas
+    """
+    try:
+        print("\n" + "="*60)
+        print("📊 Buscando estatísticas...")
+        print("="*60)
+
+        stats = bigquery_service.get_stats()
+
+        if not stats:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao buscar estatísticas"
+            )
+
+        print(f"✅ Estatísticas obtidas com sucesso!")
+        print("="*60 + "\n")
+
+        return {
+            "success": True,
+            "data": stats
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao buscar estatísticas: {e}")
+        print("="*60 + "\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
+@router.get(
+    "",
+    summary="Listar análises",
+    description="Lista análises com paginação (ordenadas por data, mais recentes primeiro)"
+)
+async def list_analises(
+    limit: int = Query(default=10, ge=1, le=100, description="Número de resultados por página"),
+    offset: int = Query(default=0, ge=0, description="Número de resultados a pular")
+) -> Dict[str, Any]:
+    """
+    Endpoint para listar análises com paginação.
+
+    Args:
+        limit: Número máximo de resultados (padrão: 10, máx: 100)
+        offset: Número de resultados a pular (padrão: 0)
+
+    Returns:
+        Dict com:
+        - success: boolean
+        - data: objeto com items, total, limit, offset
+    """
+    try:
+        print("\n" + "="*60)
+        print(f"📄 Listando análises (limit={limit}, offset={offset})...")
+        print("="*60)
+
+        result = bigquery_service.list_analises(limit=limit, offset=offset)
+
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao listar análises"
+            )
+
+        # Converte cada item para AnaliseNewFormat
+        items = []
+        for item_data in result["items"]:
+            try:
+                analise = AnaliseNewFormat(**item_data)
+                items.append(analise)
+            except Exception as e:
+                print(f"⚠️  Erro ao converter análise: {e}")
+                continue
+
+        print(f"✅ {len(items)} análises listadas!")
+        print("="*60 + "\n")
+
+        return {
+            "success": True,
+            "data": {
+                "items": items,
+                "total": result["total"],
+                "limit": result["limit"],
+                "offset": result["offset"],
+                "has_more": (result["offset"] + len(items)) < result["total"]
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao listar análises: {e}")
+        print("="*60 + "\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
 
 
 @router.post(

@@ -170,6 +170,125 @@ class BigQueryService:
             print(f"❌ Erro ao verificar existência de {document_id}: {e}")
             return False
 
+    def get_stats(self) -> Optional[Dict[str, Any]]:
+        """
+        Retorna estatísticas gerais das análises.
+
+        Returns:
+            Dict com:
+            - total_verificacoes: número total de análises
+            - total_afirmacoes: número total de claims
+            - percentual_falso: percentual de claims falsas
+        """
+        try:
+            query = f"""
+                WITH claims_data AS (
+                    SELECT
+                        document_id,
+                        claim
+                    FROM `{self.full_table_id}`,
+                    UNNEST(claims) AS claim
+                )
+                SELECT
+                    COUNT(DISTINCT document_id) as total_verificacoes,
+                    COUNT(*) as total_afirmacoes,
+                    COUNTIF(claim.verdict = 'Fake') as total_falsas
+                FROM claims_data
+            """
+
+            query_job = self.client.query(query)
+            results = list(query_job.result())
+
+            if not results:
+                return None
+
+            row = results[0]
+            total_verificacoes = row["total_verificacoes"]
+            total_afirmacoes = row["total_afirmacoes"]
+            total_falsas = row["total_falsas"]
+
+            percentual_falso = (total_falsas / total_afirmacoes * 100) if total_afirmacoes > 0 else 0
+
+            stats = {
+                "total_verificacoes": total_verificacoes,
+                "total_afirmacoes": total_afirmacoes,
+                "percentual_falso": round(percentual_falso, 1)
+            }
+
+            print(f"📊 Estatísticas calculadas: {stats}")
+            return stats
+
+        except Exception as e:
+            print(f"❌ Erro ao buscar estatísticas: {e}")
+            return None
+
+    def list_analises(self, limit: int = 10, offset: int = 0) -> Optional[Dict[str, Any]]:
+        """
+        Lista análises com paginação.
+
+        Args:
+            limit: Número máximo de resultados
+            offset: Número de resultados a pular
+
+        Returns:
+            Dict com:
+            - items: lista de análises
+            - total: número total de análises
+            - limit: limite usado
+            - offset: offset usado
+        """
+        try:
+            # Query para contar total
+            count_query = f"""
+                SELECT COUNT(*) as total
+                FROM `{self.full_table_id}`
+            """
+
+            count_job = self.client.query(count_query)
+            count_results = list(count_job.result())
+            total = count_results[0]["total"] if count_results else 0
+
+            # Query para buscar análises paginadas
+            query = f"""
+                SELECT *
+                FROM `{self.full_table_id}`
+                ORDER BY processed_at DESC
+                LIMIT @limit
+                OFFSET @offset
+            """
+
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter("limit", "INT64", limit),
+                    bigquery.ScalarQueryParameter("offset", "INT64", offset)
+                ]
+            )
+
+            query_job = self.client.query(query, job_config=job_config)
+            results = list(query_job.result())
+
+            # Converte resultados para lista de dicts
+            items = []
+            for row in results:
+                data = dict(row.items())
+                # Converte datetime para string ISO
+                data = self._convert_datetimes_to_strings(data)
+                items.append(data)
+
+            response = {
+                "items": items,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+
+            print(f"📄 Listagem: {len(items)} análises (total: {total})")
+            return response
+
+        except Exception as e:
+            print(f"❌ Erro ao listar análises: {e}")
+            return None
+
 
 # Instância global
 bigquery_service = BigQueryService()
