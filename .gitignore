@@ -16,3 +16,6 @@ backend/*$py.class
 # OS
 .DS_Store
 Thumbs.db
+
+
+analytics_json_example.json

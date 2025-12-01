@@ -64,14 +64,15 @@ class BigQueryService:
                 # Converte para string ISO se necessário
                 row_data["processed_at"] = row_data["processed_at"].isoformat()
 
-            final_message_text = row_data["FinalTranscribedText"]
-            embeddings = self._embed_text(final_message_text)
-            all_rows = [row_data] + [embeddings]
-            
+            final_message_text = row_data.get('full_combined_text')
+            if final_message_text is not None:
+                embeddings = self._embed_text(final_message_text)
+                row_data['embedding'] = embeddings
+
             # Insere no BigQuery
             errors = self.client.insert_rows_json(
                 table=self.full_table_id,
-                json_rows=all_rows
+                json_rows=[row_data]
             )
 
             if errors:
@@ -485,7 +486,6 @@ class BigQueryService:
 
     def semantic_search(self, query:str):
         pass
-
 
     def _embed_text(self,text:str)->list[float]:
         resp = self.google_genai_client.models.embed_content(
