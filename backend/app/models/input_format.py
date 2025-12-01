@@ -74,6 +74,7 @@ class AnaliseInputFormat(BaseModel):
     ResponseByDataSource: List[ResponseByDataSourceInputFormat] = []
 
     class Config:
+        extra = 'allow' # Allow extra fields not defined in the model
         json_schema_extra = {
             "example": {
                 "DocumentId": "e2854f5a-4d88-4214-ac74-c108124e9d67",
