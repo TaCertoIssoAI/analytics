@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import json
 
 from app.config import settings
@@ -72,6 +73,51 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Custom exception handler for JSON decode errors
+@app.exception_handler(json.JSONDecodeError)
+async def json_decode_exception_handler(request: Request, exc: json.JSONDecodeError):
+    """
+    Handler para erros de parsing de JSON.
+    """
+    print("\n" + "="*80)
+    print("❌ ERRO DE PARSING JSON")
+    print("="*80)
+    print(f"📍 URL: {request.method} {request.url}")
+    print(f"📍 Client: {request.client.host if request.client else 'Unknown'}")
+    print(f"\n🔍 JSON Error Details:")
+    print(f"  • Message: {exc.msg}")
+    print(f"  • Line: {exc.lineno}, Column: {exc.colno}")
+    print(f"  • Position: {exc.pos}")
+
+    # Tenta ler o body
+    try:
+        body = await request.body()
+        body_str = body.decode('utf-8')
+        print(f"\n📦 Request Body (primeiros 3000 caracteres):")
+        print(body_str[:3000])
+
+        # Mostra a área problemática
+        if exc.pos and exc.pos < len(body_str):
+            start = max(0, exc.pos - 100)
+            end = min(len(body_str), exc.pos + 100)
+            print(f"\n⚠️  Área problemática (±100 chars ao redor da posição {exc.pos}):")
+            print(f"...{body_str[start:end]}...")
+    except Exception as e:
+        print(f"⚠️  Não foi possível ler o body: {e}")
+
+    print("\n" + "="*80 + "\n")
+
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": "Invalid JSON",
+            "message": f"JSON parsing error: {exc.msg} at line {exc.lineno}, column {exc.colno}",
+            "position": exc.pos,
+            "detail": "The request body contains invalid JSON. Check for unescaped newlines, quotes, or special characters in string values."
+        }
+    )
+
+
 # Custom exception handler for validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -89,16 +135,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     try:
         body = await request.body()
         body_str = body.decode('utf-8')
-        print(f"\n📦 Request Body (raw):")
-        print(body_str[:2000])  # Primeiros 2000 caracteres
+        print(f"\n📦 Request Body Length: {len(body_str)} characters")
+        print(f"\n📦 Request Body (primeiros 3000 caracteres):")
+        print(body_str[:3000])
 
         # Tenta parsear como JSON para mostrar formatado
         try:
             body_json = json.loads(body_str)
-            print(f"\n📦 Request Body (parsed JSON):")
-            print(json.dumps(body_json, indent=2, ensure_ascii=False)[:2000])
-        except:
-            pass
+            print(f"\n📦 Request Body Keys: {list(body_json.keys()) if isinstance(body_json, dict) else 'Not a dict'}")
+
+            # Mostra valores truncados dos campos principais
+            if isinstance(body_json, dict):
+                for key in ['DocumentId', 'Date', 'message_type', 'PureText', 'FinalTranscribedText']:
+                    if key in body_json:
+                        value = str(body_json[key])
+                        print(f"  • {key}: {value[:200] if len(value) > 200 else value}{'...' if len(value) > 200 else ''}")
+        except json.JSONDecodeError as je:
+            print(f"\n⚠️  JSON parsing error: {je.msg} at line {je.lineno}, column {je.colno}")
+            print(f"  This might be the root cause - invalid JSON format")
     except Exception as e:
         print(f"⚠️  Não foi possível ler o body: {e}")
 
