@@ -46,7 +46,7 @@ class BigQueryService:
         """
         Insere uma análise no BigQuery.
 
-        Args:
+        Args
             analise: Análise no formato novo (AnaliseNewFormat)
 
         Returns:
@@ -248,6 +248,8 @@ class BigQueryService:
         # Filtro de busca (texto)
         if filters.get("search"):
             search = filters["search"].lower()
+            embeddings = self._embed_text(filters["search"])
+            print("running semantic search")
             # Busca em user_message_text, full_combined_text, e tópicos
             clauses.append(f"""
                 (LOWER(user_message_text) LIKE '%{search}%' 
@@ -383,101 +385,140 @@ class BigQueryService:
             print(f"❌ Erro ao listar análises: {e}")
             return None
 
-    def get_analytics_dashboard(self, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
-        """
-        Retorna dados agregados para o dashboard de analytics, respeitando os filtros.
-        """
+    def get_analytics_dashboard(self, filters: Dict[str, Any] = None, k_results:int = 10) -> Optional[Dict[str, Any]]:
         try:
             filters = filters or {}
-            where_clause = self._build_filter_clause(filters)
 
-            # 1. Totais e Distribuição de Resultados (Claims)
-            # Nota: O filtro de resultado (overall_verdict) filtra as ANÁLISES.
-            # Mas aqui queremos contar CLAIMS dentro dessas análises filtradas.
-            query_stats = f"""
-                WITH filtered_analyses AS (
-                    SELECT *
-                    FROM `{self.full_table_id}`
-                    WHERE {where_clause}
-                ),
+            non_semantic_filters = {k: v for k, v in filters.items() if k != "search"}
+            where_clause = self._build_filter_clause(non_semantic_filters)
+
+            query_parameters = []
+
+            has_search = bool(filters.get("search"))
+            if has_search:
+                query_text = filters["search"]
+                query_embedding = self._embed_text(query_text)
+
+                filtered_analyses_base = f"""
+                    (
+                        SELECT
+                        base.*
+                        FROM VECTOR_SEARCH(
+                            (SELECT * FROM `{self.full_table_id}` WHERE {where_clause}),
+                            'embedding',
+                            (SELECT @query_emb AS prompt_embedding),
+                            top_k => {k_results},
+                            distance_type => 'COSINE'
+                        )
+                    )
+                """
+
+                from google.cloud import bigquery
+                query_parameters.append(
+                    bigquery.ArrayQueryParameter("query_emb", "FLOAT64", query_embedding)
+                )
+            else:
+                filtered_analyses_base = f"""
+                    (
+                        SELECT *
+                        FROM `{self.full_table_id}`
+                        WHERE {where_clause}
+                    )
+                """
+
+            query = f"""
+                WITH filtered_analyses AS {filtered_analyses_base},
                 claims_unpacked AS (
                     SELECT 
-                        c.verdict as claim_verdict
+                        c.verdict AS claim_verdict
                     FROM filtered_analyses,
-                    UNNEST(claims) as c
-                )
-                SELECT
-                    (SELECT COUNT(*) FROM filtered_analyses) as total_messages,
-                    (SELECT COUNT(*) FROM claims_unpacked) as total_claims,
-                    COUNTIF(claim_verdict = 'Fake') as count_fake,
-                    COUNTIF(claim_verdict = 'True') as count_true,
-                    COUNTIF(claim_verdict = 'Misleading') as count_misleading
-                FROM claims_unpacked
-            """
-
-            # 2. Distribuição de Modalidades
-            query_modalities = f"""
-                SELECT
-                    COUNTIF(user_message_text IS NOT NULL AND LENGTH(user_message_text) > 0) as count_text,
-                    COUNTIF(media_info.has_audio = TRUE) as count_audio,
-                    COUNTIF(media_info.has_video = TRUE) as count_video,
-                    COUNTIF(media_info.has_image = TRUE) as count_image
-                FROM `{self.full_table_id}`
-                WHERE {where_clause}
-            """
-
-            # 3. Top Fontes
-            query_sources = f"""
-                WITH filtered_analyses AS (
-                    SELECT claims
-                    FROM `{self.full_table_id}`
-                    WHERE {where_clause}
+                        UNNEST(claims) AS c
                 ),
                 all_sources AS (
-                    SELECT source.url as source_url
+                    SELECT source.url AS source_url
                     FROM filtered_analyses,
-                    UNNEST(claims) as c,
-                    UNNEST(c.sources) as source
+                        UNNEST(claims) AS c,
+                        UNNEST(c.sources) AS source
                 )
-                SELECT source_url as source, COUNT(*) as count
-                FROM all_sources
-                WHERE source_url IS NOT NULL
-                GROUP BY source_url
-                ORDER BY count DESC
-                LIMIT 20
+                SELECT
+                    -- stats
+                    (SELECT COUNT(*) FROM filtered_analyses) AS total_messages,
+                    (SELECT COUNT(*) FROM claims_unpacked) AS total_claims,
+                    (SELECT COUNTIF(claim_verdict = 'Fake') FROM claims_unpacked) AS count_fake,
+                    (SELECT COUNTIF(claim_verdict = 'True') FROM claims_unpacked) AS count_true,
+                    (SELECT COUNTIF(claim_verdict = 'Misleading') FROM claims_unpacked) AS count_misleading,
+
+                    -- modalities
+                    (SELECT COUNTIF(user_message_text IS NOT NULL AND LENGTH(user_message_text) > 0)
+                    FROM filtered_analyses) AS count_text,
+                    (SELECT COUNTIF(media_info.has_audio = TRUE)
+                    FROM filtered_analyses) AS count_audio,
+                    (SELECT COUNTIF(media_info.has_video = TRUE)
+                    FROM filtered_analyses) AS count_video,
+                    (SELECT COUNTIF(media_info.has_image = TRUE)
+                    FROM filtered_analyses) AS count_image,
+
+                    -- top sources as array of structs
+                    ARRAY(
+                    SELECT AS STRUCT source_url AS source, COUNT(*) AS count
+                    FROM all_sources
+                    WHERE source_url IS NOT NULL
+                    GROUP BY source_url
+                    ORDER BY count DESC
+                    LIMIT 20
+                    ) AS top_sources
             """
 
-            # Executa queries
-            job_stats = self.client.query(query_stats)
-            job_modalities = self.client.query(query_modalities)
-            job_sources = self.client.query(query_sources)
+            from google.cloud import bigquery
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=query_parameters
+            ) if query_parameters else None
 
-            res_stats = list(job_stats.result())[0] if list(job_stats.result()) else {}
-            res_modalities = list(job_modalities.result())[0] if list(job_modalities.result()) else {}
-            res_sources = list(job_sources.result())
+            job = self.client.query(query, job_config=job_config)
+            rows = list(job.result())
 
-            # Formata resposta
+            if not rows:
+                return {
+                    "total_messages": 0,
+                    "total_claims": 0,
+                    "results_distribution": [
+                        {"name": "Falso", "value": 0},
+                        {"name": "Verdadeiro", "value": 0},
+                        {"name": "Enganoso", "value": 0},
+                    ],
+                    "modalities_distribution": [
+                        {"name": "Texto", "value": 0},
+                        {"name": "Áudio", "value": 0},
+                        {"name": "Vídeo", "value": 0},
+                        {"name": "Imagem", "value": 0},
+                    ],
+                    "top_sources": [],
+                }
+
+            row = rows[0]
+            top_sources = row["top_sources"] or []
+
             dashboard_data = {
-                "total_messages": res_stats.get("total_messages", 0),
-                "total_claims": res_stats.get("total_claims", 0),
+                "total_messages": row["total_messages"],
+                "total_claims": row["total_claims"],
                 "results_distribution": [
-                    {"name": "Falso", "value": res_stats.get("count_fake", 0)},
-                    {"name": "Verdadeiro", "value": res_stats.get("count_true", 0)},
-                    {"name": "Enganoso", "value": res_stats.get("count_misleading", 0)},
+                    {"name": "Falso", "value": row["count_fake"]},
+                    {"name": "Verdadeiro", "value": row["count_true"]},
+                    {"name": "Enganoso", "value": row["count_misleading"]},
                 ],
                 "modalities_distribution": [
-                    {"name": "Texto", "value": res_modalities.get("count_text", 0)},
-                    {"name": "Áudio", "value": res_modalities.get("count_audio", 0)},
-                    {"name": "Vídeo", "value": res_modalities.get("count_video", 0)},
-                    {"name": "Imagem", "value": res_modalities.get("count_image", 0)},
+                    {"name": "Texto", "value": row["count_text"]},
+                    {"name": "Áudio", "value": row["count_audio"]},
+                    {"name": "Vídeo", "value": row["count_video"]},
+                    {"name": "Imagem", "value": row["count_image"]},
                 ],
                 "top_sources": [
-                    {"source": row["source"], "count": row["count"]} 
-                    for row in res_sources
-                ]
+                    {"source": s["source"], "count": s["count"]}
+                    for s in top_sources
+                ],
             }
 
-            print(f"📊 Dashboard data calculated")
+            print("📊 Dashboard data calculated")
             return dashboard_data
 
         except Exception as e:
