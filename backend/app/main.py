@@ -150,6 +150,40 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                     if key in body_json:
                         value = str(body_json[key])
                         print(f"  • {key}: {value[:200] if len(value) > 200 else value}{'...' if len(value) > 200 else ''}")
+
+                # Mostra estrutura detalhada do Claims
+                if 'Claims' in body_json:
+                    claims = body_json['Claims']
+                    print(f"\n📋 Claims Structure:")
+                    print(f"  • Type: {type(claims).__name__}")
+                    print(f"  • Number of claims: {len(claims) if isinstance(claims, (dict, list)) else 'N/A'}")
+
+                    if isinstance(claims, dict):
+                        print(f"  • Claim IDs: {list(claims.keys())[:5]}{'...' if len(claims) > 5 else ''}")
+
+                        # Mostra detalhes de cada claim
+                        for claim_id, claim_data in list(claims.items())[:3]:  # Primeiras 3 claims
+                            print(f"\n  Claim ID: {claim_id}")
+                            print(f"    • Claim Type: {type(claim_data).__name__}")
+                            if isinstance(claim_data, dict):
+                                print(f"    • Claim Keys: {list(claim_data.keys())}")
+
+                                # Foca especialmente nos links
+                                if 'links' in claim_data:
+                                    links = claim_data['links']
+                                    print(f"    • Links Type: {type(links).__name__}")
+                                    print(f"    • Links Length: {len(links) if isinstance(links, (list, dict)) else 'N/A'}")
+
+                                    if isinstance(links, list):
+                                        print(f"    • Links Content:")
+                                        for i, link in enumerate(links[:5]):  # Primeiros 5 links
+                                            print(f"      [{i}] Type: {type(link).__name__}, Value: {str(link)[:100]}")
+                                    else:
+                                        print(f"    • Links Value: {str(links)[:200]}")
+
+                                if 'text' in claim_data:
+                                    text = str(claim_data['text'])
+                                    print(f"    • Text: {text[:100]}{'...' if len(text) > 100 else ''}")
         except json.JSONDecodeError as je:
             print(f"\n⚠️  JSON parsing error: {je.msg} at line {je.lineno}, column {je.colno}")
             print(f"  This might be the root cause - invalid JSON format")
