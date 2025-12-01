@@ -13,7 +13,7 @@ class ScrapedLinkInputFormat(BaseModel):
 class ClaimInputFormat(BaseModel):
     """Claim no formato de entrada (dentro do dicionário Claims)"""
     text: str
-    links: List[str] = []
+    links: List[ScrapedLinkInputFormat] = []
 
 
 class ReasoningSourceInputFormat(BaseModel):
@@ -87,7 +87,17 @@ class AnaliseInputFormat(BaseModel):
                 "ScrapedLinks": [],
                 "HadAudio": False,
                 "Claims": {
-                    "55b2d390": {"text": "Claim 1", "links": []}
+                    "55b2d390": {
+                        "text": "Claim 1",
+                        "links": [
+                            {
+                                "url": "https://example.com/source1",
+                                "success": True,
+                                "text": "Texto extraído do link",
+                                "title": "Título da página"
+                            }
+                        ]
+                    }
                 },
                 "ResponseByDataSource": [
                     {
