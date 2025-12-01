@@ -8,8 +8,8 @@ class Settings(BaseSettings):
 
     # Google Cloud
     PROJECT_ID: str = "sitegrupysanca"
-    DATASET_ID: str = "analytics_whatsapp"
-    TABLE_ID: str = "analises_complexas"
+    DATASET_ID: str = "analytics_whatsapp_br"
+    TABLE_ID: str = "analises_complexas_br"
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
     # OpenAI
@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Don't crash on extra env vars
 
 
 @lru_cache()
