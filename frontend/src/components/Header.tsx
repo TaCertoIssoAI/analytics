@@ -21,7 +21,7 @@ export const Header = () => {
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-6">
             <NavLink to="/" end>Início</NavLink>
-            <NavLink to="/analytics">Analytics</NavLink>
+            <NavLink to="/busca">Busca</NavLink>
             <NavLink to="/sobre">Sobre</NavLink>
           </nav>
           <ThemeToggle />
