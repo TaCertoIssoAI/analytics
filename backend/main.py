@@ -14,8 +14,8 @@ from iptc_classifier import IptcEmbeddingTree
 
 PROJECT_ID = "sitegrupysanca"
 SUBSCRIPTION_ID = "novas-analises-sub"
-DATASET_ID = "analytics_whatsapp"
-TABLE_ID = "analises_complexas"
+DATASET_ID = "analytics_whatsapp_br"
+TABLE_ID = "analises_complexas_br"
 
 # --- INICIALIZAÇÃO GLOBAL ---
 print("⏳ Carregando Taxonomia IPTC e Embeddings (isso pode levar alguns segundos)...")

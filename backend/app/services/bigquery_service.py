@@ -417,15 +417,15 @@ class BigQueryService:
                     WHERE {where_clause}
                 ),
                 all_sources AS (
-                    SELECT source
+                    SELECT source.url as source_url
                     FROM filtered_analyses,
                     UNNEST(claims) as c,
                     UNNEST(c.sources) as source
                 )
-                SELECT source.url as source, COUNT(*) as count
+                SELECT source_url as source, COUNT(*) as count
                 FROM all_sources
-                WHERE source.url IS NOT NULL
-                GROUP BY source.url
+                WHERE source_url IS NOT NULL
+                GROUP BY source_url
                 ORDER BY count DESC
                 LIMIT 20
             """
