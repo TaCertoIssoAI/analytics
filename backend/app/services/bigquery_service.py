@@ -3,6 +3,8 @@ from typing import Optional, Dict, Any
 from google.cloud import bigquery
 from google.api_core import exceptions
 from datetime import datetime
+from google import genai
+from google.genai.types import EmbedContentConfig
 
 from app.config import settings
 from app.models.new_format import AnaliseNewFormat
@@ -24,6 +26,16 @@ class BigQueryService:
         self.dataset_id = settings.DATASET_ID
         self.table_id = settings.TABLE_ID
         self.full_table_id = f"{settings.PROJECT_ID}.{settings.DATASET_ID}.{settings.TABLE_ID}"
+
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key is None:
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if api_key is None:
+                raise RuntimeError("Need Gemini API Key to instantiate client")
+        
+        self.google_genai_client = genai.Client(
+            api_key=api_key,
+        )
 
         print(f"📊 BigQuery client inicializado:")
         print(f"   Project: {settings.PROJECT_ID}")
@@ -52,10 +64,14 @@ class BigQueryService:
                 # Converte para string ISO se necessário
                 row_data["processed_at"] = row_data["processed_at"].isoformat()
 
+            final_message_text = row_data["FinalTranscribedText"]
+            embeddings = self._embed_text(final_message_text)
+            all_rows = [row_data] + [embeddings]
+            
             # Insere no BigQuery
             errors = self.client.insert_rows_json(
                 table=self.full_table_id,
-                json_rows=[row_data]
+                json_rows=all_rows
             )
 
             if errors:
@@ -467,6 +483,18 @@ class BigQueryService:
             print(f"❌ Erro ao gerar dashboard analytics: {e}")
             return None
 
+    def semantic_search(self, query:str):
+        pass
 
+
+    def _embed_text(self,text:str)->list[float]:
+        resp = self.google_genai_client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=[text],
+            config=EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
+        )
+
+        vector = resp.embeddings[0].values  # list[float]
+        return vector
 # Instância global
 bigquery_service = BigQueryService()
