@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import json
 
 from app.config import settings
 from app.routers import health, analises
@@ -68,6 +71,83 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Custom exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Custom handler para erros de validação (422).
+    Loga detalhes completos do erro para debugging.
+    """
+    print("\n" + "="*80)
+    print("❌ ERRO DE VALIDAÇÃO (422)")
+    print("="*80)
+    print(f"📍 URL: {request.method} {request.url}")
+    print(f"📍 Client: {request.client.host if request.client else 'Unknown'}")
+
+    # Tenta ler o body da requisição
+    try:
+        body = await request.body()
+        body_str = body.decode('utf-8')
+        print(f"\n📦 Request Body (raw):")
+        print(body_str[:2000])  # Primeiros 2000 caracteres
+
+        # Tenta parsear como JSON para mostrar formatado
+        try:
+            body_json = json.loads(body_str)
+            print(f"\n📦 Request Body (parsed JSON):")
+            print(json.dumps(body_json, indent=2, ensure_ascii=False)[:2000])
+        except:
+            pass
+    except Exception as e:
+        print(f"⚠️  Não foi possível ler o body: {e}")
+
+    # Loga os erros de validação
+    print(f"\n🔍 Validation Errors ({len(exc.errors())} error(s)):")
+    print("-" * 80)
+    for i, error in enumerate(exc.errors(), 1):
+        print(f"\nErro #{i}:")
+        print(f"  • Campo: {' -> '.join(str(loc) for loc in error['loc'])}")
+        print(f"  • Tipo: {error['type']}")
+        print(f"  • Mensagem: {error['msg']}")
+        if 'ctx' in error:
+            print(f"  • Contexto: {error['ctx']}")
+
+    print("\n" + "="*80 + "\n")
+
+    # Retorna resposta detalhada
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": exc.errors(),
+            "body": exc.body,
+            "message": "Validation error - check logs for details"
+        }
+    )
+
+
+# Middleware para logar requests
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Middleware para logar todas as requisições.
+    """
+    # Log apenas para endpoints de análise
+    if "/analises" in str(request.url.path) and request.method == "POST":
+        print(f"\n{'='*60}")
+        print(f"📨 Incoming Request: {request.method} {request.url.path}")
+        print(f"{'='*60}")
+
+    response = await call_next(request)
+
+    # Log response status para análises
+    if "/analises" in str(request.url.path) and request.method == "POST":
+        status_emoji = "✅" if response.status_code < 400 else "❌"
+        print(f"{status_emoji} Response Status: {response.status_code}")
+        print(f"{'='*60}\n")
+
+    return response
+
 
 # Configura CORS
 app.add_middleware(

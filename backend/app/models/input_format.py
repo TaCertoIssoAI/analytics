@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, List, Any
 
 
@@ -73,9 +73,9 @@ class AnaliseInputFormat(BaseModel):
     # Lista de respostas por fonte de dados
     ResponseByDataSource: List[ResponseByDataSourceInputFormat] = []
 
-    class Config:
-        extra = 'allow' # Allow extra fields not defined in the model
-        json_schema_extra = {
+    model_config = ConfigDict(
+        extra='allow',  # Allow extra fields not defined in the model
+        json_schema_extra={
             "example": {
                 "DocumentId": "e2854f5a-4d88-4214-ac74-c108124e9d67",
                 "Date": "2025-11-29T23:18:57-03:00",
@@ -106,3 +106,4 @@ class AnaliseInputFormat(BaseModel):
                 ]
             }
         }
+    )
