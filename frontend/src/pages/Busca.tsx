@@ -37,7 +37,7 @@ interface DashboardData {
   top_sources: Array<{ source: string; count: number }>;
 }
 
-const Analytics = () => {
+const Busca = () => {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -193,7 +193,7 @@ const Analytics = () => {
       <div className="container py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold">Analytics Dashboard</h1>
+          <h1 className="text-4xl font-bold">Busca</h1>
         </div>
 
         {/* Filtros */}
@@ -463,4 +463,4 @@ const Analytics = () => {
   );
 };
 
-export default Analytics;
+export default Busca;

@@ -7,7 +7,7 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Verification from "./pages/Verification";
 import NotFoundVerification from "./pages/NotFoundVerification";
-import Analytics from "./pages/Analytics";
+import Busca from "./pages/Busca";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -24,7 +24,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/verificacao/:id" element={<Verification />} />
             <Route path="/verificacao-nao-encontrada/:id?" element={<NotFoundVerification />} />
-            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/busca" element={<Busca />} />
             <Route path="/sobre" element={<About />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
