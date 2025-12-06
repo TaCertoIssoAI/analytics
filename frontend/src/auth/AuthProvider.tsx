@@ -24,6 +24,7 @@ import {
   getMockCurrentUser,
   MockUser,
 } from './mockFirebase';
+import { createUserProfile } from './userService';
 
 // User type that works for both real and mock auth
 export type AuthUser = FirebaseUser | MockUser | null;
@@ -109,7 +110,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // For mock, sign up is same as sign in (creates user if not exists in our simple mock logic)
         await mockSignInWithEmailAndPassword(email, password);
       } else if (auth) {
-        await firebaseCreateUserWithEmail(auth, email, password);
+        const userCredential = await firebaseCreateUserWithEmail(auth, email, password);
+        await createUserProfile(userCredential.user);
       } else {
         throw new Error('No authentication service available');
       }

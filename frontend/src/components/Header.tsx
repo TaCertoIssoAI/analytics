@@ -10,7 +10,7 @@ export const Header = () => {
 
   const handleUserClick = () => {
     if (currentUser) {
-      navigate("/profile");
+      navigate(`/profile/${currentUser.uid}`);
     } else {
       navigate("/login");
     }

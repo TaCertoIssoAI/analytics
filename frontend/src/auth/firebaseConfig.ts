@@ -7,6 +7,7 @@
 
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 import { isMockMode } from './mockFirebase';
 
 // Firebase configuration from environment variables
@@ -24,6 +25,7 @@ const useMockAuth = isMockMode();
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let db: Firestore | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
 // Initialize Firebase only if not in mock mode
@@ -42,6 +44,7 @@ if (!useMockAuth) {
     try {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
+      db = getFirestore(app);
       googleProvider = new GoogleAuthProvider();
 
       // Optional: Configure Google provider
@@ -62,7 +65,7 @@ if (!useMockAuth) {
 
 // Export the initialized instances
 // These will be null in mock mode, which is handled by the auth service layer
-export { auth, googleProvider };
+export { auth, db, googleProvider };
 export const firebaseApp = app;
 
 // Export a flag to check if we're using mock mode
