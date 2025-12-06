@@ -10,6 +10,10 @@ import NotFoundVerification from "./pages/NotFoundVerification";
 import Busca from "./pages/Busca";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import { AuthProvider } from "./auth";
 
 const queryClient = new QueryClient();
 
@@ -19,17 +23,22 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/verificacao/:id" element={<Verification />} />
-            <Route path="/verificacao-nao-encontrada/:id?" element={<NotFoundVerification />} />
-            <Route path="/busca" element={<Busca />} />
-            <Route path="/sobre" element={<About />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/verificacao/:id" element={<Verification />} />
+              <Route path="/verificacao-nao-encontrada/:id?" element={<NotFoundVerification />} />
+              <Route path="/busca" element={<Busca />} />
+              <Route path="/sobre" element={<About />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

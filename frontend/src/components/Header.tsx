@@ -1,9 +1,21 @@
-import { MessageSquare, CheckCircle2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MessageSquare, CheckCircle2, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/auth/useAuth";
 import { ThemeToggle } from "./ThemeToggle";
 import { NavLink } from "./NavLink";
 
 export const Header = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleUserClick = () => {
+    if (currentUser) {
+      navigate("/profile");
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -25,6 +37,13 @@ export const Header = () => {
             <NavLink to="/sobre">Sobre</NavLink>
           </nav>
           <ThemeToggle />
+          <button
+            onClick={handleUserClick}
+            className="p-2 rounded-full hover:bg-accent transition-colors"
+            aria-label="User profile"
+          >
+            <User className="h-5 w-5" />
+          </button>
         </div>
       </div>
     </header>
