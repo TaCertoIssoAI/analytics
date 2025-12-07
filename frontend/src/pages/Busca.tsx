@@ -231,40 +231,9 @@ const Busca = () => {
                 </div>
 
                 {/* Gráficos */}
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1">
                   {/* Gráfico de Resultados */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Distribuição de Resultados</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {loading ? (
-                        <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                          Carregando...
-                        </div>
-                      ) : resultsChartData.length > 0 ? (
-                        <ChartContainer config={resultsChartConfig} className="h-[250px]">
-                          <PieChart>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Pie
-                              data={resultsChartData}
-                              dataKey="value"
-                              nameKey="name"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={70}
-                              label
-                            />
-                            <ChartLegend content={<ChartLegendContent />} />
-                          </PieChart>
-                        </ChartContainer>
-                      ) : (
-                        <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                          Nenhum dado disponível
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                 
 
                   {/* Gráfico de Modalidades */}
                   <Card>
@@ -277,13 +246,19 @@ const Busca = () => {
                            Carregando...
                          </div>
                       ) : modalitiesChartData.length > 0 ? (
-                        <ChartContainer config={modalitiesChartConfig} className="h-[250px]">
-                          <BarChart data={modalitiesChartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+                        <ChartContainer config={modalitiesChartConfig} className="h-[250px] w-full">
+                          <BarChart data={modalitiesChartData} layout="vertical" margin={{ left: 0, right: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                            <YAxis 
+                              dataKey="name" 
+                              type="category" 
+                              tickLine={false}
+                              axisLine={false}
+                              width={60}
+                            />
+                            <XAxis type="number" hide />
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                            <Bar dataKey="value" layout="vertical" radius={[0, 4, 4, 0]} />
                           </BarChart>
                         </ChartContainer>
                       ) : (
