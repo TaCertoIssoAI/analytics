@@ -118,105 +118,75 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
 
   return (
     <div className="flex flex-col gap-4 p-4 max-h-[60vh] overflow-y-auto" ref={scrollRef}>
-      {steps.map((step, index) => {
-        // Determine status based on global state
-        let status: "pending" | "thinking" | "decided" = "pending";
-        
-        if (index < currentLevel) {
-          status = "decided";
-        } else if (index === currentLevel) {
-          status = phase === "thinking" ? "thinking" : "decided";
-        } else {
-          status = "pending";
+      <style>{`
+        .tree ul {
+          padding-top: 20px; 
+          position: relative;
+          transition: all 0.5s;
+          display: flex; 
+          justify-content: center;
+        }
+        .tree li {
+          float: left; text-align: center;
+          list-style-type: none;
+          position: relative;
+          padding: 20px 5px 0 5px;
+          transition: all 0.5s;
+        }
+        /* Connectors */
+        .tree li::before, .tree li::after {
+          content: ''; 
+          position: absolute; top: 0; right: 50%;
+          border-top: 2px solid hsl(var(--muted-foreground) / 0.3); 
+          width: 50%; height: 20px;
+          transition: border-color 0.5s;
+        }
+        .tree li::after {
+          right: auto; left: 50%;
+          border-left: 2px solid hsl(var(--muted-foreground) / 0.3);
+        }
+        .tree li:only-child::after, .tree li:only-child::before {
+          display: none;
+        }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after {
+          border: 0 none;
+        }
+        .tree li:last-child::before{
+          border-right: 2px solid hsl(var(--muted-foreground) / 0.3);
+          border-radius: 0 5px 0 0;
+        }
+        .tree li:first-child::after{
+          border-radius: 5px 0 0 0;
+        }
+        .tree ul ul::before{
+          content: ''; position: absolute; top: 0; left: 50%;
+          border-left: 2px solid hsl(var(--muted-foreground) / 0.3); 
+          width: 0; height: 20px;
+          transition: border-color 0.5s;
         }
 
-        // If we are past the last level (finished), everything is decided
-        if (currentLevel >= steps.length) {
-          status = "decided";
+        /* Green Connectors */
+        .tree-green li::before, .tree-green li::after,
+        .tree-green li:last-child::before, .tree-green li:first-child::after {
+          border-color: #22c55e !important; /* green-500 */
         }
+        .tree-green ul::before {
+          border-color: #22c55e !important;
+        }
+      `}</style>
 
-        return (
-        <div key={step.selectedNode.id} className={`transition-opacity duration-500 ${status === 'pending' ? 'opacity-0 hidden' : 'opacity-100'}`}>
-          
-          {/* Connector Line */}
-          {index > 0 && (
-            <div className="flex justify-center py-2">
-              <div className={`h-8 w-0.5 transition-colors duration-500 ${status === 'decided' ? 'bg-green-500' : 'bg-muted-foreground/30'}`}></div>
-            </div>
-          )}
+      <div className="tree w-full overflow-x-auto pb-8">
+        {steps.length > 0 && (
+          <RecursiveTree 
+            steps={steps} 
+            level={0} 
+            currentLevel={currentLevel} 
+            phase={phase} 
+          />
+        )}
+      </div>
 
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-              Nível {index + 1}
-            </div>
-            
-            <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-              {step.candidates.map((candidate) => {
-                const isSelected = candidate.id === step.selectedNode.id;
-                const isDecided = status === 'decided';
-                const isThinking = status === 'thinking';
-                const isHistory = index < currentLevel;
-
-                // Styles for the selected node
-                let selectedStyle = '';
-                let iconStyle = '';
-                
-                if (isDecided && isSelected) {
-                  // Always Green for decided path
-                  selectedStyle = 'border-2 border-green-500 bg-green-500/10 shadow-sm';
-                  iconStyle = 'bg-green-500 text-white';
-
-                  if (!isHistory && currentLevel < steps.length) {
-                    // Current Decision gets extra emphasis (scale)
-                    selectedStyle += ' scale-105 shadow-md ring-2 ring-green-500/20';
-                  } else {
-                    // History just stays green
-                    selectedStyle += ' scale-100';
-                  }
-                } else if (isDecided && !isSelected) {
-                  // Rejected
-                  selectedStyle = 'border-muted/50 bg-muted/10 opacity-50 grayscale scale-95';
-                  iconStyle = 'bg-muted text-muted-foreground';
-                } else if (isThinking) {
-                  // Thinking
-                  selectedStyle = 'border-muted bg-card';
-                  iconStyle = 'bg-muted text-muted-foreground';
-                } else {
-                  // Pending
-                  selectedStyle = 'border-muted bg-card';
-                  iconStyle = 'bg-muted text-muted-foreground';
-                }
-
-                return (
-                  <div 
-                    key={candidate.id}
-                    className={`
-                      relative flex items-center gap-2 p-2 rounded-xl border transition-all duration-500 w-full max-w-[200px]
-                      ${selectedStyle}
-                    `}
-                  >
-                    <div className={`
-                      h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-500
-                      ${iconStyle}
-                    `}>
-                      {isDecided && isSelected ? <Check className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-                    </div>
-                    <span className={`font-medium text-xs ${isDecided && !isSelected ? 'line-through decoration-muted-foreground/50' : ''}`}>
-                      {candidate.name}
-                    </span>
-                    
-                    {/* Pulse effect during thinking */}
-                    {isThinking && (
-                      <div className="absolute inset-0 rounded-xl bg-primary/5 animate-pulse pointer-events-none" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )})}
-      
       {/* Final Success State */}
       {currentLevel >= steps.length && steps.length > 0 && (
         <div className="flex flex-col items-center justify-center py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -231,5 +201,118 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
         </div>
       )}
     </div>
+  );
+};
+
+const RecursiveTree = ({ 
+  steps, 
+  level, 
+  currentLevel, 
+  phase 
+}: { 
+  steps: Step[], 
+  level: number, 
+  currentLevel: number, 
+  phase: "pending" | "thinking" | "decided" 
+}) => {
+  if (level >= steps.length) return null;
+
+  const step = steps[level];
+  
+  // Determine status for this level
+  let status: "pending" | "thinking" | "decided" = "pending";
+  if (level < currentLevel) {
+    status = "decided";
+  } else if (level === currentLevel) {
+    status = phase === "thinking" ? "thinking" : "decided";
+  }
+
+  // If we are waiting for this level to appear (pending), don't render children yet
+  // But we might want to render the root initially?
+  // The logic in main component handles "thinking" phase by showing the level.
+  // If status is pending, we hide it.
+  const isVisible = status !== "pending";
+  
+  // Determine if the connections TO this level should be green.
+  // This level's UL is connected to the previous level's selected node.
+  // If the previous level is decided, then the connection is green?
+  // Actually, the connection represents the flow. If we are AT this level (thinking or decided), 
+  // the path TO here is valid.
+  const isGreenPath = status !== "pending";
+
+  if (!isVisible) return null;
+
+  return (
+    <ul className={isGreenPath ? "tree-green" : ""}>
+      {step.candidates.map((candidate) => {
+        const isSelected = candidate.id === step.selectedNode.id;
+        const isDecided = status === 'decided';
+        const isThinking = status === 'thinking';
+        const isHistory = level < currentLevel;
+
+        // Styles for the node card
+        let selectedStyle = '';
+        let iconStyle = '';
+        
+        if (isDecided && isSelected) {
+          // Always Green for decided path
+          selectedStyle = 'border-2 border-green-500 bg-green-500/10 shadow-sm';
+          iconStyle = 'bg-green-500 text-white';
+
+          if (!isHistory && currentLevel < steps.length) {
+            selectedStyle += ' scale-105 shadow-md ring-2 ring-green-500/20';
+          } else {
+            selectedStyle += ' scale-100';
+          }
+        } else if (isDecided && !isSelected) {
+          // Rejected
+          selectedStyle = 'border-muted/50 bg-muted/10 opacity-50 grayscale scale-95';
+          iconStyle = 'bg-muted text-muted-foreground';
+        } else if (isThinking) {
+          // Thinking
+          selectedStyle = 'border-muted bg-card';
+          iconStyle = 'bg-muted text-muted-foreground';
+        } else {
+          // Pending
+          selectedStyle = 'border-muted bg-card';
+          iconStyle = 'bg-muted text-muted-foreground';
+        }
+
+        return (
+          <li key={candidate.id}>
+            <div 
+              className={`
+                relative flex items-center gap-2 p-2 rounded-xl border transition-all duration-500 w-full min-w-[140px] max-w-[200px] mx-auto
+                ${selectedStyle}
+              `}
+            >
+              <div className={`
+                h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-500
+                ${iconStyle}
+              `}>
+                {isDecided && isSelected ? <Check className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+              </div>
+              <span className={`font-medium text-xs ${isDecided && !isSelected ? 'line-through decoration-muted-foreground/50' : ''}`}>
+                {candidate.name}
+              </span>
+              
+              {isThinking && (
+                <div className="absolute inset-0 rounded-xl bg-primary/5 animate-pulse pointer-events-none" />
+              )}
+            </div>
+
+            {/* Recursive Children */}
+            {isSelected && (
+              <RecursiveTree 
+                steps={steps} 
+                level={level + 1} 
+                currentLevel={currentLevel} 
+                phase={phase} 
+              />
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 };
