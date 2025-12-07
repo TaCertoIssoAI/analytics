@@ -567,10 +567,10 @@ const Verification = () => {
           {/* Resposta Final */}
           <Card className="border-2 border-primary/20">
             <CardHeader>
-              <h2 className="text-2xl font-semibold">Conclusão</h2>
+              <h2 className="text-xl md:text-2xl font-semibold">Conclusão</h2>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-medium text-foreground">{analysis.final_comment}</p>
+              <p className="text-sm md:text-lg font-medium text-foreground">{analysis.final_comment}</p>
             </CardContent>
           </Card>
         </div>
