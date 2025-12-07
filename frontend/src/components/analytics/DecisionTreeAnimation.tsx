@@ -170,7 +170,11 @@ export const DecisionTreeAnimation = ({
   return (
     <div
       className={`flex flex-col gap-4 overflow-y-auto ${
-        forceFullView ? "h-full p-0" : "max-h-[60vh] p-4"
+        forceFullView 
+          ? "h-full p-0" 
+          : isCompact 
+            ? "h-auto p-4" // Mobile: auto height to avoid internal scroll
+            : "max-h-[60vh] p-4" // Desktop: limited height
       }`}
       ref={scrollRef}
     >

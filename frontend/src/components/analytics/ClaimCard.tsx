@@ -161,7 +161,7 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold text-sm flex items-center gap-2">
                       <Network className="h-4 w-4" />
-                      Caminho de Classificação
+                      Caminho de Classificação IPTC
                     </h4>
                     
                     <Dialog>
@@ -175,7 +175,7 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
                         <DialogHeader className="p-4 border-b shrink-0">
                           <DialogTitle className="flex items-center gap-2">
                             <Network className="h-5 w-5" />
-                            Caminho de Classificação
+                            Caminho de Classificação IPTC
                           </DialogTitle>
                           <DialogDescription className="sr-only">
                             Visualização detalhada e interativa do caminho de classificação da árvore de decisão.
