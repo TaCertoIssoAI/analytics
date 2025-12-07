@@ -22,13 +22,6 @@ const JoinReviewers = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Junte-se à nossa comunidade de especialistas e ajude a treinar a próxima geração de IA para combater a desinformação.
             </p>
-            <div className="pt-8">
-              <Button size="lg" className="gap-2 h-12 px-8 text-lg" asChild>
-                <Link to="/cadastro">
-                  Quero ser um Revisor
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
         

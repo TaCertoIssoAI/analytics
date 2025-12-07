@@ -210,7 +210,7 @@ class BigQueryService:
                 SELECT
                     COUNT(DISTINCT document_id) as total_verificacoes,
                     COUNT(*) as total_afirmacoes,
-                    COUNTIF(claim.verdict = 'Fake') as total_falsas
+                    COUNTIF(UPPER(claim.verdict) IN ('FAKE', 'FALSO', 'FALSE')) as total_falsas
                 FROM claims_data
             """
 
