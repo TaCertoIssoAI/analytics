@@ -272,7 +272,7 @@ const Verification = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <article className="container py-12 max-w-4xl">
+      <article className="container py-12 max-w-7xl">
         <div className="space-y-8">
           {/* Header */}
           <div className="space-y-4">

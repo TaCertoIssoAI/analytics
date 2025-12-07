@@ -127,7 +127,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
           justify-content: center;
         }
         .tree li {
-          float: left; text-align: center;
+          text-align: center;
           list-style-type: none;
           position: relative;
           padding: 20px 5px 0 5px;
@@ -176,7 +176,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
         }
       `}</style>
 
-      <div className="tree w-full overflow-x-auto pb-8">
+      <div className="tree w-full overflow-x-auto pb-8 scrollbar-hide">
         {steps.length > 0 && (
           <RecursiveTree 
             steps={steps} 
@@ -227,24 +227,20 @@ const RecursiveTree = ({
     status = phase === "thinking" ? "thinking" : "decided";
   }
 
-  // If we are waiting for this level to appear (pending), don't render children yet
-  // But we might want to render the root initially?
-  // The logic in main component handles "thinking" phase by showing the level.
-  // If status is pending, we hide it.
   const isVisible = status !== "pending";
-  
-  // Determine if the connections TO this level should be green.
-  // This level's UL is connected to the previous level's selected node.
-  // If the previous level is decided, then the connection is green?
-  // Actually, the connection represents the flow. If we are AT this level (thinking or decided), 
-  // the path TO here is valid.
   const isGreenPath = status !== "pending";
 
   if (!isVisible) return null;
 
+  // COMPACT MODE LOGIC:
+  // User requested to use available space. We will show all candidates by default.
+  // The container is now wider (max-w-7xl), so we can afford to show siblings.
+  // If it overflows, the container has overflow-x-auto.
+  const candidatesToShow = step.candidates;
+
   return (
     <ul className={isGreenPath ? "tree-green" : ""}>
-      {step.candidates.map((candidate) => {
+      {candidatesToShow.map((candidate) => {
         const isSelected = candidate.id === step.selectedNode.id;
         const isDecided = status === 'decided';
         const isThinking = status === 'thinking';
@@ -282,7 +278,7 @@ const RecursiveTree = ({
           <li key={candidate.id}>
             <div 
               className={`
-                relative flex items-center gap-2 p-2 rounded-xl border transition-all duration-500 w-full min-w-[140px] max-w-[200px] mx-auto
+                relative flex items-center gap-2 p-2 rounded-xl border transition-all duration-500 w-full min-w-[120px] max-w-[180px] mx-auto
                 ${selectedStyle}
               `}
             >
@@ -292,7 +288,7 @@ const RecursiveTree = ({
               `}>
                 {isDecided && isSelected ? <Check className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
               </div>
-              <span className={`font-medium text-xs ${isDecided && !isSelected ? 'line-through decoration-muted-foreground/50' : ''}`}>
+              <span className={`font-medium text-xs text-wrap leading-tight ${isDecided && !isSelected ? 'line-through decoration-muted-foreground/50' : ''}`}>
                 {candidate.name}
               </span>
               
