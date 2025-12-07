@@ -1,4 +1,4 @@
-import { MessageSquare, CheckCircle2, User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear } from "lucide-react";
+import { User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -72,10 +72,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="relative">
-            <MessageSquare className="h-8 w-8 text-primary" />
-            <CheckCircle2 className="h-4 w-4 text-primary absolute -bottom-1 -right-1 bg-background rounded-full" />
-          </div>
+          <img src="/tacertoissoai-logo.png" alt="Tá Certo Isso AI Logo" className="h-10 w-10 object-contain" />
           <div className="flex flex-col">
             <span className="text-xl font-bold text-foreground">Tá Certo Isso AI?</span>
             <span className="text-xs text-muted-foreground">Analytics Platform</span>
