@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // We need to check if framer-motion is installed, if not we'll use CSS
+import { motion, AnimatePresence } from "framer-motion"; // we need to check if framer-motion is installed, if not we will use css
 import { Check, ChevronDown, Circle } from "lucide-react";
 import iptcTreeData from "@/data/iptcTree.json";
 
-// Type definition for the tree data
+// type definition for the tree data
 type TreeNode = {
   id: string;
   name: string;
@@ -22,32 +22,36 @@ interface DecisionTreeAnimationProps {
 interface Step {
   level: number;
   selectedNode: TreeNode;
-  candidates: TreeNode[]; // Selected + Random siblings
+  candidates: TreeNode[]; // selected + random siblings
 }
 
-export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = false }: DecisionTreeAnimationProps) => {
+export const DecisionTreeAnimation = ({
+  targetId,
+  onComplete,
+  forceFullView = false,
+}: DecisionTreeAnimationProps) => {
   const [isCompact, setIsCompact] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentLevel, setCurrentLevel] = useState(0);
-  const [phase, setPhase] = useState<"pending" | "thinking" | "decided">("pending"); // pending, thinking, decided
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<"pending" | "thinking" | "decided">("pending");
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const treeContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const checkSize = () => {
       if (forceFullView) {
         setIsCompact(false);
       } else {
-        setIsCompact(window.innerWidth < 1024); // Compact mode for screens smaller than 1024px
+        setIsCompact(window.innerWidth < 1024);
       }
     };
-    
-    checkSize();
-    window.addEventListener('resize', checkSize);
-    return () => window.removeEventListener('resize', checkSize);
-  }, []);
 
-  // Build the path from root to target
+    checkSize();
+    window.addEventListener("resize", checkSize);
+    return () => window.removeEventListener("resize", checkSize);
+  }, [forceFullView]);
+
+  // build the path from root to target
   useEffect(() => {
     if (!targetId || !iptcTree[targetId]) return;
 
@@ -63,65 +67,61 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
       }
     }
 
-    // Generate steps with random siblings
+    // generate steps with random siblings
     const newSteps: Step[] = path.map((node, index) => {
       let candidates: TreeNode[] = [node];
-      
+
       if (node.parent) {
         const parent = iptcTree[node.parent];
-        const siblings = parent.children.filter(id => id !== node.id);
+        const siblings = parent.children.filter((id) => id !== node.id);
         const shuffledSiblings = [...siblings].sort(() => 0.5 - Math.random());
-        const selectedSiblings = shuffledSiblings.slice(0, 2).map(id => iptcTree[id]);
+        const selectedSiblings = shuffledSiblings.slice(0, 2).map((id) => iptcTree[id]);
         candidates = [...candidates, ...selectedSiblings];
       }
 
-      // Filter out any undefined or invalid candidates
-      candidates = candidates.filter(c => c && c.name && c.name.trim() !== "").sort(() => 0.5 - Math.random());
+      // filter out any undefined or invalid candidates
+      candidates = candidates
+        .filter((c) => c && c.name && c.name.trim() !== "")
+        .sort(() => 0.5 - Math.random());
 
       return {
         level: index,
         selectedNode: node,
-        candidates
+        candidates,
       };
     });
-// ... (rest of the useEffect is unchanged)
+
     setSteps(newSteps);
     setCurrentLevel(0);
-    setPhase("thinking"); // Start thinking immediately
-    
-    // Animation Loop
+    setPhase("thinking");
+
     let level = 0;
     let mounted = true;
 
     const runSequence = async () => {
-      // Initial delay
-      await new Promise(r => setTimeout(r, 500));
+      // initial delay
+      await new Promise((r) => setTimeout(r, 500));
 
       while (level < newSteps.length && mounted) {
-        // Start Thinking
+        // start thinking at this level
         setCurrentLevel(level);
         setPhase("thinking");
-        
-        // Scroll to bottom
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
 
-        // Wait thinking time
-        await new Promise(r => setTimeout(r, 1000));
+        // wait thinking time
+        await new Promise((r) => setTimeout(r, 1000));
         if (!mounted) break;
 
-        // Decide
+        // decide
         setPhase("decided");
 
-        // Wait before next level
-        await new Promise(r => setTimeout(r, 800));
+        // wait before next level
+        await new Promise((r) => setTimeout(r, 800));
         if (!mounted) break;
 
         level++;
       }
 
-      // Ensure we mark the last level as fully complete for compact mode logic
+      // depois de terminar, currentLevel vira steps.length (focamos no último nó)
       if (mounted) {
         setCurrentLevel(level);
       }
@@ -136,68 +136,42 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
     return () => {
       mounted = false;
     };
-  }, [targetId, forceFullView]);
+  }, [targetId, forceFullView, onComplete]);
 
-  // Auto-scroll effect to center the active node
+  // em modo expandido, alterna o foco totalmente para a esquerda/direita
   useEffect(() => {
-    if (steps.length > 0) {
-      const stepIndex = Math.min(currentLevel, steps.length - 1);
-      const step = steps[stepIndex];
-      
-      if (step) {
-        const nodeId = `tree-node-${step.selectedNode.id}`;
-        let animationFrameId: number;
-        const startTime = Date.now();
-        const duration = 600; // Run for 600ms to cover CSS transitions
+    if (isCompact || steps.length === 0) return;
 
-        const centerNode = () => {
-          const element = document.getElementById(nodeId);
-          const treeContainer = treeContainerRef.current;
-          
-          if (element && treeContainer) {
-            // Vertical scroll using scrollIntoView (works well for vertical)
-            element.scrollIntoView({ 
-              behavior: 'auto', // Use auto for instant updates during animation loop
-              block: 'center', 
-              inline: 'nearest' 
-            });
+    const level = Math.min(currentLevel, steps.length - 1);
+    if (level <= 0) return; // nível 0 é só a raiz, não precisa mexer
 
-            // Manual Horizontal Scroll
-            const elementRect = element.getBoundingClientRect();
-            const containerRect = treeContainer.getBoundingClientRect();
-            
-            const relativeLeft = elementRect.left - containerRect.left;
-            const currentScrollLeft = treeContainer.scrollLeft;
-            
-            // Target position: center of container
-            const targetScrollLeft = currentScrollLeft + relativeLeft - (containerRect.width / 2) + (elementRect.width / 2);
-            
-            treeContainer.scrollTo({
-              left: targetScrollLeft,
-              behavior: 'auto' // Use auto for instant updates during animation loop
-            });
-          }
+    const treeContainer = treeContainerRef.current;
+    if (!treeContainer) return;
 
-          if (Date.now() - startTime < duration) {
-            animationFrameId = requestAnimationFrame(centerNode);
-          }
-        };
+    // níveis ímpares: foca mais à esquerda, níveis pares: mais à direita
+    const side: "left" | "right" = level % 2 === 1 ? "left" : "right";
 
-        // Start the animation loop
-        centerNode();
+    const maxScroll =
+      treeContainer.scrollWidth - treeContainer.clientWidth;
+    if (maxScroll <= 0) return;
 
-        return () => {
-          if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-          }
-        };
-      }
-    }
-  }, [currentLevel, phase, steps]);
+    const leftTarget =
+      side === "left"
+        ? maxScroll * 0.2 // ~20% do scroll
+        : maxScroll * 0.85; // ~80% do scroll
+
+    treeContainer.scrollTo({
+      left: leftTarget,
+      behavior: "smooth",
+    });
+  }, [currentLevel, steps, isCompact]);
+
 
   return (
-    <div 
-      className={`flex flex-col gap-4 overflow-y-auto ${forceFullView ? 'h-full p-0' : 'max-h-[60vh] p-4'}`} 
+    <div
+      className={`flex flex-col gap-4 overflow-y-auto ${
+        forceFullView ? "h-full p-0" : "max-h-[60vh] p-4"
+      }`}
       ref={scrollRef}
     >
       <style>{`
@@ -206,9 +180,15 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
           position: relative;
           transition: all 0.5s;
           display: flex;
-          width: max-content; /* Ensure it takes full width of content */
-          min-width: 100%; /* Ensure it takes at least full width of container */
+          width: max-content;
+          min-width: 100%;
           justify-content: center;
+        }
+        .tree ul.tree-left {
+          justify-content: flex-start;
+        }
+        .tree ul.tree-right {
+          justify-content: flex-end;
         }
         .tree li {
           text-align: center;
@@ -217,7 +197,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
           padding: 20px 5px 0 5px;
           transition: all 0.5s;
         }
-        /* Connectors */
+        /* connectors */
         .tree li::before, .tree li::after {
           content: ''; 
           position: absolute; top: 0; right: 50%;
@@ -250,29 +230,32 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
           transition: border-color 0.5s;
         }
 
-        /* Green Connectors */
+        /* green connectors */
         .tree-green li::before, .tree-green li::after,
         .tree-green li:last-child::before, .tree-green li:first-child::after {
-          border-color: #22c55e !important; /* green-500 */
+          border-color: #22c55e !important;
         }
         .tree-green ul::before {
           border-color: #22c55e !important;
         }
       `}</style>
 
-      <div className="tree w-full overflow-x-auto pb-8 scrollbar-hide" ref={treeContainerRef}>
+      <div
+        className="tree w-full overflow-x-auto pb-8 scrollbar-hide"
+        ref={treeContainerRef}
+      >
         {steps.length > 0 && (
-          <RecursiveTree 
-            steps={steps} 
-            level={0} 
-            currentLevel={currentLevel} 
+          <RecursiveTree
+            steps={steps}
+            level={0}
+            currentLevel={currentLevel}
             phase={phase}
             isCompact={isCompact}
           />
         )}
       </div>
 
-      {/* Final Success State */}
+      {/* final success state */}
       {currentLevel >= steps.length && steps.length > 0 && (
         <div className="mt-4 pt-6 border-t border-border w-full flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3 shadow-sm ring-2 ring-green-50">
@@ -280,7 +263,20 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
           </div>
           <h3 className="text-lg font-bold text-center">Classificação Concluída!</h3>
           <p className="text-sm text-muted-foreground text-center mt-1 max-w-md">
-            A IA determinou a categoria <span className="font-semibold text-foreground">"{steps[steps.length - 1].selectedNode.name}"</span> navegando pela árvore de decisão com as <a href="https://iptc.org/standards/media-topics/" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">categorias do IPTC</a>.
+            A IA determinou a categoria{" "}
+            <span className="font-semibold text-foreground">
+              "{steps[steps.length - 1].selectedNode.name}"
+            </span>{" "}
+            navegando pela árvore de decisão com as{" "}
+            <a
+              href="https://iptc.org/standards/media-topics/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-primary transition-colors"
+            >
+              categorias do IPTC
+            </a>
+            .
           </p>
         </div>
       )}
@@ -288,24 +284,24 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
   );
 };
 
-const RecursiveTree = ({ 
-  steps, 
-  level, 
-  currentLevel, 
+const RecursiveTree = ({
+  steps,
+  level,
+  currentLevel,
   phase,
-  isCompact
-}: { 
-  steps: Step[], 
-  level: number, 
-  currentLevel: number, 
-  phase: "pending" | "thinking" | "decided",
-  isCompact: boolean
+  isCompact,
+}: {
+  steps: Step[];
+  level: number;
+  currentLevel: number;
+  phase: "pending" | "thinking" | "decided";
+  isCompact: boolean;
 }) => {
   if (level >= steps.length) return null;
 
   const step = steps[level];
-  
-  // Determine status for this level
+
+  // determine status for this level
   let status: "pending" | "thinking" | "decided" = "pending";
   if (level < currentLevel) {
     status = "decided";
@@ -318,81 +314,116 @@ const RecursiveTree = ({
 
   if (!isVisible) return null;
 
-  // COMPACT MODE LOGIC:
-  // If isCompact is true AND this level is already decided (past level), 
-  // ONLY show the selected node.
+  // compact mode logic:
+  // if isCompact is true and this level is already decided (past level),
+  // only show the selected node.
   let candidatesToShow = step.candidates;
   if (isCompact && level < currentLevel) {
-    candidatesToShow = step.candidates.filter(c => c.id === step.selectedNode.id);
+    candidatesToShow = step.candidates.filter(
+      (c) => c.id === step.selectedNode.id,
+    );
+  }
+
+  // em modo expandido, alterna lado do filho selecionado: esquerda, direita, esquerda...
+  let sideClass = "";
+  const isExpanded = !isCompact;
+
+  if (isExpanded && level > 0) {
+    const side: "left" | "right" = level % 2 === 1 ? "left" : "right";
+    sideClass = side === "left" ? "tree-left" : "tree-right";
+
+    // garante que o nó selecionado esteja sempre na extremidade
+    const selected = step.selectedNode;
+    const others = candidatesToShow.filter((c) => c.id !== selected.id);
+
+    if (side === "left") {
+      candidatesToShow = [selected, ...others];
+    } else {
+      candidatesToShow = [...others, selected];
+    }
   }
 
   return (
-    <ul className={isGreenPath ? "tree-green" : ""}>
+    <ul className={`${isGreenPath ? "tree-green" : ""} ${sideClass}`}>
       {candidatesToShow.map((candidate) => {
         const isSelected = candidate.id === step.selectedNode.id;
-        const isDecided = status === 'decided';
-        const isThinking = status === 'thinking';
+        const isDecided = status === "decided";
+        const isThinking = status === "thinking";
         const isHistory = level < currentLevel;
 
-        // Styles for the node card
-        let selectedStyle = '';
-        let iconStyle = '';
-        
+        // styles for the node card
+        let selectedStyle = "";
+        let iconStyle = "";
+
         if (isDecided && isSelected) {
-          // Always Green for decided path
-          selectedStyle = 'border-2 border-green-500 bg-green-500/10 shadow-sm';
-          iconStyle = 'bg-green-500 text-white';
+          // always green for decided path
+          selectedStyle =
+            "border-2 border-green-500 bg-green-500/10 shadow-sm";
+          iconStyle = "bg-green-500 text-white";
 
           if (!isHistory && currentLevel < steps.length) {
-            selectedStyle += ' scale-105 shadow-md ring-2 ring-green-500/20';
+            selectedStyle += " scale-105 shadow-md ring-2 ring-green-500/20";
           } else {
-            selectedStyle += ' scale-100';
+            selectedStyle += " scale-100";
           }
         } else if (isDecided && !isSelected) {
-          // Rejected
-          selectedStyle = 'border-muted/50 bg-muted/10 opacity-50 grayscale scale-95';
-          iconStyle = 'bg-muted text-muted-foreground';
+          // rejected
+          selectedStyle =
+            "border-muted/50 bg-muted/10 opacity-50 grayscale scale-95";
+          iconStyle = "bg-muted text-muted-foreground";
         } else if (isThinking) {
-          // Thinking
-          selectedStyle = 'border-muted bg-card';
-          iconStyle = 'bg-muted text-muted-foreground';
+          // thinking
+          selectedStyle = "border-muted bg-card";
+          iconStyle = "bg-muted text-muted-foreground";
         } else {
-          // Pending
-          selectedStyle = 'border-muted bg-card';
-          iconStyle = 'bg-muted text-muted-foreground';
+          // pending
+          selectedStyle = "border-muted bg-card";
+          iconStyle = "bg-muted text-muted-foreground";
         }
 
         return (
           <li key={candidate.id}>
-            <div 
+            <div
               id={`tree-node-${candidate.id}`}
               className={`
                 relative flex items-center gap-2 p-2 rounded-xl border transition-all duration-500 w-full min-w-[120px] max-w-[180px] mx-auto
                 ${selectedStyle}
               `}
             >
-              <div className={`
+              <div
+                className={`
                 h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-500
                 ${iconStyle}
-              `}>
-                {isDecided && isSelected ? <Check className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+              `}
+              >
+                {isDecided && isSelected ? (
+                  <Check className="h-3 w-3" />
+                ) : (
+                  <Circle className="h-3 w-3" />
+                )}
               </div>
-              <span className={`font-medium text-xs text-wrap leading-tight ${isDecided && !isSelected ? 'line-through decoration-muted-foreground/50' : ''}`}>
+              <span
+                className={`font-medium text-xs text-wrap leading-tight ${
+                  isDecided && !isSelected
+                    ? "line-through decoration-muted-foreground/50"
+                    : ""
+                }`}
+              >
                 {candidate.name}
               </span>
-              
+
               {isThinking && (
                 <div className="absolute inset-0 rounded-xl bg-primary/5 animate-pulse pointer-events-none" />
               )}
             </div>
 
-            {/* Recursive Children */}
+            {/* recursive children */}
             {isSelected && (
-              <RecursiveTree 
-                steps={steps} 
-                level={level + 1} 
-                currentLevel={currentLevel} 
-                phase={phase} 
+              <RecursiveTree
+                steps={steps}
+                level={level + 1}
+                currentLevel={currentLevel}
+                phase={phase}
                 isCompact={isCompact}
               />
             )}
