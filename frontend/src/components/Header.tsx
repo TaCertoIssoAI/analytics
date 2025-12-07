@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetDescription,
 } from "@/components/ui/sheet";
 
 export const Header = () => {
@@ -103,6 +104,7 @@ export const Header = () => {
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <SheetHeader className="text-left border-b pb-4 mb-6">
                 <SheetTitle className="text-2xl font-bold">Menu</SheetTitle>
+                <SheetDescription className="sr-only">Menu de navegação principal</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-6">
                 <nav className="flex flex-col gap-2">
