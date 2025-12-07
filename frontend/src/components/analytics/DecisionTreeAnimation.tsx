@@ -58,7 +58,8 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
         candidates = [...candidates, ...selectedSiblings];
       }
 
-      candidates = candidates.sort(() => 0.5 - Math.random());
+      // Filter out any undefined or invalid candidates
+      candidates = candidates.filter(c => c && c.name && c.name.trim() !== "").sort(() => 0.5 - Math.random());
 
       return {
         level: index,
