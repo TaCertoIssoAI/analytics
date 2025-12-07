@@ -1,9 +1,12 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink, Network } from "lucide-react";
 import { Claim } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { DecisionTreeAnimation } from "./DecisionTreeAnimation";
+import { useState } from "react";
 
 interface ClaimCardProps {
   claim: Claim;
@@ -40,10 +43,13 @@ const resultConfig: Record<string, { label: string; icon: any; className: string
 export const ClaimCard = ({ claim }: ClaimCardProps) => {
   const config = resultConfig[claim.verdict.toUpperCase()] || resultConfig["CHECK"];
   const Icon = config.icon;
+  const [treeModalOpen, setTreeModalOpen] = useState(false);
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
 
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value={claim.claim_id} className="border rounded-lg px-4">
+        {/* ... existing AccordionTrigger ... */}
         <AccordionTrigger className="hover:no-underline">
           <div className="flex flex-col items-start gap-2 text-left w-full">
             <Badge variant="outline" className={`${config.className} text-xs shrink-0`}>
@@ -62,8 +68,6 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
           {claim.topics.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm mb-2">Tópicos</h4>
-
-
               <div className="flex flex-wrap gap-2">
                 {claim.topics.map((topicStr, index) => {
                   const parts = topicStr.split('|');
@@ -79,25 +83,52 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
                     }
                   }
 
-                  if (id) {
-                    return (
-                      <a 
-                        key={index} 
-                        href={`https://cv.iptc.org/newscodes/mediatopic/${id}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="no-underline"
-                      >
-                        <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+                  return (
+                    <div key={index} className="flex items-center gap-1">
+                      {id ? (
+                        <a 
+                          href={`https://cv.iptc.org/newscodes/mediatopic/${id}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="no-underline"
+                        >
+                          <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+                            {name}
+                          </Badge>
+                        </a>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
                           {name}
                         </Badge>
-                      </a>
-                    );
-                  }
-                  return (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {name}
-                    </Badge>
+                      )}
+                      
+                      {id && (
+                        <Dialog open={treeModalOpen && selectedTopicId === id} onOpenChange={(open) => {
+                          setTreeModalOpen(open);
+                          if (!open) setSelectedTopicId(null);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 rounded-full hover:bg-muted"
+                              title="Ver caminho de decisão"
+                              onClick={() => setSelectedTopicId(id)}
+                            >
+                              <Network className="h-3 w-3 text-muted-foreground" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-lg">
+                            <DialogHeader>
+                              <DialogTitle>Caminho de Classificação</DialogTitle>
+                            </DialogHeader>
+                            <div className="mt-4">
+                              <DecisionTreeAnimation targetId={id} />
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                   );
                 })}
               </div>
