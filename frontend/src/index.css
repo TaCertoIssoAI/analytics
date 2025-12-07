@@ -102,6 +102,51 @@ All colors MUST be HSL.
     --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
+
+  .high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 60 100% 50%; /* Yellow */
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 100%;
+
+    --accent: 60 100% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 60 100% 50%;
+
+    --status-true: 120 100% 50%;
+    --status-false: 0 100% 50%;
+    --status-misleading: 60 100% 50%;
+    --status-unverifiable: 0 0% 70%;
+
+    --chart-1: 60 100% 50%;
+    --chart-2: 120 100% 50%;
+    --chart-3: 0 100% 50%;
+    --chart-4: 180 100% 50%;
+    --chart-5: 300 100% 50%;
+
+    --gradient-primary: none;
+    --shadow-soft: none;
+    --shadow-medium: none;
+  }
 }
 
 @layer base {

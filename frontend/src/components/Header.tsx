@@ -1,4 +1,4 @@
-import { MessageSquare, CheckCircle2, User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun } from "lucide-react";
+import { MessageSquare, CheckCircle2, User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ export const Header = () => {
   const navigate = useNavigate();
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [highContrast, setHighContrast] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -28,6 +29,10 @@ export const Header = () => {
     
     setTheme(initialTheme);
     document.documentElement.classList.toggle("dark", initialTheme === "dark");
+
+    const savedHighContrast = localStorage.getItem("highContrast") === "true";
+    setHighContrast(savedHighContrast);
+    document.documentElement.classList.toggle("high-contrast", savedHighContrast);
   }, []);
 
   const toggleTheme = () => {
@@ -35,6 +40,13 @@ export const Header = () => {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
+
+  const toggleHighContrast = () => {
+    const newHighContrast = !highContrast;
+    setHighContrast(newHighContrast);
+    localStorage.setItem("highContrast", String(newHighContrast));
+    document.documentElement.classList.toggle("high-contrast", newHighContrast);
   };
 
   const handleUserClick = () => {
@@ -71,6 +83,15 @@ export const Header = () => {
               <WhatsAppIcon className="h-4 w-4" />
               Adicionar Bot
             </a>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleHighContrast}
+            className="h-9 w-9"
+            aria-label="Toggle high contrast"
+          >
+            <Eye className={`h-4 w-4 ${highContrast ? "text-primary" : ""}`} />
           </Button>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           <button
@@ -141,6 +162,17 @@ export const Header = () => {
                        Tema
                      </span>
                      {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                   </button>
+
+                   <button
+                     onClick={toggleHighContrast}
+                     className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                   >
+                     <span className="flex items-center gap-3">
+                       <Eye className="h-5 w-5" />
+                       Alto Contraste
+                     </span>
+                     <div className={`h-4 w-4 rounded-full border ${highContrast ? "bg-primary border-primary" : "border-foreground"}`} />
                    </button>
                    
                    <button
