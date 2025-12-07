@@ -329,7 +329,7 @@ const Verification = () => {
               </div>
             )}
 
-            <div className="flex gap-3 pt-4 items-center">
+            <div className="flex flex-wrap gap-4 pt-4 items-center">
               <Button variant="outline" className="gap-2">
                 <Share2 className="h-4 w-4" />
                 Compartilhar
@@ -366,7 +366,7 @@ const Verification = () => {
               {reviewers.length > 0 && (
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:underline">
+                    <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:underline whitespace-normal text-left">
                       Ver revisores que avaliaram
                     </Button>
                   </DialogTrigger>
@@ -384,18 +384,18 @@ const Verification = () => {
                           to={`/perfil/${reviewer.uid}`}
                           className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
                         >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10 border">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <Avatar className="h-10 w-10 border flex-shrink-0">
                               <AvatarImage src={reviewer.photoURL} alt={reviewer.displayName} />
                               <AvatarFallback>{reviewer.displayName.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
-                            <div>
-                              <div className="font-medium group-hover:text-primary transition-colors flex items-center gap-2">
-                                {reviewer.displayName}
-                                <BadgeCheck className="h-4 w-4 text-primary" />
+                            <div className="min-w-0">
+                              <div className="text-sm md:text-base font-medium group-hover:text-primary transition-colors flex items-center gap-2">
+                                <span className="truncate">{reviewer.displayName}</span>
+                                <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
                               </div>
                               {reviewer.occupation && (
-                                <p className="text-xs text-muted-foreground">{reviewer.occupation}</p>
+                                <p className="text-xs text-muted-foreground truncate">{reviewer.occupation}</p>
                               )}
                             </div>
                           </div>
@@ -460,19 +460,19 @@ const Verification = () => {
                     {/* Legenda e Contadores */}
                     <div className="grid grid-cols-3 gap-4 pt-2">
                       <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
-                        <span className="text-2xl font-bold text-status-true">{analysis.analysis_metrics.true_count}</span>
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Verdadeiras</span>
-                        <span className="text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.truth_score}%</span>
+                        <span className="text-xl md:text-2xl font-bold text-status-true">{analysis.analysis_metrics.true_count}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Verdadeiras</span>
+                        <span className="text-[10px] md:text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.truth_score}%</span>
                       </div>
                       <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
-                        <span className="text-2xl font-bold text-status-false">{analysis.analysis_metrics.fake_count}</span>
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Falsas</span>
-                        <span className="text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.fake_score}%</span>
+                        <span className="text-xl md:text-2xl font-bold text-status-false">{analysis.analysis_metrics.fake_count}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Falsas</span>
+                        <span className="text-[10px] md:text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.fake_score}%</span>
                       </div>
                       <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
-                        <span className="text-2xl font-bold text-status-unverifiable">{analysis.analysis_metrics.unverified_count}</span>
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Outros</span>
-                        <span className="text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.unverified_score}%</span>
+                        <span className="text-xl md:text-2xl font-bold text-status-unverifiable">{analysis.analysis_metrics.unverified_count}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Outros</span>
+                        <span className="text-[10px] md:text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.unverified_score}%</span>
                       </div>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/useAuth";
 import { ThemeToggle } from "./ThemeToggle";
 import { NavLink } from "./NavLink";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 
 export const Header = () => {
   const { currentUser } = useAuth();
@@ -32,17 +33,17 @@ export const Header = () => {
         </Link>
         
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" className="hidden md:flex gap-2 text-green-600 border-green-600 hover:bg-green-50" asChild>
-            <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="h-4 w-4" />
-              Adicionar Bot
-            </a>
-          </Button>
           <nav className="hidden md:flex items-center gap-6">
             <NavLink to="/" end>Início</NavLink>
             <NavLink to="/busca">Busca</NavLink>
             <NavLink to="/sobre">Sobre</NavLink>
           </nav>
+          <Button variant="outline" size="sm" className="hidden md:flex gap-2" asChild>
+            <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
+              <WhatsAppIcon className="h-4 w-4" />
+              Adicionar Bot
+            </a>
+          </Button>
           <ThemeToggle />
           <button
             onClick={handleUserClick}

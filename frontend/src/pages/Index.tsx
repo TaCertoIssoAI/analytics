@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Database, FileText, AlertTriangle, BadgeCheck, Trophy, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTopReviewers, TopReviewer } from "@/auth/userService";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/loadAnalyses";
@@ -150,12 +151,6 @@ const Index = () => {
                       Sobre o Projeto
                     </Link>
                   </Button>
-                  <Button size="lg" variant="outline" className="gap-2 border-foreground" asChild>
-                    <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="h-5 w-5" />
-                      Adicionar Bot
-                    </a>
-                  </Button>
                 </div>
               </div>
 
@@ -257,15 +252,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Floating WhatsApp Button */}
-        <div className="absolute bottom-4 right-4 z-20 hidden lg:block">
-          <Button size="lg" variant="outline" className="gap-2 border-foreground bg-background/50 backdrop-blur-sm hover:bg-background/80" asChild>
-            <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="h-5 w-5" />
-              Adicionar Bot no WhatsApp
-            </a>
-          </Button>
-        </div>
       </section>
 
       {/* Results Section */}

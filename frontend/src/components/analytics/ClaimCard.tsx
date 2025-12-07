@@ -44,7 +44,7 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value={claim.claim_id} className="border rounded-lg px-4">
         <AccordionTrigger className="hover:no-underline">
-          <div className="flex items-start gap-3 text-left w-full">
+          <div className="flex flex-col items-start gap-2 text-left w-full">
             <Badge variant="outline" className={`${config.className} text-xs shrink-0`}>
               <Icon className="h-3 w-3 mr-1" />
               {config.label}
