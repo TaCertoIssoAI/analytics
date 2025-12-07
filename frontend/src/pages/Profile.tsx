@@ -11,6 +11,7 @@ import { getUserProfile, createUserProfile, saveUserProfile, UserProfile } from 
 import { User } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Linkedin, Twitter, Instagram, Briefcase, User as UserIcon, Upload, Camera } from "lucide-react";
+import ImageCropper from "@/components/ImageCropper";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
@@ -31,6 +32,10 @@ const Profile = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Image Cropper State
+  const [showCropper, setShowCropper] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -62,9 +67,6 @@ const Profile = () => {
         
         setProfile(userProfile);
         if (userProfile) {
-          console.log("Setting profile state. PhotoURL length:", userProfile.photoURL?.length);
-          console.log("PhotoURL start:", userProfile.photoURL?.substring(0, 50));
-          
           setName(userProfile.displayName || "");
           setBio(userProfile.bio || "");
           setOccupation(userProfile.occupation || "");
@@ -92,47 +94,29 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (limit to 2MB before compression)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 2MB");
+    // Check file size (limit to 5MB before cropping)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 400;
-        const MAX_HEIGHT = 400;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        // Compress to JPEG with 0.7 quality
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-        setPhotoURL(dataUrl);
-        toast.success("Imagem carregada com sucesso!");
-      };
-      img.src = event.target?.result as string;
+      setTempImage(event.target?.result as string);
+      setShowCropper(true);
+      // Reset input value so same file can be selected again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    setPhotoURL(croppedImage);
+    setShowCropper(false);
+    setTempImage(null);
+    toast.success("Imagem recortada com sucesso!");
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -299,7 +283,7 @@ const Profile = () => {
                     accept="image/*"
                     onChange={handleImageUpload}
                   />
-                  <p className="text-xs text-muted-foreground">Max 2MB. JPG/PNG.</p>
+                  <p className="text-xs text-muted-foreground">Max 5MB. JPG/PNG.</p>
                 </div>
               </div>
 
@@ -442,6 +426,13 @@ const Profile = () => {
           )}
         </CardContent>
       </Card>
+      
+      <ImageCropper
+        open={showCropper}
+        imageSrc={tempImage}
+        onClose={() => setShowCropper(false)}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };
