@@ -1,6 +1,6 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "./firebaseConfig";
 import { User } from "firebase/auth";
+
+const API_URL = "http://localhost:8000";
 
 export interface UserProfile {
   uid: string;
@@ -10,45 +10,51 @@ export interface UserProfile {
 }
 
 /**
- * Create or update a user profile in Firestore
+ * Create or update a user profile via Backend API
  */
 export const createUserProfile = async (user: User) => {
-  if (!db) return;
+  const newProfile: UserProfile = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    createdAt: Date.now(),
+  };
 
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
+  try {
+    const response = await fetch(`${API_URL}/users/profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newProfile),
+    });
 
-  if (!userSnap.exists()) {
-    const newProfile: UserProfile = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      createdAt: Date.now(),
-    };
-
-    try {
-      await setDoc(userRef, newProfile);
-    } catch (error) {
-      console.error("Error creating user profile:", error);
+    if (!response.ok) {
+      throw new Error(`Failed to create profile: ${response.statusText}`);
     }
+    console.log("Profile created via API");
+  } catch (error) {
+    console.error("Error creating user profile:", error);
   }
 };
 
 /**
- * Get a user profile from Firestore
+ * Get a user profile via Backend API
  */
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  if (!db) return null;
-
   try {
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      return userSnap.data() as UserProfile;
-    } else {
+    const response = await fetch(`${API_URL}/users/profile/${userId}`);
+    
+    if (response.status === 404) {
       return null;
     }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch profile: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data as UserProfile;
   } catch (error) {
     console.error("Error fetching user profile:", error);
     return null;

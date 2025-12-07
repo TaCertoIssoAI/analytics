@@ -20,7 +20,8 @@ class FirestoreService:
         # Se for o banco default, não precisa passar o argumento database.
         try:
             self.client = firestore.Client(project=settings.PROJECT_ID, database='tacertoissoai')
-            self.collection_name = "analises"
+            self.analises_collection = self.client.collection("analises")
+            self.users_collection = self.client.collection("users")
             print(f"🔥 Firestore client inicializado (database='tacertoissoai')")
         except Exception as e:
             print(f"❌ Erro ao inicializar Firestore: {e}")
@@ -51,7 +52,7 @@ class FirestoreService:
                  doc_data["processed_at"] = doc_data["processed_at"].isoformat()
 
             # Salva o documento usando document_id como chave
-            doc_ref = self.client.collection(self.collection_name).document(analise.document_id)
+            doc_ref = self.analises_collection.document(analise.document_id)
             doc_ref.set(doc_data)
             
             print(f"✅ Análise {analise.document_id} salva no Firestore!")
@@ -72,7 +73,7 @@ class FirestoreService:
 
         try:
             # Referência para a coleção
-            query = self.client.collection(self.collection_name)
+            query = self.analises_collection
 
             # Ordenação padrão por data (mais recente primeiro)
             query = query.order_by("processed_at", direction=firestore.Query.DESCENDING)
@@ -144,7 +145,7 @@ class FirestoreService:
             return None
 
         try:
-            doc_ref = self.client.collection(self.collection_name).document(document_id)
+            doc_ref = self.analises_collection.document(document_id)
             doc = doc_ref.get()
 
             if doc.exists:
@@ -157,6 +158,73 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar no Firestore: {e}")
             return None
+
+    def create_user_profile(self, user_data: Dict[str, Any]) -> bool:
+        """Cria ou atualiza um perfil de usuário."""
+        if not self.client: return False
+        try:
+            uid = user_data.get("uid")
+            if not uid: return False
+            
+            doc_ref = self.users_collection.document(uid)
+            doc_ref.set(user_data, merge=True)
+            print(f"✅ Perfil de usuário {uid} salvo/atualizado.")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao salvar perfil de usuário: {e}")
+            return False
+
+    def get_user_profile(self, uid: str) -> Optional[Dict[str, Any]]:
+        """Busca um perfil de usuário."""
+        if not self.client: return None
+        try:
+            doc_ref = self.users_collection.document(uid)
+            doc = doc_ref.get()
+            if doc.exists:
+                return doc.to_dict()
+            return None
+        except Exception as e:
+            print(f"❌ Erro ao buscar perfil de usuário: {e}")
+            return None
+
+    def update_analise_interaction(self, document_id: str, uid: str, action: str) -> bool:
+        """
+        Atualiza likes/dislikes de uma análise.
+        action: 'like', 'dislike', 'remove_like', 'remove_dislike'
+        """
+        if not self.client: return False
+        
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            
+            if action == 'like':
+                # Adiciona like, remove dislike
+                doc_ref.update({
+                    'liked_by': firestore.ArrayUnion([uid]),
+                    'disliked_by': firestore.ArrayRemove([uid])
+                })
+            elif action == 'dislike':
+                # Adiciona dislike, remove like
+                doc_ref.update({
+                    'disliked_by': firestore.ArrayUnion([uid]),
+                    'liked_by': firestore.ArrayRemove([uid])
+                })
+            elif action == 'remove_like':
+                 doc_ref.update({
+                    'liked_by': firestore.ArrayRemove([uid])
+                })
+            elif action == 'remove_dislike':
+                 doc_ref.update({
+                    'disliked_by': firestore.ArrayRemove([uid])
+                })
+            else:
+                return False
+            
+            print(f"✅ Interação {action} atualizada para {document_id} por {uid}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao atualizar interação: {e}")
+            return False
 
 # Instância global
 firestore_service = FirestoreService()

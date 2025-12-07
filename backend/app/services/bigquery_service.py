@@ -54,7 +54,8 @@ class BigQueryService:
         """
         try:
             # Converte Pydantic model para dict
-            row_data = analise.model_dump()
+            # Exclui campos que não existem no BigQuery (liked_by, disliked_by)
+            row_data = analise.model_dump(exclude={'liked_by', 'disliked_by'})
 
             # Garante que processed_at está em formato ISO
             if "processed_at" in row_data and isinstance(row_data["processed_at"], str):

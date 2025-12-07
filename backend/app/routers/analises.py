@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Query
+from pydantic import BaseModel
 from typing import Dict, Any, List
 
 from app.models.input_format import AnaliseInputFormat
@@ -382,3 +383,21 @@ async def get_analise(document_id: str) -> AnaliseGetResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro interno ao buscar análise: {str(e)}"
         )
+
+class InteractionRequest(BaseModel):
+    uid: str
+    action: str
+
+@router.post(
+    "/{document_id}/interaction",
+    summary="Interagir com análise",
+    description="Adiciona/Remove like ou dislike"
+)
+async def interact_with_analise(document_id: str, request: InteractionRequest):
+    success = firestore_service.update_analise_interaction(document_id, request.uid, request.action)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao atualizar interação"
+        )
+    return {"message": "Interação atualizada com sucesso"}

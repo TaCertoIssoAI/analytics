@@ -7,7 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 import json
 
 from app.config import settings
-from app.routers import health, analises
+from app.routers import health, analises, users
 from app.services.iptc_service import get_iptc_service
 
 
@@ -257,6 +257,7 @@ app.add_middleware(
 # Inclui routers
 app.include_router(health.router)
 app.include_router(analises.router)
+app.include_router(users.router)
 
 
 if __name__ == "__main__":

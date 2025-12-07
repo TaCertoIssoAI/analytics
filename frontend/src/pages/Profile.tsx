@@ -19,11 +19,15 @@ const Profile = () => {
     const fetchProfile = async () => {
       if (!id) return;
       setLoading(true);
+      console.log("Fetching profile for ID:", id);
+      console.log("Current User:", currentUser?.uid);
       try {
         let userProfile = await getUserProfile(id);
+        console.log("Fetched profile:", userProfile);
         
         // If profile doesn't exist in Firestore but it's the current user, create it
         if (!userProfile && isOwnProfile && currentUser) {
+          console.log("Profile missing for current user, creating...");
           await createUserProfile(currentUser as User);
           userProfile = {
             uid: currentUser.uid,

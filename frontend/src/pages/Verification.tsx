@@ -10,6 +10,9 @@ import { ClaimCard } from "@/components/analytics/ClaimCard";
 import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/auth/useAuth";
+import { toast } from "sonner";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 const statusConfig = {
   "VERDADEIRO": {
@@ -42,10 +45,19 @@ const statusConfig = {
 const Verification = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedLink, setSelectedLink] = useState<ScrapedLink | null>(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+
+  // Like/Dislike state
+  const [likes, setLikes] = useState(0);
+  const [dislikes, setDislikes] = useState(0);
+  const [userLiked, setUserLiked] = useState(false);
+  const [userDisliked, setUserDisliked] = useState(false);
+  const [likedBy, setLikedBy] = useState<string[]>([]);
+  const [dislikedBy, setDislikedBy] = useState<string[]>([]);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -64,6 +76,18 @@ const Verification = () => {
         // A API retorna { success: true, data: {...}, message: "..." }
         if (result.success && result.data) {
           setAnalysis(result.data);
+          // Initialize like/dislike state
+          const likedByList = result.data.liked_by || [];
+          const dislikedByList = result.data.disliked_by || [];
+          setLikedBy(likedByList);
+          setDislikedBy(dislikedByList);
+          setLikes(likedByList.length);
+          setDislikes(dislikedByList.length);
+          
+          if (currentUser) {
+            setUserLiked(likedByList.includes(currentUser.uid));
+            setUserDisliked(dislikedByList.includes(currentUser.uid));
+          }
         } else {
           navigate("/verificacao-nao-encontrada");
         }
@@ -75,7 +99,102 @@ const Verification = () => {
       }
     };
     loadAnalysis();
-  }, [id, navigate]);
+    loadAnalysis();
+  }, [id, navigate, currentUser]);
+
+  const handleLike = async () => {
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para avaliar.");
+      navigate("/login");
+      return;
+    }
+    if (!analysis) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const uid = currentUser.uid;
+    const action = userLiked ? 'remove_like' : 'like';
+
+    try {
+      // Optimistic update
+      if (userLiked) {
+        setLikes(prev => prev - 1);
+        setUserLiked(false);
+        setLikedBy(prev => prev.filter(id => id !== uid));
+      } else {
+        setLikes(prev => prev + 1);
+        setUserLiked(true);
+        setLikedBy(prev => [...prev, uid]);
+        
+        if (userDisliked) {
+          setDislikes(prev => prev - 1);
+          setUserDisliked(false);
+          setDislikedBy(prev => prev.filter(id => id !== uid));
+        }
+      }
+
+      const response = await fetch(`${apiUrl}/analises/${analysis.document_id}/interaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, action })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update interaction");
+      }
+
+    } catch (error) {
+      console.error("Error updating like:", error);
+      toast.error("Erro ao atualizar avaliação.");
+      // TODO: Revert optimistic update on error
+    }
+  };
+
+  const handleDislike = async () => {
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para avaliar.");
+      navigate("/login");
+      return;
+    }
+    if (!analysis) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const uid = currentUser.uid;
+    const action = userDisliked ? 'remove_dislike' : 'dislike';
+
+    try {
+      // Optimistic update
+      if (userDisliked) {
+        setDislikes(prev => prev - 1);
+        setUserDisliked(false);
+        setDislikedBy(prev => prev.filter(id => id !== uid));
+      } else {
+        setDislikes(prev => prev + 1);
+        setUserDisliked(true);
+        setDislikedBy(prev => [...prev, uid]);
+
+        if (userLiked) {
+          setLikes(prev => prev - 1);
+          setUserLiked(false);
+          setLikedBy(prev => prev.filter(id => id !== uid));
+        }
+      }
+
+      const response = await fetch(`${apiUrl}/analises/${analysis.document_id}/interaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, action })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update interaction");
+      }
+
+    } catch (error) {
+      console.error("Error updating dislike:", error);
+      toast.error("Erro ao atualizar avaliação.");
+      // TODO: Revert optimistic update on error
+    }
+  };
 
   if (loading) {
     return (
@@ -170,11 +289,37 @@ const Verification = () => {
               </div>
             )}
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-4 items-center">
               <Button variant="outline" className="gap-2">
                 <Share2 className="h-4 w-4" />
                 Compartilhar
               </Button>
+              
+              <div className="flex items-center gap-2 ml-auto">
+                <div className="flex flex-col items-center">
+                  <Button 
+                    variant={userLiked ? "default" : "outline"} 
+                    size="sm" 
+                    className="gap-2"
+                    onClick={handleLike}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    {likes}
+                  </Button>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <Button 
+                    variant={userDisliked ? "destructive" : "outline"} 
+                    size="sm" 
+                    className="gap-2"
+                    onClick={handleDislike}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    {dislikes}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 

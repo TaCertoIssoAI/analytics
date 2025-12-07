@@ -44,7 +44,7 @@ if (!useMockAuth) {
     try {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
-      db = getFirestore(app);
+      db = getFirestore(app, 'tacertoissoai');
       googleProvider = new GoogleAuthProvider();
 
       // Optional: Configure Google provider

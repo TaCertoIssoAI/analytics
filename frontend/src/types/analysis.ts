@@ -54,6 +54,8 @@ export interface Analysis {
   user_message_text: string;
   full_combined_text: string;
   scraped_links: ScrapedLink[];
+  liked_by?: string[];
+  disliked_by?: string[];
   overall_verdict: string;
   final_comment: string;
   media_info: MediaInfo;
