@@ -3,10 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink, Network } from "lucide-react";
 import { Claim } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { DecisionTreeAnimation } from "./DecisionTreeAnimation";
-import { useState } from "react";
 
 interface ClaimCardProps {
   claim: Claim;
@@ -40,16 +37,67 @@ const resultConfig: Record<string, { label: string; icon: any; className: string
   },
 };
 
+import iptcTreeData from "@/data/iptcTree.json";
+
+// ...
+
+// Type definition for the tree data (same as in DecisionTreeAnimation)
+type TreeNode = {
+  id: string;
+  name: string;
+  parent: string | null;
+  children: string[];
+};
+
+const iptcTree = iptcTreeData as Record<string, TreeNode>;
+
+const getTopicDepth = (id: string): number => {
+  let depth = 0;
+  let current = iptcTree[id];
+  while (current) {
+    depth++;
+    if (current.parent) {
+      current = iptcTree[current.parent];
+    } else {
+      current = null; // @ts-ignore
+    }
+  }
+  return depth;
+};
+
 export const ClaimCard = ({ claim }: ClaimCardProps) => {
   const config = resultConfig[claim.verdict.toUpperCase()] || resultConfig["CHECK"];
   const Icon = config.icon;
-  const [treeModalOpen, setTreeModalOpen] = useState(false);
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+
+  // Find the deepest topic to visualize
+  let deepestTopicId: string | null = null;
+  let maxDepth = -1;
+
+  claim.topics.forEach(topicStr => {
+    const parts = topicStr.split('|');
+    let id = parts.length > 1 ? parts[1] : undefined;
+
+    if (!id) {
+      const lowerName = parts[0].toLowerCase();
+      // @ts-ignore
+      if (iptcMapping[lowerName]) {
+         // @ts-ignore
+        id = iptcMapping[lowerName];
+      }
+    }
+
+    if (id && iptcTree[id]) {
+      const depth = getTopicDepth(id);
+      if (depth > maxDepth) {
+        maxDepth = depth;
+        deepestTopicId = id;
+      }
+    }
+  });
 
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value={claim.claim_id} className="border rounded-lg px-4">
-        {/* ... existing AccordionTrigger ... */}
         <AccordionTrigger className="hover:no-underline">
           <div className="flex flex-col items-start gap-2 text-left w-full">
             <Badge variant="outline" className={`${config.className} text-xs shrink-0`}>
@@ -68,7 +116,7 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
           {claim.topics.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm mb-2">Tópicos</h4>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-4">
                 {claim.topics.map((topicStr, index) => {
                   const parts = topicStr.split('|');
                   let name = parts[0];
@@ -83,55 +131,39 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
                     }
                   }
 
-                  return (
-                    <div key={index} className="flex items-center gap-1">
-                      {id ? (
-                        <a 
-                          href={`https://cv.iptc.org/newscodes/mediatopic/${id}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="no-underline"
-                        >
-                          <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
-                            {name}
-                          </Badge>
-                        </a>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">
+                  if (id) {
+                    return (
+                      <a 
+                        key={index} 
+                        href={`https://cv.iptc.org/newscodes/mediatopic/${id}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="no-underline"
+                      >
+                        <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
                           {name}
                         </Badge>
-                      )}
-                      
-                      {id && (
-                        <Dialog open={treeModalOpen && selectedTopicId === id} onOpenChange={(open) => {
-                          setTreeModalOpen(open);
-                          if (!open) setSelectedTopicId(null);
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-5 w-5 rounded-full hover:bg-muted"
-                              title="Ver caminho de decisão"
-                              onClick={() => setSelectedTopicId(id)}
-                            >
-                              <Network className="h-3 w-3 text-muted-foreground" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-lg">
-                            <DialogHeader>
-                              <DialogTitle>Caminho de Classificação</DialogTitle>
-                            </DialogHeader>
-                            <div className="mt-4">
-                              <DecisionTreeAnimation targetId={id} />
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
+                      </a>
+                    );
+                  }
+                  return (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {name}
+                    </Badge>
                   );
                 })}
               </div>
+
+              {/* Inline Decision Tree Animation for the deepest topic */}
+              {deepestTopicId && (
+                <div className="border rounded-lg p-4 bg-card/50">
+                  <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                    <Network className="h-4 w-4" />
+                    Caminho de Classificação
+                  </h4>
+                  <DecisionTreeAnimation targetId={deepestTopicId} />
+                </div>
+              )}
             </div>
           )}
 
