@@ -38,6 +38,14 @@ async def get_user_profile(uid: str):
         )
     return profile
 
+@router.get("/top-reviewers")
+async def get_top_reviewers():
+    """
+    Retorna os top reviewers da semana.
+    """
+    top_reviewers = firestore_service.get_top_reviewers()
+    return {"success": True, "data": top_reviewers}
+
 @router.get("/{uid}/interactions")
 async def get_user_interactions(uid: str):
     interactions = firestore_service.get_user_interactions(uid)

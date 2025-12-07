@@ -275,6 +275,52 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar interações do usuário: {e}")
             return []
-
+    def get_top_reviewers(self, days: int = 7, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Retorna os usuários com mais interações (likes/dislikes) nos últimos 'days' dias.
+        """
+        if not self.client: return []
+        
+        try:
+            from datetime import datetime, timedelta
+            
+            cutoff_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+            
+            # Busca análises recentes
+            # Nota: Em produção com muitos dados, isso deve ser feito com uma Collection Group Query 
+            # ou um contador incrementado em cada usuário. Para este MVP, agregação em memória serve.
+            query = self.analises_collection.where("processed_at", ">=", cutoff_date).stream()
+            
+            user_counts = {}
+            
+            for doc in query:
+                data = doc.to_dict()
+                
+                # Conta likes
+                for uid in data.get("liked_by", []):
+                    user_counts[uid] = user_counts.get(uid, 0) + 1
+                    
+                # Conta dislikes
+                for uid in data.get("disliked_by", []):
+                    user_counts[uid] = user_counts.get(uid, 0) + 1
+            
+            # Ordena por contagem decrescente
+            sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
+            
+            # Busca dados dos usuários
+            top_reviewers = []
+            for uid, count in sorted_users:
+                user_profile = self.get_user_profile(uid)
+                if user_profile:
+                    top_reviewers.append({
+                        "user": user_profile,
+                        "count": count
+                    })
+            
+            return top_reviewers
+            
+        except Exception as e:
+            print(f"❌ Erro ao buscar top reviewers: {e}")
+            return []
 # Instância global
 firestore_service = FirestoreService()

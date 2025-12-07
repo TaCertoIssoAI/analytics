@@ -121,3 +121,26 @@ export const getUserInteractions = async (userId: string): Promise<UserInteracti
     return [];
   }
 };
+export interface TopReviewer {
+  user: UserProfile;
+  count: number;
+}
+
+/**
+ * Get top reviewers via Backend API
+ */
+export const getTopReviewers = async (): Promise<TopReviewer[]> => {
+  try {
+    const response = await fetch(`${API_URL}/users/top-reviewers`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch top reviewers: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data || [];
+  } catch (error) {
+    console.error("Error fetching top reviewers:", error);
+    return [];
+  }
+};

@@ -1,7 +1,9 @@
 import { Header } from "@/components/Header";
 import { VerificationCard } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, FileText, AlertTriangle } from "lucide-react";
+import { Database, FileText, AlertTriangle, BadgeCheck, Trophy } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getTopReviewers, TopReviewer } from "@/auth/userService";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/loadAnalyses";
@@ -16,6 +18,7 @@ interface Stats {
 const Index = () => {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [topReviewers, setTopReviewers] = useState<TopReviewer[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -39,7 +42,14 @@ const Index = () => {
         console.error("Erro ao carregar estatísticas:", error);
       }
     };
+
+    const loadTopReviewers = async () => {
+      const reviewers = await getTopReviewers();
+      setTopReviewers(reviewers);
+    };
+
     loadStats();
+    loadTopReviewers();
   }, [apiUrl]);
 
   // Carrega análises (verificações recentes)
@@ -112,54 +122,130 @@ const Index = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="border-b border-border bg-gradient-to-br from-background via-muted/30 to-background">
-        <div className="container py-16 md:py-24">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Combatendo Desinformação com{" "}
-              <span className="text-primary">Inteligência Artificial</span>
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas pelo nosso bot de WhatsApp.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center pt-4">
-              <Button size="lg" className="gap-2" asChild>
-                <Link to="/analytics">
-                  <Database className="h-5 w-5" />
-                  Explorar Dados
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="gap-2" asChild>
-                <Link to="/sobre">
-                  Sobre o Projeto
-                </Link>
-              </Button>
-            </div>
-          </div>
+      <section className="border-b border-border bg-gradient-to-br from-background via-muted/30 to-background overflow-hidden relative">
+        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
+        
+        <div className="container py-16 md:py-24 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Column: Text & Stats */}
+            <div className="space-y-8">
+              <div className="space-y-6">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                  Combatendo Desinformação com{" "}
+                  <span className="text-primary">Inteligência Artificial</span>
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas pelo nosso bot de WhatsApp.
+                </p>
+                <div className="flex flex-wrap gap-4 pt-2">
+                  <Button size="lg" className="gap-2" asChild>
+                    <Link to="/busca">
+                      <Database className="h-5 w-5" />
+                      Explorar Dados
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="gap-2" asChild>
+                    <Link to="/sobre">
+                      Sobre o Projeto
+                    </Link>
+                  </Button>
+                </div>
+              </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
-            <div className="bg-card rounded-lg border p-6 text-center">
-              <Database className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold">
-                {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
+              {/* Mini Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 pt-8 border-t">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Verificações</div>
+                </div>
+                <div className="text-center border-l border-r">
+                  <div className="text-2xl font-bold text-primary">
+                    {!stats ? "..." : stats.total_afirmacoes.toLocaleString('pt-BR')}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Afirmações</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {!stats ? "..." : `${stats.percentual_falso}%`}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Fake News</div>
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Verificações Realizadas</div>
             </div>
-            <div className="bg-card rounded-lg border p-6 text-center">
-              <FileText className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold">
-                {!stats ? "..." : stats.total_afirmacoes.toLocaleString('pt-BR')}
+
+            {/* Right Column: Top Reviewers */}
+            <div className="lg:pl-12">
+              <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-6 shadow-xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-primary/10 rounded-full">
+                    <Trophy className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Top Revisores da Semana</h3>
+                    <p className="text-sm text-muted-foreground">Quem mais contribuiu para a verdade</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {topReviewers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Carregando ranking...
+                    </div>
+                  ) : (
+                    topReviewers.map((reviewer, index) => (
+                      <Link 
+                        key={reviewer.user.uid} 
+                        to={`/perfil/${reviewer.user.uid}`}
+                        className="flex items-center gap-4 p-3 rounded-xl hover:bg-accent/50 transition-colors group"
+                      >
+                        <div className="flex-shrink-0 font-bold text-muted-foreground w-6 text-center">
+                          #{index + 1}
+                        </div>
+                        
+                        <div className="relative">
+                          <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                            <AvatarImage src={reviewer.user.photoURL} alt={reviewer.user.displayName || "User"} />
+                            <AvatarFallback>{reviewer.user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          {index < 3 && (
+                            <div className="absolute -top-1 -right-1 bg-yellow-400 text-[10px] font-bold text-yellow-950 px-1 rounded-full shadow-sm border border-white">
+                              {index + 1}º
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold truncate group-hover:text-primary transition-colors">
+                              {reviewer.user.displayName}
+                            </span>
+                            <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {reviewer.user.occupation || "Membro da comunidade"}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="font-bold text-primary">{reviewer.count}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase">Avaliações</div>
+                        </div>
+                      </Link>
+                    ))
+                  )}
+                </div>
+                
+                <div className="mt-6 pt-4 border-t text-center">
+                  <Link to="/entrar" className="text-sm text-primary hover:underline font-medium">
+                    Junte-se aos revisores →
+                  </Link>
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Afirmações Analisadas</div>
             </div>
-            <div className="bg-card rounded-lg border p-6 text-center">
-              <AlertTriangle className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold">
-                {!stats ? "..." : `${stats.percentual_falso}%`}
-              </div>
-              <div className="text-sm text-muted-foreground">Conteúdo Falso Detectado</div>
-            </div>
+
           </div>
         </div>
       </section>
