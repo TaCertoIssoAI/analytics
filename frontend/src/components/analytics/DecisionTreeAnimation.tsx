@@ -115,6 +115,11 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
         level++;
       }
 
+      // Ensure we mark the last level as fully complete for compact mode logic
+      if (mounted) {
+        setCurrentLevel(level);
+      }
+
       if (mounted && onComplete) {
         onComplete();
       }
