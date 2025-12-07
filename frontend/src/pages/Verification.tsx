@@ -22,6 +22,7 @@ import { useAuth } from "@/auth/useAuth";
 import { toast } from "sonner";
 import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ReactMarkdown from "react-markdown";
 
 const statusConfig = {
   "VERDADEIRO": {
@@ -570,7 +571,9 @@ const Verification = () => {
               <h2 className="text-xl md:text-2xl font-semibold">Conclusão</h2>
             </CardHeader>
             <CardContent>
-              <p className="text-sm md:text-lg font-medium text-foreground">{analysis.final_comment}</p>
+              <div className="text-sm md:text-lg font-medium text-foreground">
+                <ReactMarkdown>{analysis.final_comment}</ReactMarkdown>
+              </div>
             </CardContent>
           </Card>
         </div>
