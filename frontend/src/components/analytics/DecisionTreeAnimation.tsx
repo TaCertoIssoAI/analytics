@@ -135,7 +135,37 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
     return () => {
       mounted = false;
     };
+    return () => {
+      mounted = false;
+    };
   }, [targetId, forceFullView]);
+
+  // Auto-scroll effect for expanded view
+  useEffect(() => {
+    if (forceFullView && steps.length > 0) {
+      // Determine which node to focus on
+      // If thinking, focus on the current level's selected node (if available)
+      // If decided, focus on the current level's selected node
+      
+      const stepIndex = Math.min(currentLevel, steps.length - 1);
+      const step = steps[stepIndex];
+      
+      if (step) {
+        const nodeId = `tree-node-${step.selectedNode.id}`;
+        const element = document.getElementById(nodeId);
+        
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center', 
+              inline: 'center' 
+            });
+          }, 100); // Small delay to ensure rendering
+        }
+      }
+    }
+  }, [currentLevel, phase, forceFullView, steps]);
 
   return (
     <div 
@@ -305,6 +335,7 @@ const RecursiveTree = ({
         return (
           <li key={candidate.id}>
             <div 
+              id={`tree-node-${candidate.id}`}
               className={`
                 relative flex items-center gap-2 p-2 rounded-xl border transition-all duration-500 w-full min-w-[120px] max-w-[180px] mx-auto
                 ${selectedStyle}
