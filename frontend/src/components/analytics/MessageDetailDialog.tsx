@@ -163,7 +163,7 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
               <div className="flex flex-wrap gap-2">
                 {allTopics.map((topic) => (
                   <Badge key={topic} variant="secondary">
-                    {topic}
+                    {topic.split('|')[0]}
                   </Badge>
                 ))}
               </div>

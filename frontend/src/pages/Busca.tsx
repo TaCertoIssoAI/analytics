@@ -396,7 +396,7 @@ const Busca = () => {
                               <div className="flex gap-1 flex-wrap">
                                 {allTopics.slice(0, 2).map((topic) => (
                                   <Badge key={topic} variant="secondary" className="text-xs">
-                                    {topic}
+                                    {topic.split('|')[0]}
                                   </Badge>
                                 ))}
                                 {allTopics.length > 2 && (
