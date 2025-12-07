@@ -191,8 +191,12 @@ async def list_analises(
         print(f"   Filtros: {filters}")
         print("="*60)
 
-        # [MODIFIED] Usa Firestore em vez de BigQuery
-        result = firestore_service.list_analises(limit=limit, offset=offset, filters=filters)
+        if search:
+            # se tiver query de busca, usa big query para busca semântica
+            result = bigquery_service.list_analises(limit=limit, offset=offset, filters=filters)
+        else:
+            # Usa Firestore em vez de BigQuery se não tiver busca semântica
+            result = firestore_service.list_analises(limit=limit, offset=offset, filters=filters)
 
         if result is None:
             raise HTTPException(

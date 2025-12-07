@@ -246,18 +246,20 @@ class BigQueryService:
         """
         clauses = []
 
-        # Filtro de busca (texto)
+        # Filtro de busca (texto) - DEPRECATED
+        # Search is now handled via VECTOR_SEARCH in list_analises and get_analytics_dashboard
+        # This LIKE-based search is kept only for backward compatibility if search is in filters
+        # but should not be used when semantic search is available
         if filters.get("search"):
             search = filters["search"].lower()
-            embeddings = self._embed_text(filters["search"])
-            print("running semantic search")
+            # Note: This LIKE search is deprecated in favor of VECTOR_SEARCH
             # Busca em user_message_text, full_combined_text, e tópicos
             clauses.append(f"""
-                (LOWER(user_message_text) LIKE '%{search}%' 
+                (LOWER(user_message_text) LIKE '%{search}%'
                  OR LOWER(full_combined_text) LIKE '%{search}%'
                  OR EXISTS(
-                     SELECT 1 
-                     FROM UNNEST(claims) c, UNNEST(c.topics) t 
+                     SELECT 1
+                     FROM UNNEST(claims) c, UNNEST(c.topics) t
                      WHERE LOWER(t) LIKE '%{search}%'
                  ))
             """)
@@ -325,45 +327,92 @@ class BigQueryService:
 
         return " AND ".join(clauses) if clauses else "1=1"
 
-    def list_analises(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+    def list_analises(self, limit: int = 5, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
         """
         Lista análises com paginação e filtros.
         """
         try:
             filters = filters or {}
-            where_clause = self._build_filter_clause(filters)
-            print(f"🔍 WHERE clause: {where_clause}")
 
-            # Query para contar total com filtros
-            count_query = f"""
-                SELECT COUNT(*) as total
-                FROM `{self.full_table_id}`
-                WHERE {where_clause}
-            """
+            # Check if semantic search is needed
+            has_search = bool(filters.get("search"))
 
-            count_job = self.client.query(count_query)
-            count_results = list(count_job.result())
-            total = count_results[0]["total"] if count_results else 0
+            if has_search:
+                # Use VECTOR_SEARCH for semantic similarity
+                query_text = filters["search"]
+                query_embedding = self._embed_text(query_text)
 
-            # Query para buscar análises paginadas com filtros
-            query = f"""
-                SELECT *
-                FROM `{self.full_table_id}`
-                WHERE {where_clause}
-                ORDER BY processed_at DESC
-                LIMIT @limit
-                OFFSET @offset
-            """
+                # Build WHERE clause without search (other filters only)
+                non_semantic_filters = {k: v for k, v in filters.items() if k != "search"}
+                where_clause = self._build_filter_clause(non_semantic_filters)
 
-            job_config = bigquery.QueryJobConfig(
-                query_parameters=[
-                    bigquery.ScalarQueryParameter("limit", "INT64", limit),
-                    bigquery.ScalarQueryParameter("offset", "INT64", offset)
-                ]
-            )
+                print(f"🔍 Using VECTOR_SEARCH for semantic search: '{query_text}'")
 
-            query_job = self.client.query(query, job_config=job_config)
-            results = list(query_job.result())
+                # Query with VECTOR_SEARCH
+                # Note: VECTOR_SEARCH doesn't support traditional OFFSET, so we need a workaround
+                # We'll fetch more results and slice them in memory
+                # Using same pattern as get_analytics_dashboard
+                # we will use limit for the TOP-K results in vector search
+                query = f"""
+                    SELECT base.*
+                    FROM VECTOR_SEARCH(
+                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause}),
+                        'embedding',
+                        (SELECT @query_emb AS prompt_embedding),
+                        top_k => {limit},
+                        distance_type => 'COSINE'
+                    )
+                    ORDER BY processed_at DESC
+                """
+
+                job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ArrayQueryParameter("query_emb", "FLOAT64", query_embedding)
+                    ]
+                )
+
+                query_job = self.client.query(query, job_config=job_config)
+                all_results = list(query_job.result())
+
+                # Apply offset and limit in memory
+                total = len(all_results)
+                results = all_results[offset:offset + limit]
+
+            else:
+                # Use traditional WHERE clause for non-semantic filters
+                where_clause = self._build_filter_clause(filters)
+                print(f"🔍 WHERE clause: {where_clause}")
+
+                # Query para contar total com filtros
+                count_query = f"""
+                    SELECT COUNT(*) as total
+                    FROM `{self.full_table_id}`
+                    WHERE {where_clause}
+                """
+
+                count_job = self.client.query(count_query)
+                count_results = list(count_job.result())
+                total = count_results[0]["total"] if count_results else 0
+
+                # Query para buscar análises paginadas com filtros
+                query = f"""
+                    SELECT *
+                    FROM `{self.full_table_id}`
+                    WHERE {where_clause}
+                    ORDER BY processed_at DESC
+                    LIMIT @limit
+                    OFFSET @offset
+                """
+
+                job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter("limit", "INT64", limit),
+                        bigquery.ScalarQueryParameter("offset", "INT64", offset)
+                    ]
+                )
+
+                query_job = self.client.query(query, job_config=job_config)
+                results = list(query_job.result())
 
             # Converte resultados para lista de dicts
             items = []
