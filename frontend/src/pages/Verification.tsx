@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText, Link as LinkIcon, Eye, ExternalLink } from "lucide-react";
 import { Analysis, ScrapedLink } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
@@ -351,56 +353,55 @@ const Verification = () => {
               </div>
               
               
-              {/* Reviewers Dropdown */}
+              {/* Reviewers Modal */}
               {reviewers.length > 0 && (
-                <div className="w-full">
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="reviewers" className="border-none">
-                      <AccordionTrigger className="hover:no-underline py-2">
-                        <span className="text-sm font-semibold">Revisores que avaliaram</span>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4 pt-2">
-                          <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                            Estas são as avaliações da análise feita pela AI, realizada pelos revisores certificados do TaCertoIsso AI.
-                          </p>
-                          <div className="space-y-2">
-                            {reviewers.map((reviewer) => (
-                              <Link 
-                                key={reviewer.uid} 
-                                to={`/profile/${reviewer.uid}`}
-                                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                                    {reviewer.displayName.charAt(0).toUpperCase()}
-                                  </div>
-                                  <span className="font-medium group-hover:text-primary transition-colors">
-                                    {reviewer.displayName}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {reviewer.action === 'like' ? (
-                                    <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                                      <ThumbsUp className="h-3 w-3" />
-                                      <span>Aprovou</span>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 px-2 py-1 rounded-full">
-                                      <ThumbsDown className="h-3 w-3" />
-                                      <span>Reprovou</span>
-                                    </div>
-                                  )}
-                                  <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                              </Link>
-                            ))}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:underline">
+                      Ver revisores que avaliaram
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Revisores que avaliaram</DialogTitle>
+                      <DialogDescription>
+                        Estas são as avaliações da análise feita pela AI, realizada pelos revisores certificados do TaCertoIsso AI.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 mt-4 max-h-[60vh] overflow-y-auto pr-2">
+                      {reviewers.map((reviewer) => (
+                        <Link 
+                          key={reviewer.uid} 
+                          to={`/profile/${reviewer.uid}`}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                              {reviewer.displayName.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="font-medium group-hover:text-primary transition-colors">
+                              {reviewer.displayName}
+                            </span>
                           </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
+                          <div className="flex items-center gap-2">
+                            {reviewer.action === 'like' ? (
+                              <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                                <ThumbsUp className="h-3 w-3" />
+                                <span>Aprovou</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 px-2 py-1 rounded-full">
+                                <ThumbsDown className="h-3 w-3" />
+                                <span>Reprovou</span>
+                              </div>
+                            )}
+                            <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               )}
             </div>
           </div>
