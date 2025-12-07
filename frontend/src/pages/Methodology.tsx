@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Header } from "@/components/Header";
 
 const Controls = () => {
   const { zoomIn, zoomOut, resetTransform } = useControls();
@@ -63,41 +64,43 @@ classDef magenta fill:magenta,stroke:#000,stroke-width:2px,color:#fff
 A(IMG):::green ===> P[Separação por Modalidade]:::default
 AA(IMG + Texto):::green ===> P[Separação por Modalidade]:::default
 AAAAAA(Texto):::green ===> P[Separação por Modalidade]:::default
-AAAA(Audio):::green ===> P[Separação por Modalidade]:::default
-AAAAAAAA(Video):::green ===> P[Separação por Modalidade]:::default
-AAA(Video + Texto):::green ===> P[Separação por Modalidade]:::default
+AAAA(Áudio):::green ===> P[Separação por Modalidade]:::default
+AAAAAAAA(Vídeo):::green ===> P[Separação por Modalidade]:::default
+AAA(Vídeo + Texto):::green ===> P[Separação por Modalidade]:::default
 
 
 
 %% 1,2,3,4 %%
 P ---o ALEK(Texto Original)
 P ---o ALEKI(Imagem)
-P ---o ALEKII(Transcri. Audio)
-P ---o ALEKIII(Video?)
+P ---o ALEKII(Transcri. Áudio)
+P ---o ALEKIII(Vídeo?)
 
-ALEK ---o |Contexto de Links|PD(Extrator de Afirmacoes<br>Afirmacao 1<br>Afirmacao 2<br>...<br>Afirmacao n<br>):::orange
+ALEK ---o |Contexto de Links|PD(Extrator de Afirmações<br>Afirmação 1<br>Afirmação 2<br>...<br>Afirmação n<br>):::orange
 ALEK ---o |Texto Original|PD
 ALEKI ---o PD
 ALEKII ---o PD
 ALEKIII ---o PD
 PD --- MT([APIs de fact-checking<br>Busca na Web]):::blue
-MT --- |Contexto Externo| ZOIO(Lista de Afirmacoes<br>enriquecidas) 
-ZOIO ----  OV(Julgamento Final - Contexto de todas afirmacoes e LLM):::red ---> Whatsapp{Whatsapp}:::green
+MT --- |Contexto Externo| ZOIO(Lista de Afirmações<br>enriquecidas) 
+ZOIO ----  OV(Julgamento Final - Contexto de todas afirmações e LLM):::red ---> Whatsapp{Whatsapp}:::green
 
-OV --- |Cada entrada do dataset eh<br>por afirmacao, mas apenas ingerida apos<br> o julgamento final| IC[(Analytics)]:::blue
+OV --- |Cada entrada do dataset é<br>por afirmação, mas apenas ingerida após<br> o julgamento final| IC[(Analytics)]:::blue
 `;
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-        Metodologia Tá Certo Isso AI
-      </h1>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto py-10 px-4">
+        <h1 className="text-4xl font-bold mb-8 text-center text-primary">
+          Metodologia Tá Certo Isso AI
+        </h1>
       
       <Card className="mb-10 overflow-hidden border-none shadow-lg bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Arquitetura do Sistema</CardTitle>
         </CardHeader>
-          <div className="relative w-full h-[80vh] min-h-[600px] bg-white/5 dark:bg-black/20">
+          <div className="relative w-full h-[80vh] min-h-[600px] bg-background">
             <TransformWrapper
               initialScale={1}
               initialPositionX={0}
@@ -209,6 +212,7 @@ OV --- |Cada entrada do dataset eh<br>por afirmacao, mas apenas ingerida apos<br
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     </div>
   );
