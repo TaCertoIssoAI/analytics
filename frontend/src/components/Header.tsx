@@ -1,4 +1,4 @@
-import { MessageSquare, CheckCircle2, User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye } from "lucide-react";
+import { MessageSquare, CheckCircle2, User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ export const Header = () => {
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [highContrast, setHighContrast] = useState(false);
+  const [vlibrasEnabled, setVlibrasEnabled] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -33,6 +34,9 @@ export const Header = () => {
     const savedHighContrast = localStorage.getItem("highContrast") === "true";
     setHighContrast(savedHighContrast);
     document.documentElement.classList.toggle("high-contrast", savedHighContrast);
+
+    const savedVlibras = localStorage.getItem("vlibrasEnabled") === "true";
+    setVlibrasEnabled(savedVlibras);
   }, []);
 
   const toggleTheme = () => {
@@ -47,6 +51,13 @@ export const Header = () => {
     setHighContrast(newHighContrast);
     localStorage.setItem("highContrast", String(newHighContrast));
     document.documentElement.classList.toggle("high-contrast", newHighContrast);
+  };
+
+  const toggleVLibras = () => {
+    const newState = !vlibrasEnabled;
+    setVlibrasEnabled(newState);
+    localStorage.setItem("vlibrasEnabled", String(newState));
+    window.location.reload();
   };
 
   const handleUserClick = () => {
@@ -83,6 +94,15 @@ export const Header = () => {
               <WhatsAppIcon className="h-4 w-4" />
               Adicionar Bot
             </a>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleVLibras}
+            className="h-9 w-9"
+            aria-label="Toggle VLibras"
+          >
+            <Ear className={`h-4 w-4 ${vlibrasEnabled ? "text-primary" : ""}`} />
           </Button>
           <Button
             variant="ghost"
@@ -173,6 +193,17 @@ export const Header = () => {
                        Alto Contraste
                      </span>
                      <div className={`h-4 w-4 rounded-full border ${highContrast ? "bg-primary border-primary" : "border-foreground"}`} />
+                   </button>
+
+                   <button
+                     onClick={toggleVLibras}
+                     className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                   >
+                     <span className="flex items-center gap-3">
+                       <Ear className="h-5 w-5" />
+                       Acessibilidade (VLibras)
+                     </span>
+                     <div className={`h-4 w-4 rounded-full border ${vlibrasEnabled ? "bg-primary border-primary" : "border-foreground"}`} />
                    </button>
                    
                    <button

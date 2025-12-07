@@ -16,11 +16,14 @@ import Profile from "./pages/Profile";
 import JoinReviewers from "./pages/JoinReviewers";
 import { AuthProvider } from "./auth";
 
+import { VLibrasController } from "@/components/VLibrasController";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <VLibrasController />
       <TooltipProvider>
         <Toaster />
         <Sonner />
