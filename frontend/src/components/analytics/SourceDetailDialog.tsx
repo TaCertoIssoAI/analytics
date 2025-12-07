@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ExternalLink, Calendar, ArrowRight } from "lucide-react";
@@ -65,6 +65,9 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
             <ExternalLink className="h-5 w-5" />
             Detalhes da Fonte
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Detalhes da fonte citada, estatísticas e análises relacionadas.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

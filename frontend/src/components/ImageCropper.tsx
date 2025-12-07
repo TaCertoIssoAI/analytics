@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import getCroppedImg from '@/utils/canvasUtils'
 import { Loader2 } from "lucide-react"
 
@@ -52,6 +52,9 @@ const ImageCropper = ({ imageSrc, open, onClose, onCropComplete }: ImageCropperP
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Ajustar Foto</DialogTitle>
+          <DialogDescription className="sr-only">
+            Ferramenta para recortar e ajustar a imagem de perfil.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="relative w-full h-[300px] bg-black rounded-md overflow-hidden my-4">

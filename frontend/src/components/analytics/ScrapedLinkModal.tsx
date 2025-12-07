@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Copy, Check } from "lucide-react";
@@ -31,6 +31,9 @@ export const ScrapedLinkModal = ({ link, open, onOpenChange }: ScrapedLinkModalP
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Conteúdo Extraído do Site</DialogTitle>
+          <DialogDescription className="sr-only">
+            Visualização do texto extraído do link selecionado.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
