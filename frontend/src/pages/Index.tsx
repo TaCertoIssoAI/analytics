@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { VerificationCard } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, FileText, AlertTriangle, BadgeCheck, Trophy } from "lucide-react";
+import { Database, FileText, AlertTriangle, BadgeCheck, Trophy, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTopReviewers, TopReviewer } from "@/auth/userService";
 import { useEffect, useState } from "react";
@@ -138,7 +138,7 @@ const Index = () => {
                 <p className="text-lg text-muted-foreground">
                   Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas pelo nosso bot de WhatsApp.
                 </p>
-                <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex flex-wrap gap-4 justify-center pt-4">
                   <Button size="lg" className="gap-2" asChild>
                     <Link to="/busca">
                       <Database className="h-5 w-5" />
@@ -150,8 +150,16 @@ const Index = () => {
                       Sobre o Projeto
                     </Link>
                   </Button>
+                  <Button size="lg" variant="outline" className="gap-2 border-foreground" asChild>
+                    <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="h-5 w-5" />
+                      Adicionar Bot
+                    </a>
+                  </Button>
                 </div>
               </div>
+
+
 
               {/* Mini Stats Grid */}
               <div className="grid grid-cols-3 gap-4 pt-8 border-t">
@@ -247,6 +255,16 @@ const Index = () => {
             </div>
 
           </div>
+        </div>
+
+        {/* Floating WhatsApp Button */}
+        <div className="absolute bottom-4 right-4 z-20 hidden lg:block">
+          <Button size="lg" variant="outline" className="gap-2 border-foreground bg-background/50 backdrop-blur-sm hover:bg-background/80" asChild>
+            <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="h-5 w-5" />
+              Adicionar Bot no WhatsApp
+            </a>
+          </Button>
         </div>
       </section>
 
