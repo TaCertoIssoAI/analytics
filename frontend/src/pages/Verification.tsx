@@ -240,6 +240,27 @@ const Verification = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: analysis?.analysis_title || "Análise de Verificação",
+          text: "Confira esta análise de verificação no Tá Certo Isso AI!",
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copiado para a área de transferência!");
+      } catch (error) {
+        toast.error("Erro ao copiar link.");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -367,7 +388,7 @@ const Verification = () => {
             )}
 
             <div className="flex flex-wrap gap-4 pt-4 items-center">
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleShare}>
                 <Share2 className="h-4 w-4" />
                 Compartilhar
               </Button>

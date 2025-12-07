@@ -206,7 +206,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
 
       {/* Final Success State */}
       {currentLevel >= steps.length && steps.length > 0 && (
-        <div className="flex flex-col items-center justify-center py-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="mt-4 pt-6 border-t border-border w-full flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3 shadow-sm ring-2 ring-green-50">
             <Check className="h-5 w-5" />
           </div>
