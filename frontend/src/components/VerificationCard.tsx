@@ -5,12 +5,17 @@ import { Link } from "react-router-dom";
 
 import { AnalysisMetrics } from "@/types/analysis";
 
+export interface Tag {
+  name: string;
+  id?: string;
+}
+
 interface VerificationCardProps {
   id: string;
   title: string;
   status: "true" | "false" | "unverifiable";
   date: string;
-  tags: string[];
+  tags: Tag[];
   excerpt: string;
   analysis_metrics?: AnalysisMetrics;
 }
@@ -77,12 +82,27 @@ export const VerificationCard = ({ id, title, status, date, tags, excerpt, analy
           </div>
           
           {tags.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
               <Tag className="h-3 w-3 text-muted-foreground" />
               {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
+                tag.id ? (
+                  <a 
+                    key={tag.name} 
+                    href={`https://cv.iptc.org/newscodes/mediatopic/${tag.id}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="no-underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+                      {tag.name}
+                    </Badge>
+                  </a>
+                ) : (
+                  <Badge key={tag.name} variant="secondary" className="text-xs">
+                    {tag.name}
+                  </Badge>
+                )
               ))}
             </div>
           )}

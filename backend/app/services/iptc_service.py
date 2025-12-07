@@ -87,8 +87,19 @@ class IPTCService:
                 llm_model="gpt-4o-mini"
             )
 
+            # Helper para formatar tópico
+            def format_topic(topic_obj):
+                if not topic_obj or isinstance(topic_obj, str):
+                    return topic_obj if topic_obj else ""
+                name = topic_obj.get("name", "")
+                qcode = topic_obj.get("qcode", "")
+                # Extract ID from qcode (medtop:11000000 -> 11000000)
+                if ":" in qcode:
+                    qcode = qcode.split(":")[-1]
+                return f"{name}|{qcode}"
+
             # Combina categoria principal + subcategorias
-            topics = [result['main_category']] + result.get('subcategories', [])
+            topics = [format_topic(result['main_category'])] + [format_topic(sub) for sub in result.get('subcategories', [])]
 
             # Remove duplicatas preservando ordem
             unique_topics = list(dict.fromkeys([t for t in topics if t]))

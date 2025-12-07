@@ -52,7 +52,17 @@ def classificar_texto(texto_claim):
             llm_model="gpt-4o-mini"
         )
         
-        topicos = [resultado['main_category']] + resultado['subcategories']
+        # Helper para formatar tópico
+        def format_topic(topic_obj):
+            if not topic_obj or isinstance(topic_obj, str):
+                return topic_obj if topic_obj else ""
+            name = topic_obj.get("name", "")
+            qcode = topic_obj.get("qcode", "")
+            if ":" in qcode:
+                qcode = qcode.split(":")[-1]
+            return f"{name}|{qcode}"
+
+        topicos = [format_topic(resultado['main_category'])] + [format_topic(sub) for sub in resultado['subcategories']]
         return list(dict.fromkeys([t for t in topicos if t]))
     
     except Exception as e:

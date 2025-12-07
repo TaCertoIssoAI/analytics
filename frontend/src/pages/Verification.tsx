@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
+import iptcMapping from "@/data/iptcMapping.json";
 
 const statusConfig = {
   "VERDADEIRO": {
@@ -321,14 +322,47 @@ const Verification = () => {
               ))}
             </div>
 
+
+
             {/* Tópicos */}
             {allTopics.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                {allTopics.map((topic) => (
-                  <Badge key={topic} variant="outline">
-                    {topic}
-                  </Badge>
-                ))}
+                {allTopics.map((topicStr) => {
+                  const parts = topicStr.split('|');
+                  let name = parts[0];
+                  let id = parts.length > 1 ? parts[1] : undefined;
+                  
+                  // Fallback for legacy data using mapping
+                  if (!id) {
+                    const lowerName = name.toLowerCase();
+                    // @ts-ignore
+                    if (iptcMapping[lowerName]) {
+                       // @ts-ignore
+                      id = iptcMapping[lowerName];
+                    }
+                  }
+
+                  if (id) {
+                    return (
+                      <a 
+                        key={topicStr} 
+                        href={`https://cv.iptc.org/newscodes/mediatopic/${id}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="no-underline"
+                      >
+                        <Badge variant="outline" className="hover:bg-accent transition-colors">
+                          {name}
+                        </Badge>
+                      </a>
+                    );
+                  }
+                  return (
+                    <Badge key={topicStr} variant="outline">
+                      {name}
+                    </Badge>
+                  );
+                })}
               </div>
             )}
 

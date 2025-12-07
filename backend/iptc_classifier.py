@@ -222,8 +222,8 @@ class IptcEmbeddingTree:
         if not nodes:
             return {"main_category": "", "subcategories": [], "score": 0.0}
 
-        main_category = nodes[0]["name"]
-        subcategories = [node["name"] for node in nodes[1:]]
+        main_category = {"name": nodes[0]["name"], "qcode": nodes[0]["qcode"]}
+        subcategories = [{"name": node["name"], "qcode": node["qcode"]} for node in nodes[1:]]
 
         return {
             "main_category": main_category,

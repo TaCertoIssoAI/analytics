@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
 import { Claim } from "@/types/analysis";
+import iptcMapping from "@/data/iptcMapping.json";
 
 interface ClaimCardProps {
   claim: Claim;
@@ -61,12 +62,44 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
           {claim.topics.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm mb-2">Tópicos</h4>
+
+
               <div className="flex flex-wrap gap-2">
-                {claim.topics.map((topic, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {topic}
-                  </Badge>
-                ))}
+                {claim.topics.map((topicStr, index) => {
+                  const parts = topicStr.split('|');
+                  let name = parts[0];
+                  let id = parts.length > 1 ? parts[1] : undefined;
+
+                  if (!id) {
+                    const lowerName = name.toLowerCase();
+                    // @ts-ignore
+                    if (iptcMapping[lowerName]) {
+                       // @ts-ignore
+                      id = iptcMapping[lowerName];
+                    }
+                  }
+
+                  if (id) {
+                    return (
+                      <a 
+                        key={index} 
+                        href={`https://cv.iptc.org/newscodes/mediatopic/${id}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="no-underline"
+                      >
+                        <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+                          {name}
+                        </Badge>
+                      </a>
+                    );
+                  }
+                  return (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {name}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           )}

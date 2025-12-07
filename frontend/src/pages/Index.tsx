@@ -1,5 +1,5 @@
 import { Header } from "@/components/Header";
-import { VerificationCard } from "@/components/VerificationCard";
+import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
 import { Database, FileText, AlertTriangle, BadgeCheck, Trophy, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/loadAnalyses";
 import type { Analysis } from "@/types/analysis";
+import iptcMapping from "@/data/iptcMapping.json";
 
 interface Stats {
   total_verificacoes: number;
@@ -97,9 +98,29 @@ const Index = () => {
 
   // Converte análises para o formato esperado pelo VerificationCard
   const verifications = analyses.map((analysis) => {
-    const allTopics = Array.from(
+
+
+    const allTopics: Tag[] = Array.from(
       new Set(analysis.claims.flatMap(claim => claim.topics))
-    );
+    ).map(topicStr => {
+      const parts = topicStr.split('|');
+      let name = parts[0];
+      let id = parts.length > 1 ? parts[1] : undefined;
+
+      if (!id) {
+        const lowerName = name.toLowerCase();
+        // @ts-ignore
+        if (iptcMapping[lowerName]) {
+           // @ts-ignore
+          id = iptcMapping[lowerName];
+        }
+      }
+
+      if (id) {
+        return { name, id };
+      }
+      return { name };
+    });
 
     // Determina status baseado no overall_verdict
     let status: 'true' | 'false' | 'unverifiable' = 'unverifiable';
