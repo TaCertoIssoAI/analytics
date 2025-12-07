@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +66,7 @@ const Verification = () => {
   const [loading, setLoading] = useState(true);
   const [selectedLink, setSelectedLink] = useState<ScrapedLink | null>(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [accordionValue, setAccordionValue] = useState<string>("");
 
   // Like/Dislike state
   const [likes, setLikes] = useState(0);
@@ -572,10 +574,99 @@ const Verification = () => {
             </CardHeader>
             <CardContent>
               <div className="text-sm md:text-lg font-medium text-foreground">
-                <ReactMarkdown>{analysis.final_comment}</ReactMarkdown>
+                <ReactMarkdown
+                  components={{
+                    p: ({ node, children, ...props }) => {
+                      return (
+                        <p {...props} className="mb-4 last:mb-0">
+                          {Array.isArray(children) 
+                            ? children.map((child, index) => {
+                                if (typeof child === 'string') {
+                                  // Regex para capturar citações como [1], [1][2], etc.
+                                  const parts = child.split(/(\[[0-9]+\])/g);
+                                  return parts.map((part, i) => {
+                                    if (part.match(/^\[[0-9]+\]$/)) {
+                                      const id = part.replace(/[\[\]]/g, '');
+                                      return (
+                                        <a 
+                                          key={`${index}-${i}`} 
+                                          href={`#source-${id}`}
+                                          className="text-primary font-bold hover:underline cursor-pointer"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            setAccordionValue("sources");
+                                            setTimeout(() => {
+                                              document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: 'smooth' });
+                                            }, 100);
+                                          }}
+                                        >
+                                          {part}
+                                        </a>
+                                      );
+                                    }
+                                    return part;
+                                  });
+                                }
+                                return child;
+                              })
+                            : children}
+                        </p>
+                      );
+                    }
+                  }}
+                >
+                  {analysis.final_comment}
+                </ReactMarkdown>
               </div>
             </CardContent>
           </Card>
+
+          {/* Fontes de Apoio */}
+          {(() => {
+            // Aggregate all unique sources from claims
+            const allSources = analysis.claims.flatMap(claim => claim.sources);
+            const uniqueSources = Array.from(new Map(allSources.map(s => [s.url, s])).values());
+
+            if (uniqueSources.length === 0) return null;
+
+            return (
+              <Accordion 
+                type="single" 
+                collapsible 
+                className="w-full border-2 border-muted rounded-lg bg-card text-card-foreground shadow-sm"
+                value={accordionValue}
+                onValueChange={setAccordionValue}
+              >
+                <AccordionItem value="sources" className="border-none">
+                  <AccordionTrigger className="px-6 hover:no-underline">
+                    <h2 className="text-xl md:text-2xl font-semibold">Fontes de Apoio</h2>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-6 pb-6">
+                    <div className="space-y-3 pt-2">
+                      {uniqueSources.map((source, index) => (
+                        <div key={index} id={`source-${index + 1}`} className="flex gap-3 text-sm">
+                          <span className="font-bold text-primary min-w-[24px]">[{index + 1}]</span>
+                          <div className="flex-1">
+                            <a 
+                              href={source.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="font-medium hover:underline text-foreground block"
+                            >
+                              {source.title || source.publisher || new URL(source.url).hostname}
+                            </a>
+                            <span className="text-xs text-muted-foreground break-all">
+                              {source.url}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            );
+          })()}
         </div>
       </article>
 
