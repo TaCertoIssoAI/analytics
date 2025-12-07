@@ -25,10 +25,21 @@ interface Step {
 }
 
 export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnimationProps) => {
+  const [isCompact, setIsCompact] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [phase, setPhase] = useState<"pending" | "thinking" | "decided">("pending"); // pending, thinking, decided
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkSize = () => {
+      setIsCompact(window.innerWidth < 1024); // Compact mode for screens smaller than 1024px
+    };
+    
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
 
   // Build the path from root to target
   useEffect(() => {
@@ -67,7 +78,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
         candidates
       };
     });
-
+// ... (rest of the useEffect is unchanged)
     setSteps(newSteps);
     setCurrentLevel(0);
     setPhase("thinking"); // Start thinking immediately
@@ -182,7 +193,8 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
             steps={steps} 
             level={0} 
             currentLevel={currentLevel} 
-            phase={phase} 
+            phase={phase}
+            isCompact={isCompact}
           />
         )}
       </div>
@@ -208,12 +220,14 @@ const RecursiveTree = ({
   steps, 
   level, 
   currentLevel, 
-  phase 
+  phase,
+  isCompact
 }: { 
   steps: Step[], 
   level: number, 
   currentLevel: number, 
-  phase: "pending" | "thinking" | "decided" 
+  phase: "pending" | "thinking" | "decided",
+  isCompact: boolean
 }) => {
   if (level >= steps.length) return null;
 
@@ -233,10 +247,12 @@ const RecursiveTree = ({
   if (!isVisible) return null;
 
   // COMPACT MODE LOGIC:
-  // User requested to use available space. We will show all candidates by default.
-  // The container is now wider (max-w-7xl), so we can afford to show siblings.
-  // If it overflows, the container has overflow-x-auto.
-  const candidatesToShow = step.candidates;
+  // If isCompact is true AND this level is already decided (past level), 
+  // ONLY show the selected node.
+  let candidatesToShow = step.candidates;
+  if (isCompact && level < currentLevel) {
+    candidatesToShow = step.candidates.filter(c => c.id === step.selectedNode.id);
+  }
 
   return (
     <ul className={isGreenPath ? "tree-green" : ""}>
@@ -304,6 +320,7 @@ const RecursiveTree = ({
                 level={level + 1} 
                 currentLevel={currentLevel} 
                 phase={phase} 
+                isCompact={isCompact}
               />
             )}
           </li>
