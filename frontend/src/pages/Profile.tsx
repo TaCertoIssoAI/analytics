@@ -11,7 +11,7 @@ import { useEffect, useState, useRef } from "react";
 import { getUserProfile, createUserProfile, saveUserProfile, getUserInteractions, UserProfile, UserInteraction } from "@/auth/userService";
 import { User } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink } from "lucide-react";
+import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -236,7 +236,10 @@ const Profile = () => {
                     )}
                   </div>
                   
-                  <h1 className="text-2xl font-bold mt-4 text-center">{profile.displayName || "Usuário"}</h1>
+                  <div className="flex items-center gap-2 mt-4 justify-center">
+                    <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
+                    <BadgeCheck className="h-6 w-6 text-primary" />
+                  </div>
                   
                   {profile.occupation && (
                     <div className="flex items-center gap-2 text-muted-foreground mt-1">
@@ -338,17 +341,20 @@ const Profile = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome</Label>
-                      <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                      <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={50} />
+                      <p className="text-xs text-muted-foreground text-right">{name.length}/50</p>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="occupation">Ocupação</Label>
-                      <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} />
+                      <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} maxLength={50} />
+                      <p className="text-xs text-muted-foreground text-right">{occupation.length}/50</p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="bio">Bio</Label>
-                      <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
+                      <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} maxLength={160} />
+                      <p className="text-xs text-muted-foreground text-right">{bio.length}/160</p>
                     </div>
 
                     <div className="space-y-2">
