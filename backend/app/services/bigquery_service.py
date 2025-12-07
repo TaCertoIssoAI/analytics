@@ -445,9 +445,9 @@ class BigQueryService:
                     -- stats
                     (SELECT COUNT(*) FROM filtered_analyses) AS total_messages,
                     (SELECT COUNT(*) FROM claims_unpacked) AS total_claims,
-                    (SELECT COUNTIF(claim_verdict = 'Fake') FROM claims_unpacked) AS count_fake,
-                    (SELECT COUNTIF(claim_verdict = 'True') FROM claims_unpacked) AS count_true,
-                    (SELECT COUNTIF(claim_verdict = 'Misleading') FROM claims_unpacked) AS count_misleading,
+                    (SELECT COUNTIF(UPPER(claim_verdict) IN ('FAKE', 'FALSO', 'FALSE')) FROM claims_unpacked) AS count_fake,
+                    (SELECT COUNTIF(UPPER(claim_verdict) IN ('TRUE', 'VERDADEIRO', 'VERDADE')) FROM claims_unpacked) AS count_true,
+                    (SELECT COUNTIF(UPPER(claim_verdict) IN ('UNKNOWN', 'CHECK', 'UNVERIFIED', 'DESCONHECIDO', 'FONTES INSUFICIENTES', 'INSUFFICIENT_RESOURCES', 'MISLEADING', 'ENGANOSO')) FROM claims_unpacked) AS count_unverifiable,
 
                     -- modalities
                     (SELECT COUNTIF(user_message_text IS NOT NULL AND LENGTH(user_message_text) > 0)
@@ -485,7 +485,7 @@ class BigQueryService:
                     "results_distribution": [
                         {"name": "Falso", "value": 0},
                         {"name": "Verdadeiro", "value": 0},
-                        {"name": "Enganoso", "value": 0},
+                        {"name": "Fontes insuficientes para verificar", "value": 0},
                     ],
                     "modalities_distribution": [
                         {"name": "Texto", "value": 0},
@@ -505,7 +505,7 @@ class BigQueryService:
                 "results_distribution": [
                     {"name": "Falso", "value": row["count_fake"]},
                     {"name": "Verdadeiro", "value": row["count_true"]},
-                    {"name": "Enganoso", "value": row["count_misleading"]},
+                    {"name": "Fontes insuficientes para verificar", "value": row["count_unverifiable"]},
                 ],
                 "modalities_distribution": [
                     {"name": "Texto", "value": row["count_text"]},

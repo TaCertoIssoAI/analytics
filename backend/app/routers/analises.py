@@ -698,7 +698,7 @@ async def export_messages_csv(
             "Quantidade de Claims",
             "% Verdadeiro",
             "% Falso",
-            "% Não Verificado",
+            "% Fontes insuficientes para verificar",
             "Tópicos"
         ])
 
