@@ -81,13 +81,13 @@ def test_metrics_calculation():
     assert metrics.fake_count == 1, f"Expected 1 fake, got {metrics.fake_count}" # Claim 2
     assert metrics.unverified_count == 1, f"Expected 1 unverified, got {metrics.unverified_count}" # Claim 3 (Enganoso)
 
-    # Check scores
-    # True: 2/4 = 50.0
-    # Fake: 1/4 = 25.0
-    # Unverified: 1/4 = 25.0
-    assert metrics.truth_score == 50.0, f"Expected 50.0 truth score, got {metrics.truth_score}"
-    assert metrics.fake_score == 25.0, f"Expected 25.0 fake score, got {metrics.fake_score}"
-    assert metrics.unverified_score == 25.0, f"Expected 25.0 unverified score, got {metrics.unverified_score}"
+    # Check scores (as integers, rounded from percentages)
+    # True: 2/4 = 50%
+    # Fake: 1/4 = 25%
+    # Unverified: 1/4 = 25%
+    assert metrics.truth_score == 50, f"Expected 50 truth score, got {metrics.truth_score}"
+    assert metrics.fake_score == 25, f"Expected 25 fake score, got {metrics.fake_score}"
+    assert metrics.unverified_score == 25, f"Expected 25 unverified score, got {metrics.unverified_score}"
 
     print("✅ Metrics calculation test passed!")
 
