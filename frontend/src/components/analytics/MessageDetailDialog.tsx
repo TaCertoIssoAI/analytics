@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +56,9 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
               </Button>
             )}
           </div>
+          <DialogDescription className="sr-only">
+            Detalhes completos da análise, incluindo conteúdo original, transcrições e verificações.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
