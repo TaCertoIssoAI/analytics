@@ -234,6 +234,82 @@ async def list_analises(
         )
 
 
+@router.get(
+    "/sources",
+    summary="Listar fontes",
+    description="Lista fontes citadas com paginação e filtros"
+)
+async def list_sources(
+    limit: int = Query(default=10, ge=1, le=100, description="Número de resultados por página"),
+    offset: int = Query(default=0, ge=0, description="Número de resultados a pular"),
+    search: str = Query(None, description="Termo de busca"),
+    message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
+    message_type_direct: bool = Query(True, description="Incluir Direct"),
+    modality_text: bool = Query(True, description="Incluir Texto"),
+    modality_audio: bool = Query(True, description="Incluir Áudio"),
+    modality_video: bool = Query(True, description="Incluir Vídeo"),
+    modality_image: bool = Query(True, description="Incluir Imagem"),
+    result_fake: bool = Query(True, description="Incluir Falso"),
+    result_true: bool = Query(True, description="Incluir Verdadeiro"),
+    result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
+    max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
+    min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
+    max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+) -> Dict[str, Any]:
+    """
+    Endpoint para listar fontes com paginação.
+    """
+    try:
+        filters = {
+            "search": search,
+            "message_type_whatsapp": message_type_whatsapp,
+            "message_type_direct": message_type_direct,
+            "modality_text": modality_text,
+            "modality_audio": modality_audio,
+            "modality_video": modality_video,
+            "modality_image": modality_image,
+            "result_fake": result_fake,
+            "result_true": result_true,
+            "result_unknown": result_unknown,
+            "min_truth_score": min_truth_score,
+            "max_truth_score": max_truth_score,
+            "min_fake_score": min_fake_score,
+            "max_fake_score": max_fake_score,
+        }
+
+        print("\n" + "="*60)
+        print(f"📚 Listando fontes (limit={limit}, offset={offset})...")
+        print(f"   Filtros: {filters}")
+        print("="*60)
+
+        result = bigquery_service.list_sources(limit=limit, offset=offset, filters=filters)
+
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao listar fontes"
+            )
+
+        print(f"✅ {len(result['items'])} fontes listadas!")
+        print("="*60 + "\n")
+
+        return {
+            "success": True,
+            "data": result
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao listar fontes: {e}")
+        print("="*60 + "\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
 @router.post(
     "",
     response_model=AnaliseCreateResponse,

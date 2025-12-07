@@ -526,6 +526,101 @@ class BigQueryService:
             print(f"❌ Erro ao gerar dashboard analytics: {e}")
             return None
 
+    def list_sources(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+        """
+        Lista fontes com paginação e filtros.
+        """
+        try:
+            filters = filters or {}
+            
+            # Remove search do filtro padrão pois vamos tratar diferente para fontes
+            # Se o search for para buscar NOME da fonte, precisamos ajustar.
+            # Por enquanto, vamos assumir que os filtros filtram as ANÁLISES, e listamos as fontes dessas análises.
+            
+            where_clause = self._build_filter_clause(filters)
+            
+            # Query base para filtrar análises
+            filtered_analyses_query = f"""
+                SELECT *
+                FROM `{self.full_table_id}`
+                WHERE {where_clause}
+            """
+
+            # Query para extrair, agrupar e contar fontes
+            # Usamos uma CTE para primeiro filtrar as análises, depois explodir as fontes
+            query = f"""
+                WITH filtered_analyses AS (
+                    {filtered_analyses_query}
+                ),
+                all_sources AS (
+                    SELECT source.url AS source_url
+                    FROM filtered_analyses,
+                    UNNEST(claims) AS c,
+                    UNNEST(c.sources) AS source
+                    WHERE source.url IS NOT NULL AND source.url != ''
+                ),
+                source_counts AS (
+                    SELECT source_url, COUNT(*) as count
+                    FROM all_sources
+                    GROUP BY source_url
+                )
+                SELECT *
+                FROM source_counts
+                ORDER BY count DESC
+                LIMIT @limit
+                OFFSET @offset
+            """
+            
+            # Query para contar o total de fontes únicas (para paginação)
+            count_query = f"""
+                WITH filtered_analyses AS (
+                    {filtered_analyses_query}
+                ),
+                all_sources AS (
+                    SELECT source.url AS source_url
+                    FROM filtered_analyses,
+                    UNNEST(claims) AS c,
+                    UNNEST(c.sources) AS source
+                    WHERE source.url IS NOT NULL AND source.url != ''
+                )
+                SELECT COUNT(DISTINCT source_url) as total
+                FROM all_sources
+            """
+
+            # Executa count
+            count_job = self.client.query(count_query)
+            count_results = list(count_job.result())
+            total = count_results[0]["total"] if count_results else 0
+
+            # Executa listagem
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter("limit", "INT64", limit),
+                    bigquery.ScalarQueryParameter("offset", "INT64", offset)
+                ]
+            )
+
+            query_job = self.client.query(query, job_config=job_config)
+            results = list(query_job.result())
+
+            items = []
+            for row in results:
+                items.append({
+                    "source": row["source_url"],
+                    "count": row["count"]
+                })
+
+            return {
+                "items": items,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+
+        except Exception as e:
+            print(f"❌ Erro ao listar fontes: {e}")
+            return None
+
     def semantic_search(self, query:str):
         pass
 

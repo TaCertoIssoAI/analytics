@@ -28,6 +28,15 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart";
 import { Pie, PieChart, Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface DashboardData {
   total_messages: number;
@@ -45,7 +54,19 @@ const Busca = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Pagination State - Messages
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalMessages, setTotalMessages] = useState(0);
+
+  // Pagination State - Sources
+  const [sourcesPage, setSourcesPage] = useState(1);
+  const [sourcesLimit] = useState(10);
+  const [totalSources, setTotalSources] = useState(0);
+  const [sources, setSources] = useState<Array<{ source: string; count: number }>>([]);
   const [filters, setFilters] = useState<AnalysisFilters>({
     messageType: {
       whatsapp: true,
@@ -94,7 +115,7 @@ const Busca = () => {
     try {
       const params = buildQueryParams();
       
-      // Fetch Dashboard Data
+      // Fetch Dashboard Data (Stats only)
       const dashboardRes = await fetch(`${apiUrl}/analises/dashboard?${params.toString()}`);
       if (dashboardRes.ok) {
         const result = await dashboardRes.json();
@@ -103,13 +124,31 @@ const Busca = () => {
         }
       }
 
-      // Fetch List Data (Limit 50 for now)
-      params.append("limit", "50");
-      const listRes = await fetch(`${apiUrl}/analises?${params.toString()}`);
+      // Fetch List Data (Messages)
+      const messagesParams = new URLSearchParams(params);
+      messagesParams.append("limit", String(limit));
+      messagesParams.append("offset", String((page - 1) * limit));
+      
+      const listRes = await fetch(`${apiUrl}/analises?${messagesParams.toString()}`);
       if (listRes.ok) {
         const result = await listRes.json();
         if (result.success) {
           setAnalyses(result.data.items);
+          setTotalMessages(result.data.total);
+        }
+      }
+
+      // Fetch Sources Data
+      const sourcesParams = new URLSearchParams(params);
+      sourcesParams.append("limit", String(sourcesLimit));
+      sourcesParams.append("offset", String((sourcesPage - 1) * sourcesLimit));
+
+      const sourcesRes = await fetch(`${apiUrl}/analises/sources?${sourcesParams.toString()}`);
+      if (sourcesRes.ok) {
+        const result = await sourcesRes.json();
+        if (result.success) {
+          setSources(result.data.items);
+          setTotalSources(result.data.total);
         }
       }
 
@@ -118,7 +157,7 @@ const Busca = () => {
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, buildQueryParams]);
+  }, [apiUrl, buildQueryParams, page, limit, sourcesPage, sourcesLimit]);
 
   useEffect(() => {
     // Debounce search to avoid too many requests
@@ -373,6 +412,41 @@ const Busca = () => {
                     )}
                   </TableBody>
                 </Table>
+
+
+                {/* Pagination - Messages */}
+                {totalMessages > limit && (
+                  <Pagination className="mt-4">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page > 1) setPage(page - 1);
+                          }} 
+                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                      
+                      {/* Simple pagination logic: show current page */}
+                      <PaginationItem>
+                        <PaginationLink href="#" isActive>{page}</PaginationLink>
+                      </PaginationItem>
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page * limit < totalMessages) setPage(page + 1);
+                          }}
+                          className={page * limit >= totalMessages ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
               </TabsContent>
 
               {/* Aba Fontes */}
@@ -381,39 +455,74 @@ const Busca = () => {
                    <div className="text-center py-12 text-muted-foreground">
                      Carregando fontes...
                    </div>
-                ) : !dashboardData?.top_sources || dashboardData.top_sources.length === 0 ? (
+                ) : !sources || sources.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <ExternalLink className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Nenhuma fonte encontrada com os filtros atuais</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fonte</TableHead>
-                        <TableHead className="text-right">Citações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {dashboardData.top_sources.map(({ source, count }) => (
-                        <TableRow
-                          key={source}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => handleSourceClick(source)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span className="truncate max-w-xl">{source}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant="secondary">{count}</Badge>
-                          </TableCell>
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fonte</TableHead>
+                          <TableHead className="text-right">Citações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {sources.map(({ source, count }) => (
+                          <TableRow
+                            key={source}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSourceClick(source)}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="truncate max-w-xl">{source}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant="secondary">{count}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {/* Pagination - Sources */}
+                    {totalSources > sourcesLimit && (
+                      <Pagination className="mt-4">
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              href="#" 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (sourcesPage > 1) setSourcesPage(sourcesPage - 1);
+                              }} 
+                              className={sourcesPage === 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                          
+                          <PaginationItem>
+                            <PaginationLink href="#" isActive>{sourcesPage}</PaginationLink>
+                          </PaginationItem>
+                          
+                          <PaginationItem>
+                            <PaginationNext 
+                              href="#" 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (sourcesPage * sourcesLimit < totalSources) setSourcesPage(sourcesPage + 1);
+                              }}
+                              className={sourcesPage * sourcesLimit >= totalSources ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    )}
+                  </>
                 )}
               </TabsContent>
             </Tabs>
