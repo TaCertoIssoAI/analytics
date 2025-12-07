@@ -206,14 +206,13 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
 
       {/* Final Success State */}
       {currentLevel >= steps.length && steps.length > 0 && (
-        <div className="flex flex-col items-center justify-center py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="h-16 w-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 shadow-lg ring-4 ring-green-50">
-            <Check className="h-8 w-8" />
+        <div className="flex flex-col items-center justify-center py-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3 shadow-sm ring-2 ring-green-50">
+            <Check className="h-5 w-5" />
           </div>
-          <h3 className="text-xl font-bold text-center">Classificação Concluída!</h3>
-          <p className="text-muted-foreground text-center mt-1">
-            A IA determinou que esta afirmação pertence à categoria <br/>
-            <span className="font-semibold text-foreground">"{steps[steps.length - 1].selectedNode.name}"</span>
+          <h3 className="text-lg font-bold text-center">Classificação Concluída!</h3>
+          <p className="text-sm text-muted-foreground text-center mt-1 max-w-md">
+            A IA determinou a categoria <span className="font-semibold text-foreground">"{steps[steps.length - 1].selectedNode.name}"</span> navegando pela árvore de decisão com as <a href="https://iptc.org/standards/media-topics/" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">categorias do IPTC</a>.
           </p>
         </div>
       )}
