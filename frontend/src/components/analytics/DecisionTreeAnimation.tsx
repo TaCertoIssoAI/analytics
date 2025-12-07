@@ -16,6 +16,7 @@ const iptcTree = iptcTreeData as Record<string, TreeNode>;
 interface DecisionTreeAnimationProps {
   targetId: string;
   onComplete?: () => void;
+  forceFullView?: boolean;
 }
 
 interface Step {
@@ -24,7 +25,7 @@ interface Step {
   candidates: TreeNode[]; // Selected + Random siblings
 }
 
-export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnimationProps) => {
+export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = false }: DecisionTreeAnimationProps) => {
   const [isCompact, setIsCompact] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentLevel, setCurrentLevel] = useState(0);
@@ -33,7 +34,11 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
 
   useEffect(() => {
     const checkSize = () => {
-      setIsCompact(window.innerWidth < 1024); // Compact mode for screens smaller than 1024px
+      if (forceFullView) {
+        setIsCompact(false);
+      } else {
+        setIsCompact(window.innerWidth < 1024); // Compact mode for screens smaller than 1024px
+      }
     };
     
     checkSize();
@@ -130,10 +135,13 @@ export const DecisionTreeAnimation = ({ targetId, onComplete }: DecisionTreeAnim
     return () => {
       mounted = false;
     };
-  }, [targetId]);
+  }, [targetId, forceFullView]);
 
   return (
-    <div className="flex flex-col gap-4 p-4 max-h-[60vh] overflow-y-auto" ref={scrollRef}>
+    <div 
+      className={`flex flex-col gap-4 overflow-y-auto ${forceFullView ? 'h-full p-0' : 'max-h-[60vh] p-4'}`} 
+      ref={scrollRef}
+    >
       <style>{`
         .tree ul {
           padding-top: 20px; 

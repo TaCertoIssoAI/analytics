@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink, Network } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink, Network, Maximize2 } from "lucide-react";
 import { Claim } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
 import { DecisionTreeAnimation } from "./DecisionTreeAnimation";
@@ -157,10 +158,32 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
               {/* Inline Decision Tree Animation for the deepest topic */}
               {deepestTopicId && (
                 <div className="border rounded-lg p-4 bg-card/50">
-                  <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                    <Network className="h-4 w-4" />
-                    Caminho de Classificação
-                  </h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <Network className="h-4 w-4" />
+                      Caminho de Classificação
+                    </h4>
+                    
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-xs flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
+                          <Maximize2 className="h-3 w-3" />
+                          Expandir
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="w-full h-full max-w-none m-0 rounded-none flex flex-col p-0 sm:max-w-none sm:h-full sm:m-0 sm:rounded-none">
+                        <DialogHeader className="p-4 border-b shrink-0">
+                          <DialogTitle className="flex items-center gap-2">
+                            <Network className="h-5 w-5" />
+                            Caminho de Classificação
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="flex-1 overflow-hidden bg-background">
+                          <DecisionTreeAnimation targetId={deepestTopicId} forceFullView={true} />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <DecisionTreeAnimation targetId={deepestTopicId} />
                 </div>
               )}
