@@ -143,7 +143,6 @@ await logout();
 const { getToken } = useAuth();
 
 const token = await getToken();
-console.log('ID Token:', token);
 ```
 
 ## 🔧 Switching to Real Firebase

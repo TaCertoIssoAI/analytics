@@ -75,9 +75,6 @@ export const mockSignInWithEmailAndPassword = async (
   email: string,
   password: string
 ): Promise<MockUserCredential> => {
-  console.log('🔐 [MOCK] Attempting email/password login...');
-  console.log('   Email:', email);
-  console.log('   Password:', '*'.repeat(password.length));
 
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -86,7 +83,6 @@ export const mockSignInWithEmailAndPassword = async (
   const user = MOCK_USERS.find(u => u.email === email && u.password === password);
 
   if (!user) {
-    console.error('❌ [MOCK] Login failed: Invalid credentials');
     throw new Error('auth/invalid-credential');
   }
 
@@ -100,10 +96,6 @@ export const mockSignInWithEmailAndPassword = async (
 
   setMockCurrentUser(mockUser);
 
-  console.log('✅ [MOCK] Login successful!');
-  console.log('   User ID:', mockUser.uid);
-  console.log('   Display Name:', mockUser.displayName);
-
   return { user: mockUser };
 };
 
@@ -112,8 +104,6 @@ export const mockSignInWithEmailAndPassword = async (
  * Simulates Firebase Google authentication
  */
 export const mockSignInWithPopup = async (): Promise<MockUserCredential> => {
-  console.log('🔐 [MOCK] Attempting Google Sign-In...');
-
   // Simulate popup delay
   await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -127,11 +117,6 @@ export const mockSignInWithPopup = async (): Promise<MockUserCredential> => {
 
   setMockCurrentUser(mockUser);
 
-  console.log('✅ [MOCK] Google Sign-In successful!');
-  console.log('   User ID:', mockUser.uid);
-  console.log('   Display Name:', mockUser.displayName);
-  console.log('   Provider:', mockUser.providerId);
-
   return { user: mockUser };
 };
 
@@ -140,14 +125,11 @@ export const mockSignInWithPopup = async (): Promise<MockUserCredential> => {
  * Simulates Firebase sign out
  */
 export const mockSignOut = async (): Promise<void> => {
-  console.log('🚪 [MOCK] Signing out...');
 
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
 
   setMockCurrentUser(null);
-
-  console.log('✅ [MOCK] Sign out successful!');
 };
 
 /**
@@ -155,8 +137,6 @@ export const mockSignOut = async (): Promise<void> => {
  * Generates a fake JWT token for testing
  */
 export const mockGetIdToken = async (user: MockUser): Promise<string> => {
-  console.log('🎫 [MOCK] Generating ID token...');
-  console.log('   User ID:', user.uid);
 
   // Simulate token generation delay
   await new Promise(resolve => setTimeout(resolve, 300));
@@ -173,10 +153,6 @@ export const mockGetIdToken = async (user: MockUser): Promise<string> => {
 
   const token = `${header}.${payload}.${signature}`;
 
-  console.log('✅ [MOCK] Token generated!');
-  console.log('   Full Token:', token);
-  console.log('   Token Length:', token.length);
-
   return token;
 };
 
@@ -185,16 +161,11 @@ export const mockGetIdToken = async (user: MockUser): Promise<string> => {
  * Simulates Firebase auth state observer
  */
 export const mockOnAuthStateChanged = (callback: (user: MockUser | null) => void): (() => void) => {
-  console.log('👂 [MOCK] Auth state listener registered');
 
   // Immediately call with current user
   const currentUser = getMockCurrentUser();
   setTimeout(() => callback(currentUser), 0);
 
-  // Return unsubscribe function
-  return () => {
-    console.log('👋 [MOCK] Auth state listener unregistered');
-  };
 };
 
 /**
@@ -205,5 +176,3 @@ export const isMockMode = (): boolean => {
   return import.meta.env.VITE_USE_MOCK_AUTH === 'true' ||
     import.meta.env.VITE_FIREBASE_APIKEY === 'mock';
 };
-
-console.log('📦 [MOCK] Mock Firebase service loaded');

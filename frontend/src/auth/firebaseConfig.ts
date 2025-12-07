@@ -30,16 +30,12 @@ let googleProvider: GoogleAuthProvider | null = null;
 
 // Initialize Firebase only if not in mock mode
 if (!useMockAuth) {
-  console.log('🔥 Initializing Firebase with real configuration...');
-
   // Validate that all required config values are present
   const missingConfig = Object.entries(firebaseConfig)
     .filter(([_, value]) => !value)
     .map(([key]) => key);
 
   if (missingConfig.length > 0) {
-    console.warn('⚠️ Missing Firebase configuration:', missingConfig.join(', '));
-    console.warn('⚠️ Falling back to mock mode');
   } else {
     try {
       app = initializeApp(firebaseConfig);
@@ -52,15 +48,9 @@ if (!useMockAuth) {
         prompt: 'select_account'
       });
 
-      console.log('✅ Firebase initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize Firebase:', error);
-      console.warn('⚠️ Falling back to mock mode');
     }
   }
-} else {
-  console.log('🎭 Using MOCK authentication mode');
-  console.log('   Set VITE_USE_MOCK_AUTH=false to use real Firebase');
 }
 
 // Export the initialized instances

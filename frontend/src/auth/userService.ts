@@ -41,7 +41,6 @@ export const createUserProfile = async (user: User) => {
     if (!response.ok) {
       throw new Error(`Failed to create profile: ${response.statusText}`);
     }
-    console.log("Profile created via API");
   } catch (error) {
     console.error("Error creating user profile:", error);
   }
@@ -63,7 +62,6 @@ export const saveUserProfile = async (profile: UserProfile) => {
     if (!response.ok) {
       throw new Error(`Failed to save profile: ${response.statusText}`);
     }
-    console.log("Profile saved via API");
     return true;
   } catch (error) {
     console.error("Error saving user profile:", error);

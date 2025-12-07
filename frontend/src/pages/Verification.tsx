@@ -130,11 +130,9 @@ const Verification = () => {
     const loadInteractions = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        console.log("Fetching interactions for:", id);
         const response = await fetch(`${apiUrl}/analises/${id}/interactions`);
         if (response.ok) {
           const data = await response.json();
-          console.log("Interactions data:", data);
           setReviewers(data.interactions || []);
         }
       } catch (error) {
