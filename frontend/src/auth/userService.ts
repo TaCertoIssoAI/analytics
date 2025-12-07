@@ -93,3 +93,31 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
     return null;
   }
 };
+
+export interface UserInteraction {
+  document_id: string;
+  analysis_title?: string;
+  user_message_text?: string;
+  processed_at: string;
+  overall_verdict: string;
+  user_interaction: 'like' | 'dislike';
+}
+
+/**
+ * Get user interactions (reviews) via Backend API
+ */
+export const getUserInteractions = async (userId: string): Promise<UserInteraction[]> => {
+  try {
+    const response = await fetch(`${API_URL}/users/${userId}/interactions`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch interactions: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.interactions || [];
+  } catch (error) {
+    console.error("Error fetching user interactions:", error);
+    return [];
+  }
+};

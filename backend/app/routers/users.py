@@ -37,3 +37,8 @@ async def get_user_profile(uid: str):
             detail="Perfil não encontrado"
         )
     return profile
+
+@router.get("/{uid}/interactions")
+async def get_user_interactions(uid: str):
+    interactions = firestore_service.get_user_interactions(uid)
+    return {"interactions": interactions}

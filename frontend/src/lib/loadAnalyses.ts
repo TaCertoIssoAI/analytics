@@ -7,10 +7,6 @@ export interface AnalysisWithFileId extends Analysis {
 /**
  * Carrega todas as análises disponíveis dos arquivos JSON
  * @returns Promise com array de análises ordenadas por data (mais recente primeiro)
- *
- * TODO: Migrar para usar a API do backend
- * Atualmente usa JSONs mockados. No futuro, deve usar:
- * GET http://localhost:8000/analises (endpoint que retorna lista de todas as análises)
  */
 export async function loadAllAnalyses(): Promise<AnalysisWithFileId[]> {
   const analyses: AnalysisWithFileId[] = [];

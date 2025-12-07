@@ -246,5 +246,35 @@ class FirestoreService:
             print(f"❌ Erro ao atualizar interação: {e}")
             return False
 
+    def get_user_interactions(self, uid: str) -> List[Dict[str, Any]]:
+        """
+        Busca todas as análises que o usuário interagiu (like ou dislike).
+        """
+        if not self.client: return []
+        
+        interactions = []
+        try:
+            # Busca likes
+            likes_query = self.analises_collection.where("liked_by", "array_contains", uid).stream()
+            for doc in likes_query:
+                data = doc.to_dict()
+                data["user_interaction"] = "like"
+                interactions.append(data)
+                
+            # Busca dislikes
+            dislikes_query = self.analises_collection.where("disliked_by", "array_contains", uid).stream()
+            for doc in dislikes_query:
+                data = doc.to_dict()
+                data["user_interaction"] = "dislike"
+                interactions.append(data)
+                
+            # Ordena por data (mais recente primeiro) - processamento em memória
+            interactions.sort(key=lambda x: x.get("processed_at", ""), reverse=True)
+            
+            return interactions
+        except Exception as e:
+            print(f"❌ Erro ao buscar interações do usuário: {e}")
+            return []
+
 # Instância global
 firestore_service = FirestoreService()
