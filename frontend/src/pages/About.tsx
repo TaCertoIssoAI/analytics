@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Github, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const About = () => {
   const team = [
@@ -65,6 +66,12 @@ const About = () => {
                 em ferramentas complexas, sites pesados e linguagens técnicas.
               </p>
             </section>
+
+            <div className="flex justify-center py-4">
+              <Button asChild size="lg" className="text-lg px-8">
+                <Link to="/metodologia">Conheça nossa Metodologia</Link>
+              </Button>
+            </div>
 
             <section>
               <h3 className="text-2xl font-bold mb-4">Mas nosso projeto vai além da checagem individual.</h3>
