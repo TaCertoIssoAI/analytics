@@ -31,6 +31,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
   const [currentLevel, setCurrentLevel] = useState(0);
   const [phase, setPhase] = useState<"pending" | "thinking" | "decided">("pending"); // pending, thinking, decided
   const scrollRef = useRef<HTMLDivElement>(null);
+  const treeContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkSize = () => {
@@ -135,37 +136,64 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
     return () => {
       mounted = false;
     };
-    return () => {
-      mounted = false;
-    };
   }, [targetId, forceFullView]);
 
-  // Auto-scroll effect for expanded view
+  // Auto-scroll effect to center the active node
   useEffect(() => {
-    if (forceFullView && steps.length > 0) {
-      // Determine which node to focus on
-      // If thinking, focus on the current level's selected node (if available)
-      // If decided, focus on the current level's selected node
-      
+    if (steps.length > 0) {
       const stepIndex = Math.min(currentLevel, steps.length - 1);
       const step = steps[stepIndex];
       
       if (step) {
         const nodeId = `tree-node-${step.selectedNode.id}`;
-        const element = document.getElementById(nodeId);
-        
-        if (element) {
-          setTimeout(() => {
+        let animationFrameId: number;
+        const startTime = Date.now();
+        const duration = 600; // Run for 600ms to cover CSS transitions
+
+        const centerNode = () => {
+          const element = document.getElementById(nodeId);
+          const treeContainer = treeContainerRef.current;
+          
+          if (element && treeContainer) {
+            // Vertical scroll using scrollIntoView (works well for vertical)
             element.scrollIntoView({ 
-              behavior: 'smooth', 
+              behavior: 'auto', // Use auto for instant updates during animation loop
               block: 'center', 
-              inline: 'center' 
+              inline: 'nearest' 
             });
-          }, 100); // Small delay to ensure rendering
-        }
+
+            // Manual Horizontal Scroll
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = treeContainer.getBoundingClientRect();
+            
+            const relativeLeft = elementRect.left - containerRect.left;
+            const currentScrollLeft = treeContainer.scrollLeft;
+            
+            // Target position: center of container
+            const targetScrollLeft = currentScrollLeft + relativeLeft - (containerRect.width / 2) + (elementRect.width / 2);
+            
+            treeContainer.scrollTo({
+              left: targetScrollLeft,
+              behavior: 'auto' // Use auto for instant updates during animation loop
+            });
+          }
+
+          if (Date.now() - startTime < duration) {
+            animationFrameId = requestAnimationFrame(centerNode);
+          }
+        };
+
+        // Start the animation loop
+        centerNode();
+
+        return () => {
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+          }
+        };
       }
     }
-  }, [currentLevel, phase, forceFullView, steps]);
+  }, [currentLevel, phase, steps]);
 
   return (
     <div 
@@ -177,7 +205,9 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
           padding-top: 20px; 
           position: relative;
           transition: all 0.5s;
-          display: flex; 
+          display: flex;
+          width: max-content; /* Ensure it takes full width of content */
+          min-width: 100%; /* Ensure it takes at least full width of container */
           justify-content: center;
         }
         .tree li {
@@ -230,7 +260,7 @@ export const DecisionTreeAnimation = ({ targetId, onComplete, forceFullView = fa
         }
       `}</style>
 
-      <div className="tree w-full overflow-x-auto pb-8 scrollbar-hide">
+      <div className="tree w-full overflow-x-auto pb-8 scrollbar-hide" ref={treeContainerRef}>
         {steps.length > 0 && (
           <RecursiveTree 
             steps={steps} 
