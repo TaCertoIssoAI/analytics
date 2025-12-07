@@ -316,13 +316,10 @@ const RecursiveTree = ({
   if (!isVisible) return null;
 
   // compact mode logic:
-  // if isCompact is true and this level is already decided (past level),
-  // only show the selected node.
+  // if isCompact is true, only show the selected node (linear path).
   let candidatesToShow = step.candidates;
-  if (isCompact && level < currentLevel) {
-    candidatesToShow = step.candidates.filter(
-      (c) => c.id === step.selectedNode.id,
-    );
+  if (isCompact) {
+    candidatesToShow = [step.selectedNode];
   }
 
   // em modo expandido, alterna lado do filho selecionado: esquerda, direita, esquerda...
