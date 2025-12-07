@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, ExternalLink, Network, Maximize2 } from "lucide-react";
 import { Claim } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
@@ -177,6 +177,9 @@ export const ClaimCard = ({ claim }: ClaimCardProps) => {
                             <Network className="h-5 w-5" />
                             Caminho de Classificação
                           </DialogTitle>
+                          <DialogDescription className="sr-only">
+                            Visualização detalhada e interativa do caminho de classificação da árvore de decisão.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="flex-1 overflow-hidden bg-background">
                           <DecisionTreeAnimation targetId={deepestTopicId} forceFullView={true} />
