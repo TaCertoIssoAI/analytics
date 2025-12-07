@@ -406,7 +406,7 @@ const Profile = () => {
 
               <TabsContent value="reviews" className="mt-6 space-y-4">
                 {interactions.length === 0 ? (
-                  <Card className="bg-muted/30 border-dashed">
+                  <Card className="bg-card border-dashed shadow-sm">
                     <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                       <MessageSquare className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
                       <h3 className="text-lg font-medium">Nenhuma avaliação ainda</h3>
