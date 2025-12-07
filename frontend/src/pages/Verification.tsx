@@ -34,17 +34,22 @@ const statusConfig = {
     className: "bg-status-false/10 text-status-false border-status-false/20",
   },
   "DESCONHECIDO": {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
   "CHECK": {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
   "UNVERIFIED": {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
+    icon: HelpCircle,
+    className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
+  },
+  "FONTES INSUFICIENTES PARA VERIFICAR": {
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
@@ -436,7 +441,7 @@ const Verification = () => {
                         <div 
                           style={{ width: `${analysis.analysis_metrics.unverified_score}%` }} 
                           className="h-full bg-status-unverifiable"
-                          title={`Não Verificável: ${analysis.analysis_metrics.unverified_score}%`}
+                          title={`Fontes insuficientes para verificar: ${analysis.analysis_metrics.unverified_score}%`}
                         />
                       )}
                     </div>

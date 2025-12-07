@@ -20,7 +20,7 @@ class VerdictService:
     VERDADEIRO = "VERDADEIRO"
     ENGANOSO = "ENGANOSO"
     CHECK = "CHECK"
-    UNVERIFIED = "UNVERIFIED"
+    UNVERIFIED = "Fontes insuficientes para verificar"
 
     @staticmethod
     def calculate_overall_verdict(claim_verdicts: List[str]) -> str:
@@ -101,7 +101,7 @@ class VerdictService:
             return VerdictService.ENGANOSO
         elif text_upper.startswith("CHECK"):
             return VerdictService.CHECK
-        elif text_upper.startswith("UNVERIFIED"):
+        elif text_upper.startswith("UNVERIFIED") or text_upper.startswith("FONTES INSUFICIENTES"):
             return VerdictService.UNVERIFIED
         else:
             # Se não conseguir extrair, retorna CHECK como fallback

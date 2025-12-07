@@ -136,7 +136,7 @@ export const SourceDetailDialog = ({ source, citations, totalCitations, open, on
                                     ? "Falso"
                                     : claim.result === "VERDADEIRO"
                                     ? "Verdadeiro"
-                                    : "Não Verificável"}
+                                    : "Fontes insuficientes para verificar"}
                                 </Badge>
                                 <p className="text-xs text-muted-foreground flex-1">
                                   {claim.claimText}

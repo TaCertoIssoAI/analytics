@@ -27,7 +27,7 @@ const statusConfig = {
     className: "bg-status-false/10 text-status-false border-status-false/20",
   },
   unverifiable: {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },

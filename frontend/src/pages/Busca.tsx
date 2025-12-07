@@ -169,7 +169,7 @@ const Busca = () => {
     value: { label: "Quantidade" },
     Falso: { label: "Falso", color: "hsl(var(--chart-1))" },
     Verdadeiro: { label: "Verdadeiro", color: "hsl(var(--chart-2))" },
-    "Não Verificável": { label: "Não Verificável", color: "hsl(var(--chart-3))" },
+    "Fontes insuficientes para verificar": { label: "Fontes insuficientes para verificar", color: "hsl(var(--chart-3))" },
   };
 
   const modalitiesChartConfig = {
@@ -363,7 +363,7 @@ const Busca = () => {
                                   {analysis.analysis_metrics.unverified_count > 0 && (
                                     <div
                                       className="h-3 w-3 rounded-full bg-status-unverifiable"
-                                      title={`Não Verificável: ${analysis.analysis_metrics.unverified_score}%`}
+                                      title={`Fontes insuficientes para verificar: ${analysis.analysis_metrics.unverified_score}%`}
                                     />
                                   )}
                                 </div>
@@ -374,7 +374,7 @@ const Busca = () => {
                                 >
                                   {getMainResult(analysis) === "Fake" && "Falso"}
                                   {getMainResult(analysis) === "True" && "Verdadeiro"}
-                                  {getMainResult(analysis) === "Unknown" && "Não Verificável"}
+                                  {getMainResult(analysis) === "Unknown" && "Fontes insuficientes para verificar"}
                                 </Badge>
                               )}
                             </TableCell>

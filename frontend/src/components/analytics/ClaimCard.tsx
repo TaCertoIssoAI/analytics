@@ -20,17 +20,17 @@ const resultConfig: Record<string, { label: string; icon: any; className: string
     className: "bg-status-false/10 text-status-false border-status-false/20",
   },
   ENGANOSO: {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
   CHECK: {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
   UNVERIFIED: {
-    label: "Não Verificável",
+    label: "Fontes insuficientes para verificar",
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
