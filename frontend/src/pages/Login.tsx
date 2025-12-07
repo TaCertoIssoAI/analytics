@@ -77,7 +77,7 @@ const Login = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Não tem uma conta?{" "}
-            <Link to="/register" className="text-primary hover:underline">
+            <Link to="/cadastro" className="text-primary hover:underline">
               Cadastre-se
             </Link>
           </p>

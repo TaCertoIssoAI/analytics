@@ -97,7 +97,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate("/entrar");
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -439,7 +439,7 @@ const Profile = () => {
                                   </span>
                                 </div>
                                 
-                                <Link to={`/verification/${interaction.document_id}`} className="group">
+                                <Link to={`/verificacao/${interaction.document_id}`} className="group">
                                   <h3 className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
                                     {interaction.analysis_title || "Análise sem título"}
                                   </h3>
@@ -450,7 +450,7 @@ const Profile = () => {
                               </div>
                               
                               <Button variant="ghost" size="icon" asChild>
-                                <Link to={`/verification/${interaction.document_id}`}>
+                                <Link to={`/verificacao/${interaction.document_id}`}>
                                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                 </Link>
                               </Button>

@@ -145,7 +145,7 @@ const Verification = () => {
   const handleLike = async () => {
     if (!currentUser) {
       toast.error("Você precisa estar logado para avaliar.");
-      navigate("/login");
+      navigate("/entrar");
       return;
     }
     if (!analysis) return;
@@ -192,7 +192,7 @@ const Verification = () => {
   const handleDislike = async () => {
     if (!currentUser) {
       toast.error("Você precisa estar logado para avaliar.");
-      navigate("/login");
+      navigate("/entrar");
       return;
     }
     if (!analysis) return;
@@ -381,7 +381,7 @@ const Verification = () => {
                       {reviewers.map((reviewer) => (
                         <Link 
                           key={reviewer.uid} 
-                          to={`/profile/${reviewer.uid}`}
+                          to={`/perfil/${reviewer.uid}`}
                           className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
                         >
                           <div className="flex items-center gap-3">
