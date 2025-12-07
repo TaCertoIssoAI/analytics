@@ -12,6 +12,8 @@ import {
   signInWithPopup as firebaseSignInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  updateProfile,
+  updatePassword,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, googleProvider, isUsingMockAuth } from './firebaseConfig';
@@ -33,7 +35,9 @@ export interface AuthContextType {
   currentUser: AuthUser;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
+  updateUserProfile: (name: string) => Promise<void>;
+  updateUserPassword: (password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
@@ -104,19 +108,72 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /**
    * Sign up with email and password
    */
-  const signUpWithEmail = async (email: string, password: string): Promise<void> => {
+  const signUpWithEmail = async (email: string, password: string, name: string): Promise<void> => {
     try {
       if (isUsingMockAuth) {
         // For mock, sign up is same as sign in (creates user if not exists in our simple mock logic)
         await mockSignInWithEmailAndPassword(email, password);
       } else if (auth) {
         const userCredential = await firebaseCreateUserWithEmail(auth, email, password);
-        await createUserProfile(userCredential.user);
+        
+        // Update profile with name
+        await updateProfile(userCredential.user, {
+          displayName: name
+        });
+
+        // Force reload user to get updated profile
+        await userCredential.user.reload();
+        const updatedUser = auth.currentUser;
+
+        if (updatedUser) {
+          await createUserProfile(updatedUser);
+        }
       } else {
         throw new Error('No authentication service available');
       }
     } catch (error) {
-      console.error('❌ Sign up failed:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Update user profile (name)
+   */
+  const updateUserProfile = async (name: string): Promise<void> => {
+    try {
+      if (auth && auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: name
+        });
+        
+        // Force reload and sync with backend
+        await auth.currentUser.reload();
+        const updatedUser = auth.currentUser;
+        if (updatedUser) {
+          await createUserProfile(updatedUser);
+          setCurrentUser(updatedUser);
+        }
+      } else if (!isUsingMockAuth) {
+        throw new Error('No user logged in');
+      }
+    } catch (error) {
+      console.error('❌ Update profile failed:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Update user password
+   */
+  const updateUserPassword = async (password: string): Promise<void> => {
+    try {
+      if (auth && auth.currentUser) {
+        await updatePassword(auth.currentUser, password);
+      } else if (!isUsingMockAuth) {
+        throw new Error('No user logged in');
+      }
+    } catch (error) {
+      console.error('❌ Update password failed:', error);
       throw error;
     }
   };
@@ -185,6 +242,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     signInWithEmail,
     signUpWithEmail,
+    updateUserProfile,
+    updateUserPassword,
     signInWithGoogle,
     logout,
     getToken,
