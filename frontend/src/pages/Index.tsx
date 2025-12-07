@@ -239,8 +239,8 @@ const Index = () => {
                 </div>
                 
                 <div className="mt-6 pt-4 border-t text-center">
-                  <Link to="/entrar" className="text-sm text-primary hover:underline font-medium">
-                    Junte-se aos revisores →
+                  <Link to="/seja-um-revisor" className="text-sm text-primary hover:underline font-medium">
+                    Junte-se aos revisores ⮕
                   </Link>
                 </div>
               </div>

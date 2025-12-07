@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import JoinReviewers from "./pages/JoinReviewers";
 import { AuthProvider } from "./auth";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/verificacao-nao-encontrada/:id?" element={<NotFoundVerification />} />
               <Route path="/busca" element={<Busca />} />
               <Route path="/sobre" element={<About />} />
+              <Route path="/seja-um-revisor" element={<JoinReviewers />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
