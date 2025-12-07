@@ -7,6 +7,14 @@ export interface UserProfile {
   email: string | null;
   displayName: string | null;
   createdAt: number;
+  photoURL?: string;
+  bio?: string;
+  occupation?: string;
+  socials?: {
+    linkedin?: string;
+    twitter?: string;
+    instagram?: string;
+  };
 }
 
 /**
@@ -17,6 +25,7 @@ export const createUserProfile = async (user: User) => {
     uid: user.uid,
     email: user.email,
     displayName: user.displayName,
+    photoURL: user.photoURL || undefined,
     createdAt: Date.now(),
   };
 
@@ -35,6 +44,30 @@ export const createUserProfile = async (user: User) => {
     console.log("Profile created via API");
   } catch (error) {
     console.error("Error creating user profile:", error);
+  }
+};
+
+/**
+ * Save full user profile via Backend API
+ */
+export const saveUserProfile = async (profile: UserProfile) => {
+  try {
+    const response = await fetch(`${API_URL}/users/profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(profile),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save profile: ${response.statusText}`);
+    }
+    console.log("Profile saved via API");
+    return true;
+  } catch (error) {
+    console.error("Error saving user profile:", error);
+    return false;
   }
 };
 

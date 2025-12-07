@@ -13,6 +13,10 @@ class UserProfile(BaseModel):
     email: Optional[str] = None
     displayName: Optional[str] = None
     createdAt: int
+    photoURL: Optional[str] = None
+    bio: Optional[str] = None
+    occupation: Optional[str] = None
+    socials: Optional[dict] = None  # { "linkedin": "...", "twitter": "...", "instagram": "..." }
 
 @router.post("/profile")
 async def create_user_profile(profile: UserProfile):

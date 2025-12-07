@@ -20,7 +20,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/auth/useAuth";
 import { toast } from "sonner";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Linkedin } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const statusConfig = {
   "VERDADEIRO": {
@@ -75,6 +76,9 @@ const Verification = () => {
   interface InteractionUser {
     uid: string;
     displayName: string;
+    photoURL?: string;
+    occupation?: string;
+    socials?: { linkedin?: string };
     action: 'like' | 'dislike';
   }
   const [reviewers, setReviewers] = useState<InteractionUser[]>([]);
@@ -381,12 +385,19 @@ const Verification = () => {
                           className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                              {reviewer.displayName.charAt(0).toUpperCase()}
+                            <Avatar className="h-10 w-10 border">
+                              <AvatarImage src={reviewer.photoURL} alt={reviewer.displayName} />
+                              <AvatarFallback>{reviewer.displayName.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium group-hover:text-primary transition-colors flex items-center gap-2">
+                                {reviewer.displayName}
+                                {reviewer.socials?.linkedin && <Linkedin className="h-3 w-3 text-muted-foreground" />}
+                              </div>
+                              {reviewer.occupation && (
+                                <p className="text-xs text-muted-foreground">{reviewer.occupation}</p>
+                              )}
                             </div>
-                            <span className="font-medium group-hover:text-primary transition-colors">
-                              {reviewer.displayName}
-                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

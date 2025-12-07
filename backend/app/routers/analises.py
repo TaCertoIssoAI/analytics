@@ -432,6 +432,9 @@ async def get_analise_interactions(document_id: str):
             interactions.append({
                 "uid": uid,
                 "displayName": user.get("displayName", "Usuário"),
+                "photoURL": user.get("photoURL"),
+                "occupation": user.get("occupation"),
+                "socials": user.get("socials"),
                 "action": "like"
             })
             
@@ -441,6 +444,9 @@ async def get_analise_interactions(document_id: str):
             interactions.append({
                 "uid": uid,
                 "displayName": user.get("displayName", "Usuário"),
+                "photoURL": user.get("photoURL"),
+                "occupation": user.get("occupation"),
+                "socials": user.get("socials"),
                 "action": "dislike"
             })
             
