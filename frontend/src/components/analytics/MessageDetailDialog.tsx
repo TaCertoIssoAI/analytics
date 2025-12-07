@@ -100,24 +100,24 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
             <CardContent className="space-y-3">
               <div>
                 <h4 className="font-semibold text-sm mb-1">Mensagem Original</h4>
-                <p className="text-sm text-muted-foreground">{analysis.user_message_text}</p>
+                <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.user_message_text}</p>
               </div>
               {analysis.media_info.has_audio && analysis.media_info.audio_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Transcrição do Áudio</h4>
-                  <p className="text-sm text-muted-foreground">{analysis.media_info.audio_text}</p>
+                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.media_info.audio_text}</p>
                 </div>
               )}
               {analysis.media_info.has_image && analysis.media_info.image_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Texto da Imagem</h4>
-                  <p className="text-sm text-muted-foreground">{analysis.media_info.image_text}</p>
+                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.media_info.image_text}</p>
                 </div>
               )}
               {analysis.media_info.has_video && analysis.media_info.video_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Texto do Vídeo</h4>
-                  <p className="text-sm text-muted-foreground">{analysis.media_info.video_text}</p>
+                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.media_info.video_text}</p>
                 </div>
               )}
               {analysis.scraped_links.length > 0 && (
@@ -126,15 +126,15 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
                   <div className="space-y-2">
                     {analysis.scraped_links.map((link, index) => (
                       <div key={index} className="border rounded-lg p-2 bg-muted/30">
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col gap-2">
                           <a
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs font-medium hover:underline text-primary flex-1 min-w-0"
+                            className="flex items-center gap-2 text-xs font-medium hover:underline text-primary break-all"
                           >
                             <LinkIcon className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">{link.title}</span>
+                            <span>{link.title || link.url}</span>
                           </a>
                           {link.scraped_text && (
                             <Button
@@ -144,7 +144,7 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
                                 setSelectedLink(link);
                                 setLinkModalOpen(true);
                               }}
-                              className="gap-1 flex-shrink-0 text-xs h-7"
+                              className="gap-1 w-full sm:w-auto text-xs h-7"
                             >
                               <Eye className="h-3 w-3" />
                               Ver Texto
