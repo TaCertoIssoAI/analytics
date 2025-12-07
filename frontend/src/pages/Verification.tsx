@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText, Link as LinkIcon, Eye } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText, Link as LinkIcon, Eye, ExternalLink } from "lucide-react";
 import { Analysis, ScrapedLink } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
 import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
@@ -58,6 +64,13 @@ const Verification = () => {
   const [userDisliked, setUserDisliked] = useState(false);
   const [likedBy, setLikedBy] = useState<string[]>([]);
   const [dislikedBy, setDislikedBy] = useState<string[]>([]);
+  
+  interface InteractionUser {
+    uid: string;
+    displayName: string;
+    action: 'like' | 'dislike';
+  }
+  const [reviewers, setReviewers] = useState<InteractionUser[]>([]);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -98,8 +111,24 @@ const Verification = () => {
         setLoading(false);
       }
     };
+    
+    const loadInteractions = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        console.log("Fetching interactions for:", id);
+        const response = await fetch(`${apiUrl}/analises/${id}/interactions`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Interactions data:", data);
+          setReviewers(data.interactions || []);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar interações:", error);
+      }
+    };
+
     loadAnalysis();
-    loadAnalysis();
+    loadInteractions();
   }, [id, navigate, currentUser]);
 
   const handleLike = async () => {
@@ -320,6 +349,59 @@ const Verification = () => {
                   </Button>
                 </div>
               </div>
+              
+              
+              {/* Reviewers Dropdown */}
+              {reviewers.length > 0 && (
+                <div className="w-full">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="reviewers" className="border-none">
+                      <AccordionTrigger className="hover:no-underline py-2">
+                        <span className="text-sm font-semibold">Revisores que avaliaram</span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4 pt-2">
+                          <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                            Estas são as avaliações da análise feita pela AI, realizada pelos revisores certificados do TaCertoIsso AI.
+                          </p>
+                          <div className="space-y-2">
+                            {reviewers.map((reviewer) => (
+                              <Link 
+                                key={reviewer.uid} 
+                                to={`/profile/${reviewer.uid}`}
+                                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                                    {reviewer.displayName.charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="font-medium group-hover:text-primary transition-colors">
+                                    {reviewer.displayName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {reviewer.action === 'like' ? (
+                                    <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                                      <ThumbsUp className="h-3 w-3" />
+                                      <span>Aprovou</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 px-2 py-1 rounded-full">
+                                      <ThumbsDown className="h-3 w-3" />
+                                      <span>Reprovou</span>
+                                    </div>
+                                  )}
+                                  <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              )}
             </div>
           </div>
 

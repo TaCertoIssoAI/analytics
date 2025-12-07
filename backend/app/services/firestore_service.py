@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from google.cloud import firestore
 from app.config import settings
 from app.models.new_format import AnaliseNewFormat
@@ -186,6 +186,26 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar perfil de usuário: {e}")
             return None
+        except Exception as e:
+            print(f"❌ Erro ao buscar perfil de usuário: {e}")
+            return None
+
+    def get_users_by_ids(self, uids: List[str]) -> List[Dict[str, Any]]:
+        """Busca múltiplos perfis de usuário."""
+        if not self.client or not uids: return []
+        
+        users = []
+        # Firestore 'in' query supports up to 10 items. For more, we need to batch or loop.
+        # For simplicity in this MVP, we'll loop. For production, use FieldFilter with 'in' in batches of 10-30.
+        try:
+            for uid in uids:
+                user = self.get_user_profile(uid)
+                if user:
+                    users.append(user)
+            return users
+        except Exception as e:
+            print(f"❌ Erro ao buscar usuários em lote: {e}")
+            return []
 
     def update_analise_interaction(self, document_id: str, uid: str, action: str) -> bool:
         """

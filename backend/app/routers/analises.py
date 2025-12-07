@@ -401,3 +401,47 @@ async def interact_with_analise(document_id: str, request: InteractionRequest):
             detail="Erro ao atualizar interação"
         )
     return {"message": "Interação atualizada com sucesso"}
+    return {"message": "Interação atualizada com sucesso"}
+
+@router.get(
+    "/{document_id}/interactions",
+    summary="Listar interações",
+    description="Retorna lista de usuários que deram like/dislike"
+)
+async def get_analise_interactions(document_id: str):
+    # 1. Busca a análise para pegar os IDs
+    analise_data = firestore_service.get_analise(document_id)
+    if not analise_data:
+        raise HTTPException(status_code=404, detail="Análise não encontrada")
+    
+    liked_by = analise_data.get("liked_by", [])
+    disliked_by = analise_data.get("disliked_by", [])
+    
+    all_uids = list(set(liked_by + disliked_by))
+    
+    # 2. Busca os perfis dos usuários
+    users = firestore_service.get_users_by_ids(all_uids)
+    users_map = {u["uid"]: u for u in users}
+    
+    # 3. Monta a resposta
+    interactions = []
+    
+    for uid in liked_by:
+        user = users_map.get(uid)
+        if user:
+            interactions.append({
+                "uid": uid,
+                "displayName": user.get("displayName", "Usuário"),
+                "action": "like"
+            })
+            
+    for uid in disliked_by:
+        user = users_map.get(uid)
+        if user:
+            interactions.append({
+                "uid": uid,
+                "displayName": user.get("displayName", "Usuário"),
+                "action": "dislike"
+            })
+            
+    return {"interactions": interactions}
