@@ -20,7 +20,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/auth/useAuth";
 import { toast } from "sonner";
-import { ThumbsUp, ThumbsDown, Linkedin } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const statusConfig = {
@@ -392,7 +392,7 @@ const Verification = () => {
                             <div>
                               <div className="font-medium group-hover:text-primary transition-colors flex items-center gap-2">
                                 {reviewer.displayName}
-                                {reviewer.socials?.linkedin && <Linkedin className="h-3 w-3 text-muted-foreground" />}
+                                <BadgeCheck className="h-4 w-4 text-primary" />
                               </div>
                               {reviewer.occupation && (
                                 <p className="text-xs text-muted-foreground">{reviewer.occupation}</p>
