@@ -201,7 +201,7 @@ export const Header = () => {
                    >
                      <span className="flex items-center gap-3">
                        <Ear className="h-5 w-5" />
-                       Acessibilidade (VLibras)
+                       VLibras
                      </span>
                      <div className={`h-4 w-4 rounded-full border ${vlibrasEnabled ? "bg-primary border-primary" : "border-foreground"}`} />
                    </button>
