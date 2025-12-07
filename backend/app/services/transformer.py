@@ -281,9 +281,9 @@ class AnaliseTransformer:
             true_count=true_count,
             fake_count=fake_count,
             unverified_count=unverified_count,
-            truth_score=round((true_count / total_claims) * 100, 2),
-            fake_score=round((fake_count / total_claims) * 100, 2),
-            unverified_score=round((unverified_count / total_claims) * 100, 2)
+            truth_score=int(round((true_count / total_claims) * 100)),
+            fake_score=int(round((fake_count / total_claims) * 100)),
+            unverified_score=int(round((unverified_count / total_claims) * 100))
         )
 
 

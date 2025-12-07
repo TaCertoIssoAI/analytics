@@ -50,10 +50,10 @@ class AnalysisMetrics(BaseModel):
     true_count: int = 0
     fake_count: int = 0
     unverified_count: int = 0
-    
-    truth_score: float = 0.0
-    fake_score: float = 0.0
-    unverified_score: float = 0.0
+
+    truth_score: int = 0
+    fake_score: int = 0
+    unverified_score: int = 0
 
 
 class AnaliseNewFormat(BaseModel):
