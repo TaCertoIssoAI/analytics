@@ -7,6 +7,7 @@ import { MetricsCard } from "@/components/analytics/MetricsCard";
 import { MessageDetailDialog } from "@/components/analytics/MessageDetailDialog";
 import { SourceDetailDialog } from "@/components/analytics/SourceDetailDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -16,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, MessageSquare, ExternalLink } from "lucide-react";
+import { FileText, MessageSquare, ExternalLink, Download } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Analysis } from "@/types/analysis";
@@ -86,6 +87,16 @@ const Busca = () => {
     },
   });
 
+  const [exportLoading, setExportLoading] = useState<{
+    dashboard: boolean;
+    messages: boolean;
+    sources: boolean;
+  }>({
+    dashboard: false,
+    messages: false,
+    sources: false,
+  });
+
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   const buildQueryParams = useCallback(() => {
@@ -109,6 +120,84 @@ const Busca = () => {
 
     return params;
   }, [filters, searchTerm]);
+
+  const handleExportDashboard = async () => {
+    setExportLoading(prev => ({ ...prev, dashboard: true }));
+    try {
+      const params = buildQueryParams();
+      const response = await fetch(`${apiUrl}/analises/export/dashboard?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Falha ao exportar dashboard');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dashboard_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erro ao exportar dashboard:', error);
+    } finally {
+      setExportLoading(prev => ({ ...prev, dashboard: false }));
+    }
+  };
+
+  const handleExportMessages = async () => {
+    setExportLoading(prev => ({ ...prev, messages: true }));
+    try {
+      const params = buildQueryParams();
+      const response = await fetch(`${apiUrl}/analises/export/messages?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Falha ao exportar mensagens');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mensagens_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erro ao exportar mensagens:', error);
+    } finally {
+      setExportLoading(prev => ({ ...prev, messages: false }));
+    }
+  };
+
+  const handleExportSources = async () => {
+    setExportLoading(prev => ({ ...prev, sources: true }));
+    try {
+      const params = buildQueryParams();
+      const response = await fetch(`${apiUrl}/analises/export/sources?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Falha ao exportar fontes');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fontes_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erro ao exportar fontes:', error);
+    } finally {
+      setExportLoading(prev => ({ ...prev, sources: false }));
+    }
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -256,6 +345,19 @@ const Busca = () => {
 
               {/* Aba Overview */}
               <TabsContent value="overview" className="space-y-6">
+                {/* Botão de Exportação */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleExportDashboard}
+                    disabled={exportLoading.dashboard || loading}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportLoading.dashboard ? "Exportando..." : "Exportar CSV"}
+                  </Button>
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <MetricsCard
                     title="Total de Mensagens"
@@ -312,6 +414,22 @@ const Busca = () => {
 
               {/* Aba Mensagens */}
               <TabsContent value="messages" className="space-y-6">
+                {/* Botão de Exportação */}
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-sm text-muted-foreground">
+                    {totalMessages > 0 && `${totalMessages} mensagens encontradas`}
+                  </div>
+                  <Button
+                    onClick={handleExportMessages}
+                    disabled={exportLoading.messages || loading || analyses.length === 0}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportLoading.messages ? "Exportando..." : "Exportar Todas"}
+                  </Button>
+                </div>
+
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -462,6 +580,22 @@ const Busca = () => {
                   </div>
                 ) : (
                   <>
+                    {/* Botão de Exportação */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="text-sm text-muted-foreground">
+                        {totalSources > 0 && `${totalSources} fontes encontradas`}
+                      </div>
+                      <Button
+                        onClick={handleExportSources}
+                        disabled={exportLoading.sources || loading}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        {exportLoading.sources ? "Exportando..." : "Exportar Todas"}
+                      </Button>
+                    </div>
+
                     <Table>
                       <TableHeader>
                         <TableRow>

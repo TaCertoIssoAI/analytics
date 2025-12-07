@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Any, List
+import csv
+import io
+from datetime import datetime
 
 from app.models.input_format import AnaliseInputFormat
 from app.models.new_format import AnaliseNewFormat
@@ -525,5 +529,331 @@ async def get_analise_interactions(document_id: str):
                 "socials": user.get("socials"),
                 "action": "dislike"
             })
-            
+
     return {"interactions": interactions}
+
+
+@router.get(
+    "/export/dashboard",
+    summary="Exportar dados do dashboard como CSV",
+    description="Retorna CSV com estatísticas agregadas"
+)
+async def export_dashboard_csv(
+    search: str = Query(None, description="Termo de busca"),
+    message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
+    message_type_direct: bool = Query(True, description="Incluir Direct"),
+    modality_text: bool = Query(True, description="Incluir Texto"),
+    modality_audio: bool = Query(True, description="Incluir Áudio"),
+    modality_video: bool = Query(True, description="Incluir Vídeo"),
+    modality_image: bool = Query(True, description="Incluir Imagem"),
+    result_fake: bool = Query(True, description="Incluir Falso"),
+    result_true: bool = Query(True, description="Incluir Verdadeiro"),
+    result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
+    max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
+    min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
+    max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+):
+    """
+    Exporta dados do dashboard como CSV
+    """
+    try:
+        filters = {
+            "search": search,
+            "message_type_whatsapp": message_type_whatsapp,
+            "message_type_direct": message_type_direct,
+            "modality_text": modality_text,
+            "modality_audio": modality_audio,
+            "modality_video": modality_video,
+            "modality_image": modality_image,
+            "result_fake": result_fake,
+            "result_true": result_true,
+            "result_unknown": result_unknown,
+            "min_truth_score": min_truth_score,
+            "max_truth_score": max_truth_score,
+            "min_fake_score": min_fake_score,
+            "max_fake_score": max_fake_score,
+        }
+
+        print("\n" + "="*60)
+        print("📊 Exportando dashboard para CSV...")
+        print("="*60)
+
+        data = bigquery_service.get_analytics_dashboard(filters)
+
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao buscar dados do dashboard"
+            )
+
+        # Criar CSV em memória
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+
+        # Header
+        writer.writerow(["Métrica", "Valor"])
+
+        # Stats
+        writer.writerow(["Total de Mensagens", data["total_messages"]])
+        writer.writerow(["Total de Claims", data["total_claims"]])
+
+        # Results distribution
+        for item in data["results_distribution"]:
+            writer.writerow([f"Claims {item['name']}", item["value"]])
+
+        # Modalities distribution
+        for item in data["modalities_distribution"]:
+            writer.writerow([f"Mensagens com {item['name']}", item["value"]])
+
+        output.seek(0)
+
+        print("✅ Dashboard CSV gerado com sucesso!")
+        print("="*60 + "\n")
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f"attachment; filename=dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao exportar dashboard CSV: {e}")
+        print("="*60 + "\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao exportar CSV: {str(e)}"
+        )
+
+
+@router.get(
+    "/export/messages",
+    summary="Exportar mensagens como CSV",
+    description="Retorna CSV com todas as mensagens que correspondem aos filtros"
+)
+async def export_messages_csv(
+    search: str = Query(None, description="Termo de busca"),
+    message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
+    message_type_direct: bool = Query(True, description="Incluir Direct"),
+    modality_text: bool = Query(True, description="Incluir Texto"),
+    modality_audio: bool = Query(True, description="Incluir Áudio"),
+    modality_video: bool = Query(True, description="Incluir Vídeo"),
+    modality_image: bool = Query(True, description="Incluir Imagem"),
+    result_fake: bool = Query(True, description="Incluir Falso"),
+    result_true: bool = Query(True, description="Incluir Verdadeiro"),
+    result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
+    max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
+    min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
+    max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    max_records: int = Query(10000, ge=1, le=50000, description="Limite de segurança"),
+):
+    """
+    Exporta mensagens como CSV
+    """
+    try:
+        filters = {
+            "search": search,
+            "message_type_whatsapp": message_type_whatsapp,
+            "message_type_direct": message_type_direct,
+            "modality_text": modality_text,
+            "modality_audio": modality_audio,
+            "modality_video": modality_video,
+            "modality_image": modality_image,
+            "result_fake": result_fake,
+            "result_true": result_true,
+            "result_unknown": result_unknown,
+            "min_truth_score": min_truth_score,
+            "max_truth_score": max_truth_score,
+            "min_fake_score": min_fake_score,
+            "max_fake_score": max_fake_score,
+        }
+
+        print("\n" + "="*60)
+        print(f"📄 Exportando mensagens para CSV (max: {max_records})...")
+        print("="*60)
+
+        # Buscar TODAS as mensagens (limitado por max_records)
+        result = firestore_service.list_analises(limit=max_records, offset=0, filters=filters)
+
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao listar mensagens"
+            )
+
+        # Criar CSV
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+
+        # Header
+        writer.writerow([
+            "Data",
+            "Tipo",
+            "Título",
+            "Quantidade de Claims",
+            "% Verdadeiro",
+            "% Falso",
+            "% Não Verificado",
+            "Tópicos"
+        ])
+
+        # Linhas
+        for item in result["items"]:
+            # Formatar data
+            try:
+                date_obj = datetime.fromisoformat(item.get("processed_at", ""))
+                formatted_date = date_obj.strftime("%d/%m/%Y")
+            except:
+                formatted_date = item.get("processed_at", "")
+
+            # Tipo
+            msg_type = "WhatsApp" if item.get("source_type") == "FromWhatsappGroup" else "Direta"
+
+            # Título
+            title = item.get("analysis_title") or "Sem título"
+
+            # Métricas
+            metrics = item.get("analysis_metrics", {})
+            total_claims = len(item.get("claims", []))
+            truth_score = metrics.get("truth_score", 0) if metrics else 0
+            fake_score = metrics.get("fake_score", 0) if metrics else 0
+            unverified_score = metrics.get("unverified_score", 0) if metrics else 0
+
+            # Tópicos (únicos, apenas parte antes do pipe)
+            all_topics = []
+            for claim in item.get("claims", []):
+                for topic in claim.get("topics", []):
+                    topic_name = topic.split('|')[0] if '|' in topic else topic
+                    if topic_name and topic_name not in all_topics:
+                        all_topics.append(topic_name)
+            topics_str = ", ".join(all_topics)
+
+            writer.writerow([
+                formatted_date,
+                msg_type,
+                title,
+                total_claims,
+                f"{truth_score}%",
+                f"{fake_score}%",
+                f"{unverified_score}%",
+                topics_str
+            ])
+
+        output.seek(0)
+
+        print(f"✅ {len(result['items'])} mensagens exportadas para CSV!")
+        print("="*60 + "\n")
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f"attachment; filename=mensagens_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao exportar mensagens CSV: {e}")
+        print("="*60 + "\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao exportar CSV: {str(e)}"
+        )
+
+
+@router.get(
+    "/export/sources",
+    summary="Exportar fontes como CSV",
+    description="Retorna CSV com todas as fontes que correspondem aos filtros"
+)
+async def export_sources_csv(
+    search: str = Query(None, description="Termo de busca"),
+    message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
+    message_type_direct: bool = Query(True, description="Incluir Direct"),
+    modality_text: bool = Query(True, description="Incluir Texto"),
+    modality_audio: bool = Query(True, description="Incluir Áudio"),
+    modality_video: bool = Query(True, description="Incluir Vídeo"),
+    modality_image: bool = Query(True, description="Incluir Imagem"),
+    result_fake: bool = Query(True, description="Incluir Falso"),
+    result_true: bool = Query(True, description="Incluir Verdadeiro"),
+    result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
+    max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
+    min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
+    max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    max_records: int = Query(10000, ge=1, le=50000, description="Limite de segurança"),
+):
+    """
+    Exporta fontes como CSV
+    """
+    try:
+        filters = {
+            "search": search,
+            "message_type_whatsapp": message_type_whatsapp,
+            "message_type_direct": message_type_direct,
+            "modality_text": modality_text,
+            "modality_audio": modality_audio,
+            "modality_video": modality_video,
+            "modality_image": modality_image,
+            "result_fake": result_fake,
+            "result_true": result_true,
+            "result_unknown": result_unknown,
+            "min_truth_score": min_truth_score,
+            "max_truth_score": max_truth_score,
+            "min_fake_score": min_fake_score,
+            "max_fake_score": max_fake_score,
+        }
+
+        print("\n" + "="*60)
+        print(f"📚 Exportando fontes para CSV (max: {max_records})...")
+        print("="*60)
+
+        # Buscar TODAS as fontes
+        result = bigquery_service.list_sources(limit=max_records, offset=0, filters=filters)
+
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao listar fontes"
+            )
+
+        # Criar CSV
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+
+        # Header
+        writer.writerow(["URL da Fonte", "Número de Citações"])
+
+        # Linhas
+        for item in result["items"]:
+            writer.writerow([item["source"], item["count"]])
+
+        output.seek(0)
+
+        print(f"✅ {len(result['items'])} fontes exportadas para CSV!")
+        print("="*60 + "\n")
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f"attachment; filename=fontes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao exportar fontes CSV: {e}")
+        print("="*60 + "\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao exportar CSV: {str(e)}"
+        )
