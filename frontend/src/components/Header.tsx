@@ -85,6 +85,7 @@ export const Header = () => {
             <NavLink to="/" end>Início</NavLink>
             <NavLink to="/busca">Busca</NavLink>
             <NavLink to="/sobre">Sobre</NavLink>
+            <NavLink to="/termos-e-privacidade">Termos</NavLink>
           </nav>
           <Button variant="outline" size="sm" className="gap-2" asChild>
             <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
@@ -166,6 +167,13 @@ export const Header = () => {
                   >
                     <Info className="h-5 w-5" />
                     Sobre
+                  </Link>
+                  <Link 
+                    to="/termos-e-privacidade" 
+                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Info className="h-5 w-5" />
+                    Termos e Privacidade
                   </Link>
                 </nav>
                 

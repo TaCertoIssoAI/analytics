@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import JoinReviewers from "./pages/JoinReviewers";
 import Methodology from "./pages/Methodology";
+import TermsAndPrivacy from "./pages/TermsAndPrivacy";
 import { AuthProvider } from "./auth";
 
 import { VLibrasController } from "@/components/VLibrasController";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/sobre" element={<About />} />
               <Route path="/seja-um-revisor" element={<JoinReviewers />} />
               <Route path="/metodologia" element={<Methodology />} />
+              <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
