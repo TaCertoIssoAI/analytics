@@ -161,12 +161,8 @@ All colors MUST be HSL.
 
 /* VLibras Widget Styles */
 [vw] {
-  display: none; /* Hidden by default, controlled by VLibrasController */
+  display: none !important; /* Hidden by default, controlled by VLibrasController */
   z-index: 2147483647 !important;
-}
-
-[vw].enabled {
-  display: block !important;
 }
 
 [vw-access-button] {

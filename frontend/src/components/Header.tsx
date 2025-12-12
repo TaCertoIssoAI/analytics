@@ -57,7 +57,9 @@ export const Header = () => {
     const newState = !vlibrasEnabled;
     setVlibrasEnabled(newState);
     localStorage.setItem("vlibrasEnabled", String(newState));
-    window.location.reload();
+    
+    // Dispatch custom event to notify VLibrasController
+    window.dispatchEvent(new Event('vlibras-toggle'));
   };
 
   const handleUserClick = () => {
