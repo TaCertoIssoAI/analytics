@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, MessageSquare, ExternalLink, Download } from "lucide-react";
+import { FileText, MessageSquare, ExternalLink, Download, CheckCircle, XCircle, HelpCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Analysis } from "@/types/analysis";
@@ -84,6 +84,8 @@ const Busca = () => {
       maxTruthScore: 100,
       minFakeScore: 0,
       maxFakeScore: 100,
+      minUnverifiedScore: 0,
+      maxUnverifiedScore: 100,
     },
   });
 
@@ -117,6 +119,8 @@ const Busca = () => {
     params.append("max_truth_score", String(filters.percentage.maxTruthScore));
     params.append("min_fake_score", String(filters.percentage.minFakeScore));
     params.append("max_fake_score", String(filters.percentage.maxFakeScore));
+    params.append("min_unverified_score", String(filters.percentage.minUnverifiedScore));
+    params.append("max_unverified_score", String(filters.percentage.maxUnverifiedScore));
 
     return params;
   }, [filters, searchTerm]);
@@ -293,6 +297,22 @@ const Busca = () => {
     })).filter(item => item.value > 0);
   }, [dashboardData]);
 
+  const totals = useMemo(() => {
+    if (!dashboardData) return { true: 0, fake: 0, unknown: 0 };
+    
+    let trueCount = 0;
+    let fakeCount = 0;
+    let unknownCount = 0;
+
+    dashboardData.results_distribution.forEach(item => {
+      if (item.name === "Verdadeiro") trueCount = item.value;
+      if (item.name === "Falso") fakeCount = item.value;
+      if (item.name === "Fontes insuficientes para verificar") unknownCount = item.value;
+    });
+
+    return { true: trueCount, fake: fakeCount, unknown: unknownCount };
+  }, [dashboardData]);
+
   const resultsChartConfig = {
     value: { label: "Quantidade" },
     Falso: { label: "Falso", color: "hsl(var(--chart-1))" },
@@ -358,16 +378,34 @@ const Busca = () => {
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                   <MetricsCard
                     title="Total de Mensagens"
                     value={dashboardData?.total_messages || 0}
                     icon={MessageSquare}
                   />
                   <MetricsCard
-                    title="Total de Claims"
+                    title="Total de Afirmações"
                     value={dashboardData?.total_claims || 0}
                     icon={FileText}
+                  />
+                  <MetricsCard
+                    title="Total Verdadeiras"
+                    value={totals.true}
+                    icon={CheckCircle}
+                    className="text-status-true"
+                  />
+                  <MetricsCard
+                    title="Total Falsas"
+                    value={totals.fake}
+                    icon={XCircle}
+                    className="text-status-false"
+                  />
+                  <MetricsCard
+                    title="Total Fontes Insuficientes"
+                    value={totals.unknown}
+                    icon={HelpCircle}
+                    className="text-status-unverifiable"
                   />
                 </div>
 
@@ -436,7 +474,7 @@ const Busca = () => {
                       <TableHead>Data</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Título</TableHead>
-                      <TableHead>Claims</TableHead>
+                      <TableHead>Afirmações</TableHead>
                       <TableHead>Resultado</TableHead>
                       <TableHead>Tópicos</TableHead>
                     </TableRow>

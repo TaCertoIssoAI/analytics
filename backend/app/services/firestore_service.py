@@ -114,10 +114,13 @@ class FirestoreService:
                     if metrics:
                         truth = metrics.get("truth_score", 0)
                         fake = metrics.get("fake_score", 0)
+                        unverified = metrics.get("unverified_score", 0)
                         
                         if truth < filters.get("min_truth_score", 0) or truth > filters.get("max_truth_score", 100):
                             continue
                         if fake < filters.get("min_fake_score", 0) or fake > filters.get("max_fake_score", 100):
+                            continue
+                        if unverified < filters.get("min_unverified_score", 0) or unverified > filters.get("max_unverified_score", 100):
                             continue
 
                 items.append(data)

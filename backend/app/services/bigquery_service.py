@@ -315,6 +315,8 @@ class BigQueryService:
         max_truth = filters.get("max_truth_score")
         min_fake = filters.get("min_fake_score")
         max_fake = filters.get("max_fake_score")
+        min_unverified = filters.get("min_unverified_score")
+        max_unverified = filters.get("max_unverified_score")
 
         if min_truth is not None and min_truth > 0:
             clauses.append(f"analysis_metrics.truth_score >= {min_truth}")
@@ -324,6 +326,10 @@ class BigQueryService:
             clauses.append(f"analysis_metrics.fake_score >= {min_fake}")
         if max_fake is not None and max_fake < 100:
             clauses.append(f"analysis_metrics.fake_score <= {max_fake}")
+        if min_unverified is not None and min_unverified > 0:
+            clauses.append(f"analysis_metrics.unverified_score >= {min_unverified}")
+        if max_unverified is not None and max_unverified < 100:
+            clauses.append(f"analysis_metrics.unverified_score <= {max_unverified}")
 
         return " AND ".join(clauses) if clauses else "1=1"
 

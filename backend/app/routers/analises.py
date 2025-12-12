@@ -92,6 +92,8 @@ async def get_dashboard(
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
     max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    min_unverified_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de inverificável"),
+    max_unverified_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de inverificável"),
 ) -> Dict[str, Any]:
     """
     Endpoint para obter dados do dashboard (gráficos e totais).
@@ -112,6 +114,8 @@ async def get_dashboard(
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
             "max_fake_score": max_fake_score,
+            "min_unverified_score": min_unverified_score,
+            "max_unverified_score": max_unverified_score,
         }
 
         print("\n" + "="*60)
@@ -557,6 +561,8 @@ async def export_dashboard_csv(
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
     max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    min_unverified_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de inverificável"),
+    max_unverified_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de inverificável"),
 ):
     """
     Exporta dados do dashboard como CSV
@@ -577,6 +583,8 @@ async def export_dashboard_csv(
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
             "max_fake_score": max_fake_score,
+            "min_unverified_score": min_unverified_score,
+            "max_unverified_score": max_unverified_score,
         }
 
         print("\n" + "="*60)
@@ -600,11 +608,28 @@ async def export_dashboard_csv(
 
         # Stats
         writer.writerow(["Total de Mensagens", data["total_messages"]])
-        writer.writerow(["Total de Claims", data["total_claims"]])
+        writer.writerow(["Total de Afirmações", data["total_claims"]])
+
+        # Calculate totals from results distribution
+        total_true = 0
+        total_fake = 0
+        total_unknown = 0
+
+        for item in data["results_distribution"]:
+            if item["name"] == "Verdadeiro":
+                total_true = item["value"]
+            elif item["name"] == "Falso":
+                total_fake = item["value"]
+            elif item["name"] == "Fontes insuficientes para verificar":
+                total_unknown = item["value"]
+
+        writer.writerow(["Total Verdadeiras", total_true])
+        writer.writerow(["Total Falsas", total_fake])
+        writer.writerow(["Total Fontes Insuficientes", total_unknown])
 
         # Results distribution
         for item in data["results_distribution"]:
-            writer.writerow([f"Claims {item['name']}", item["value"]])
+            writer.writerow([f"Afirmações {item['name']}", item["value"]])
 
         # Modalities distribution
         for item in data["modalities_distribution"]:
@@ -654,6 +679,8 @@ async def export_messages_csv(
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
     max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    min_unverified_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de inverificável"),
+    max_unverified_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de inverificável"),
     max_records: int = Query(10000, ge=1, le=50000, description="Limite de segurança"),
 ):
     """
@@ -675,6 +702,8 @@ async def export_messages_csv(
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
             "max_fake_score": max_fake_score,
+            "min_unverified_score": min_unverified_score,
+            "max_unverified_score": max_unverified_score,
         }
 
         print("\n" + "="*60)
@@ -696,22 +725,34 @@ async def export_messages_csv(
 
         # Header
         writer.writerow([
-            "Data",
-            "Tipo",
-            "Título",
-            "Quantidade de Claims",
+            "ID",
+            "Data Processamento",
+            "Tipo Fonte",
+            "Título Análise",
+            "Veredito Geral",
+            "Comentário Final",
+            "Texto Mensagem Usuário",
+            "Transcrição Áudio",
+            "Texto Imagem (OCR)",
+            "Transcrição Vídeo",
+            "Links Raspados (Detalhado)",
+            "Quantidade de Afirmações",
             "% Verdadeiro",
             "% Falso",
             "% Fontes insuficientes para verificar",
-            "Tópicos"
+            "Tópicos",
+            "Afirmações Detalhadas (com Fontes)"
         ])
 
         # Linhas
         for item in result["items"]:
+            # ID
+            doc_id = item.get("document_id", "")
+
             # Formatar data
             try:
                 date_obj = datetime.fromisoformat(item.get("processed_at", ""))
-                formatted_date = date_obj.strftime("%d/%m/%Y")
+                formatted_date = date_obj.strftime("%d/%m/%Y %H:%M:%S")
             except:
                 formatted_date = item.get("processed_at", "")
 
@@ -721,6 +762,31 @@ async def export_messages_csv(
             # Título
             title = item.get("analysis_title") or "Sem título"
 
+            # Veredito Geral
+            overall_verdict = item.get("overall_verdict", "")
+
+            # Comentário Final
+            final_comment = item.get("final_comment", "")
+
+            # Conteúdos Específicos
+            user_msg_text = item.get("user_message_text", "")
+            
+            media_info = item.get("media_info", {})
+            audio_text = media_info.get("audio_text", "") if media_info.get("has_audio") else ""
+            image_text = media_info.get("image_text", "") if media_info.get("has_image") else ""
+            video_text = media_info.get("video_text", "") if media_info.get("has_video") else ""
+
+            # Links Raspados Detalhados
+            scraped_links_details = []
+            for link in item.get("scraped_links", []):
+                url = link.get("url", "")
+                link_title = link.get("title", "Sem título")
+                scraped_text = link.get("scraped_text", "")[:200] + "..." if link.get("scraped_text") else ""
+                if url:
+                    scraped_links_details.append(f"Título: {link_title}\nURL: {url}\nPreview: {scraped_text}")
+            
+            scraped_links_str = "\n\n".join(scraped_links_details)
+
             # Métricas
             metrics = item.get("analysis_metrics", {})
             total_claims = len(item.get("claims", []))
@@ -728,24 +794,70 @@ async def export_messages_csv(
             fake_score = metrics.get("fake_score", 0) if metrics else 0
             unverified_score = metrics.get("unverified_score", 0) if metrics else 0
 
-            # Tópicos (únicos, apenas parte antes do pipe)
+            # Tópicos e Afirmações Detalhadas
             all_topics = []
-            for claim in item.get("claims", []):
+            claims_details = []
+            
+            for i, claim in enumerate(item.get("claims", []), 1):
+                # Tópicos
                 for topic in claim.get("topics", []):
                     topic_name = topic.split('|')[0] if '|' in topic else topic
                     if topic_name and topic_name not in all_topics:
                         all_topics.append(topic_name)
+                
+                # Detalhes da afirmação
+                claim_text = claim.get("claim_text", "") or claim.get("text", "")
+                verdict = claim.get("verdict", "Desconhecido")
+                reasoning = claim.get("reasoning", "")
+                
+                # Fontes da afirmação
+                sources_details = []
+                for source in claim.get("sources", []):
+                    s_url = source.get("url", "")
+                    s_title = source.get("title", "")
+                    s_publisher = source.get("publisher", "")
+                    s_citation = source.get("citation_text", "")
+                    
+                    source_str = f"- "
+                    if s_publisher: source_str += f"[{s_publisher}] "
+                    if s_title: source_str += f"{s_title} "
+                    if s_url: source_str += f"({s_url})"
+                    if s_citation: source_str += f"\n  Citação: {s_citation}"
+                    
+                    sources_details.append(source_str)
+                
+                sources_block = "\n".join(sources_details) if sources_details else "Nenhuma fonte citada."
+                
+                claim_block = (
+                    f"Afirmação #{i}:\n"
+                    f"Texto: {claim_text}\n"
+                    f"Veredito: {verdict}\n"
+                    f"Justificativa: {reasoning}\n"
+                    f"Fontes:\n{sources_block}"
+                )
+                claims_details.append(claim_block)
+
             topics_str = ", ".join(all_topics)
+            claims_str = "\n\n----------------------------------------\n\n".join(claims_details)
 
             writer.writerow([
+                doc_id,
                 formatted_date,
                 msg_type,
                 title,
+                overall_verdict,
+                final_comment,
+                user_msg_text,
+                audio_text,
+                image_text,
+                video_text,
+                scraped_links_str,
                 total_claims,
                 f"{truth_score}%",
                 f"{fake_score}%",
                 f"{unverified_score}%",
-                topics_str
+                topics_str,
+                claims_str
             ])
 
         output.seek(0)
@@ -792,6 +904,8 @@ async def export_sources_csv(
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
     max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    min_unverified_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de inverificável"),
+    max_unverified_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de inverificável"),
     max_records: int = Query(10000, ge=1, le=50000, description="Limite de segurança"),
 ):
     """
@@ -813,6 +927,8 @@ async def export_sources_csv(
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
             "max_fake_score": max_fake_score,
+            "min_unverified_score": min_unverified_score,
+            "max_unverified_score": max_unverified_score,
         }
 
         print("\n" + "="*60)

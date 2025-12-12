@@ -446,24 +446,24 @@ const Verification = () => {
                               <AvatarFallback>{reviewer.displayName.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <div className="text-sm md:text-base font-medium group-hover:text-primary transition-colors flex items-center gap-2">
+                              <div className="text-sm md:text-base font-medium group-hover:text-accent-foreground transition-colors flex items-center gap-2">
                                 <span className="truncate">{reviewer.displayName}</span>
-                                <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                                <BadgeCheck className="h-4 w-4 text-primary group-hover:text-accent-foreground flex-shrink-0 transition-colors" />
                               </div>
                               {reviewer.occupation && (
-                                <p className="text-xs text-muted-foreground truncate">{reviewer.occupation}</p>
+                                <p className="text-xs text-muted-foreground group-hover:text-accent-foreground/80 truncate transition-colors">{reviewer.occupation}</p>
                               )}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
                             {reviewer.action === 'like' ? (
-                              <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                              <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
                                 <ThumbsUp className="h-3 w-3" />
                                 <span>Aprovou</span>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 px-2 py-1 rounded-full">
+                              <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
                                 <ThumbsDown className="h-3 w-3" />
                                 <span>Reprovou</span>
                               </div>

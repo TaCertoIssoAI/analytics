@@ -22,7 +22,7 @@ export const FilterSection = ({
 }: FilterSectionProps) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  const handlePercentageChange = (field: 'minTruthScore' | 'maxTruthScore' | 'minFakeScore' | 'maxFakeScore', value: number) => {
+  const handlePercentageChange = (field: 'minTruthScore' | 'maxTruthScore' | 'minFakeScore' | 'maxFakeScore' | 'minUnverifiedScore' | 'maxUnverifiedScore', value: number) => {
     if (filters && onFilterChange) {
       onFilterChange({
         ...filters,
@@ -64,7 +64,11 @@ export const FilterSection = ({
       onFilterChange({
         messageType: { whatsapp: true, direct: true },
         modality: { text: true, audio: true, video: true, image: true },
-        percentage: { minTruthScore: 0, maxTruthScore: 100, minFakeScore: 0, maxFakeScore: 100 },
+        percentage: { 
+          minTruthScore: 0, maxTruthScore: 100, 
+          minFakeScore: 0, maxFakeScore: 100,
+          minUnverifiedScore: 0, maxUnverifiedScore: 100 
+        },
       });
     }
     if (onSearchChange) {
@@ -200,10 +204,10 @@ export const FilterSection = ({
           {/* Filtros por Porcentagem */}
           <div className="border-t pt-6">
             <Label className="text-base font-semibold mb-4 block">Filtrar por Porcentagem</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Porcentagem de Claims Verdadeiras */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Porcentagem de Afirmações Verdadeiras */}
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Claims Verdadeiras (%)</Label>
+                <Label className="text-sm font-medium">Afirmações Verdadeiras (%)</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label htmlFor="minTruth" className="text-xs text-muted-foreground">Mínimo</Label>
@@ -232,9 +236,9 @@ export const FilterSection = ({
                 </div>
               </div>
 
-              {/* Porcentagem de Claims Falsas */}
+              {/* Porcentagem de Afirmações Falsas */}
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Claims Falsas (%)</Label>
+                <Label className="text-sm font-medium">Afirmações Falsas (%)</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label htmlFor="minFake" className="text-xs text-muted-foreground">Mínimo</Label>
@@ -257,6 +261,37 @@ export const FilterSection = ({
                       max="100"
                       value={filters.percentage.maxFakeScore}
                       onChange={(e) => handlePercentageChange('maxFakeScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Porcentagem de Afirmações com Fontes Inverificáveis */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Fontes Inverificáveis (%)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="minUnverified" className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      id="minUnverified"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.minUnverifiedScore}
+                      onChange={(e) => handlePercentageChange('minUnverifiedScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="maxUnverified" className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      id="maxUnverified"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.maxUnverifiedScore}
+                      onChange={(e) => handlePercentageChange('maxUnverifiedScore', Number(e.target.value))}
                       className="h-9"
                     />
                   </div>

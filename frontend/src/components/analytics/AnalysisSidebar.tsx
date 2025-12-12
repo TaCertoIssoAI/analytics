@@ -19,6 +19,8 @@ export interface AnalysisFilters {
     maxTruthScore: number;  // 0-100
     minFakeScore: number;   // 0-100
     maxFakeScore: number;   // 0-100
+    minUnverifiedScore: number; // 0-100
+    maxUnverifiedScore: number; // 0-100
   };
 }
 
