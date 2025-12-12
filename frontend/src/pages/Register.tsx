@@ -52,68 +52,30 @@ const Register = () => {
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Criar uma conta</CardTitle>
-          <CardDescription className="text-center">
-            Digite seu email abaixo para criar sua conta
+          <CardTitle className="text-2xl font-bold text-center">Cadastro de Revisores</CardTitle>
+          <CardDescription className="text-center text-base pt-2">
+            Para garantir que todos os revisores sejam verificados, o cadastro é realizado manualmente pela nossa equipe.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Seu nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Criando conta..." : "Criar conta"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Já tem uma conta?{" "}
-            <Link to="/entrar" className="text-primary hover:underline">
-              Entrar
-            </Link>
+        <CardContent className="space-y-6 text-center pb-8">
+          <p className="text-muted-foreground">
+            Por favor, envie um email solicitando seu cadastro para:
           </p>
-        </CardFooter>
+          <div className="p-4 bg-muted rounded-lg font-medium text-lg select-all">
+            tacertoissoai@gmail.com
+          </div>
+          <Button className="w-full" asChild>
+            <a href="mailto:tacertoissoai@gmail.com?subject=Solicitação de Cadastro de Revisor">
+              Enviar Email Agora
+            </a>
+          </Button>
+          <div className="text-sm text-muted-foreground pt-4">
+            Já tem uma conta?{" "}
+            <Link to="/entrar" className="text-primary hover:underline font-medium">
+              Fazer Login
+            </Link>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

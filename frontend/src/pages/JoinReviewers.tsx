@@ -132,15 +132,15 @@ const JoinReviewers = () => {
       <section className="container py-20 border-t">
         <div className="bg-primary text-primary-foreground rounded-3xl p-8 md:p-16 text-center space-y-8 relative overflow-hidden">
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold">Estamos em Beta!</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">Quer ser um revisor?</h2>
             <p className="text-lg text-primary-foreground/90">
-              Neste momento, as inscrições estão abertas para todos que desejam contribuir. 
-              Basta criar sua conta e começar a avaliar as análises.
+              Para garantir a qualidade e segurança da nossa rede de revisores, o cadastro é feito mediante verificação.
+              Envie um email para <strong>tacertoissoai@gmail.com</strong> solicitando seu acesso.
             </p>
             <Button size="lg" variant="secondary" className="h-12 px-8 text-lg font-semibold" asChild>
-              <Link to="/cadastro">
-                Inscrever-se Agora
-              </Link>
+              <a href="mailto:tacertoissoai@gmail.com?subject=Solicitação de Cadastro de Revisor">
+                Enviar Email
+              </a>
             </Button>
           </div>
           
