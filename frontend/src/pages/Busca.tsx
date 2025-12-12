@@ -69,10 +69,6 @@ const Busca = () => {
   const [totalSources, setTotalSources] = useState(0);
   const [sources, setSources] = useState<Array<{ source: string; count: number }>>([]);
   const [filters, setFilters] = useState<AnalysisFilters>({
-    messageType: {
-      whatsapp: true,
-      direct: true,
-    },
     modality: {
       text: true,
       audio: true,
@@ -105,9 +101,6 @@ const Busca = () => {
     const params = new URLSearchParams();
 
     if (searchTerm) params.append("search", searchTerm);
-
-    params.append("message_type_whatsapp", String(filters.messageType.whatsapp));
-    params.append("message_type_direct", String(filters.messageType.direct));
 
     params.append("modality_text", String(filters.modality.text));
     params.append("modality_audio", String(filters.modality.audio));

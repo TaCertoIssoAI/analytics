@@ -4,10 +4,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Filter } from "lucide-react";
 
 export interface AnalysisFilters {
-  messageType: {
-    whatsapp: boolean;
-    direct: boolean;
-  };
   modality: {
     text: boolean;
     audio: boolean;
@@ -30,16 +26,6 @@ interface AnalysisSidebarProps {
 }
 
 export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProps) => {
-  const handleMessageTypeChange = (type: 'whatsapp' | 'direct', checked: boolean) => {
-    onFilterChange({
-      ...filters,
-      messageType: {
-        ...filters.messageType,
-        [type]: checked,
-      },
-    });
-  };
-
   const handleModalityChange = (modality: 'text' | 'audio' | 'video' | 'image', checked: boolean) => {
     onFilterChange({
       ...filters,
@@ -60,32 +46,6 @@ export const AnalysisSidebar = ({ filters, onFilterChange }: AnalysisSidebarProp
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-3">
-          <Label className="text-base font-semibold">Tipo de Mensagem</Label>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="whatsapp"
-                checked={filters.messageType.whatsapp}
-                onCheckedChange={(checked) => handleMessageTypeChange('whatsapp', checked as boolean)}
-              />
-              <label htmlFor="whatsapp" className="text-sm cursor-pointer">
-                Grupo do WhatsApp
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="direct"
-                checked={filters.messageType.direct}
-                onCheckedChange={(checked) => handleMessageTypeChange('direct', checked as boolean)}
-              />
-              <label htmlFor="direct" className="text-sm cursor-pointer">
-                Mensagem Direta
-              </label>
-            </div>
-          </div>
-        </div>
-
         <div className="space-y-3">
           <Label className="text-base font-semibold">Modalidade</Label>
           <div className="space-y-2">

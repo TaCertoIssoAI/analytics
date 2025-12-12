@@ -34,18 +34,6 @@ export const FilterSection = ({
     }
   };
 
-  const handleMessageTypeChange = (type: 'whatsapp' | 'direct', checked: boolean) => {
-    if (filters && onFilterChange) {
-      onFilterChange({
-        ...filters,
-        messageType: {
-          ...filters.messageType,
-          [type]: checked,
-        },
-      });
-    }
-  };
-
   const handleModalityChange = (modality: 'text' | 'audio' | 'video' | 'image', checked: boolean) => {
     if (filters && onFilterChange) {
       onFilterChange({
@@ -62,7 +50,6 @@ export const FilterSection = ({
   const handleClearFilters = () => {
     if (onFilterChange) {
       onFilterChange({
-        messageType: { whatsapp: true, direct: true },
         modality: { text: true, audio: true, video: true, image: true },
         percentage: { 
           minTruthScore: 0, maxTruthScore: 100, 
@@ -125,33 +112,6 @@ export const FilterSection = ({
       {filters && showAdvancedFilters && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Tipo de Mensagem */}
-            <div className="space-y-3">
-            <Label className="text-base font-semibold">Tipo de Mensagem</Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="whatsapp"
-                  checked={filters.messageType.whatsapp}
-                  onCheckedChange={(checked) => handleMessageTypeChange('whatsapp', checked as boolean)}
-                />
-                <label htmlFor="whatsapp" className="text-sm cursor-pointer">
-                  Grupo do WhatsApp
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="direct"
-                  checked={filters.messageType.direct}
-                  onCheckedChange={(checked) => handleMessageTypeChange('direct', checked as boolean)}
-                />
-                <label htmlFor="direct" className="text-sm cursor-pointer">
-                  Mensagem Direta
-                </label>
-              </div>
-            </div>
-          </div>
-
           {/* Modalidade */}
           <div className="space-y-3">
             <Label className="text-base font-semibold">Modalidade</Label>
