@@ -159,13 +159,29 @@ All colors MUST be HSL.
   }
 }
 
-/* VLibras Z-Index Fix */
+/* VLibras Widget Styles */
 [vw] {
+  display: none; /* Hidden by default, controlled by VLibrasController */
   z-index: 2147483647 !important;
 }
+
+[vw].enabled {
+  display: block !important;
+}
+
 [vw-access-button] {
   z-index: 2147483647 !important;
 }
-.vw-plugin-wrapper {
+
+[vw-plugin-wrapper] {
   z-index: 2147483647 !important;
+}
+
+/* Fix for mobile devices */
+@media (max-width: 768px) {
+  [vw-access-button] {
+    position: fixed !important;
+    bottom: 1rem !important;
+    right: 1rem !important;
+  }
 }
