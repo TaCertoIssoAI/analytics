@@ -49,10 +49,12 @@ class AnalysisMetrics(BaseModel):
     total_claims: int = 0
     true_count: int = 0
     fake_count: int = 0
-    unverified_count: int = 0
+    out_of_context_count: int = 0  # FORA_DE_CONTEXTO
+    unverified_count: int = 0  # CHECK and all others
 
     truth_score: int = 0
     fake_score: int = 0
+    out_of_context_score: int = 0
     unverified_score: int = 0
 
 

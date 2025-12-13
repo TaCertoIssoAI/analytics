@@ -66,6 +66,9 @@ export const VerificationCard = ({ id, title, status, date, tags, excerpt, analy
                 {analysis_metrics.fake_count > 0 && (
                   <div className="h-3 w-3 rounded-full bg-status-false" title="Contém informações falsas" />
                 )}
+                {(analysis_metrics.out_of_context_count || 0) > 0 && (
+                  <div className="h-3 w-3 rounded-full bg-yellow-500" title="Contém informações fora de contexto" />
+                )}
                 {analysis_metrics.unverified_count > 0 && (
                   <div className="h-3 w-3 rounded-full bg-status-unverifiable" title="Contém informações não verificáveis" />
                 )}

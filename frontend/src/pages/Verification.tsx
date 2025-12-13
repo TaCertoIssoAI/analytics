@@ -304,6 +304,9 @@ const Verification = () => {
                   {analysis.analysis_metrics.fake_count > 0 && (
                     <div className="h-4 w-4 rounded-full bg-status-false" title="Contém informações falsas" />
                   )}
+                  {(analysis.analysis_metrics.out_of_context_count || 0) > 0 && (
+                    <div className="h-4 w-4 rounded-full bg-yellow-500" title="Contém informações fora de contexto" />
+                  )}
                   {analysis.analysis_metrics.unverified_count > 0 && (
                     <div className="h-4 w-4 rounded-full bg-status-unverifiable" title="Contém informações não verificáveis" />
                   )}
@@ -491,22 +494,29 @@ const Verification = () => {
                     {/* Barra de Progresso Segmentada */}
                     <div className="h-4 w-full flex rounded-full overflow-hidden bg-secondary">
                       {analysis.analysis_metrics.truth_score > 0 && (
-                        <div 
-                          style={{ width: `${analysis.analysis_metrics.truth_score}%` }} 
+                        <div
+                          style={{ width: `${analysis.analysis_metrics.truth_score}%` }}
                           className="h-full bg-status-true"
                           title={`Verdadeiro: ${analysis.analysis_metrics.truth_score}%`}
                         />
                       )}
                       {analysis.analysis_metrics.fake_score > 0 && (
-                        <div 
-                          style={{ width: `${analysis.analysis_metrics.fake_score}%` }} 
+                        <div
+                          style={{ width: `${analysis.analysis_metrics.fake_score}%` }}
                           className="h-full bg-status-false"
                           title={`Falso: ${analysis.analysis_metrics.fake_score}%`}
                         />
                       )}
+                      {(analysis.analysis_metrics.out_of_context_score || 0) > 0 && (
+                        <div
+                          style={{ width: `${analysis.analysis_metrics.out_of_context_score || 0}%` }}
+                          className="h-full bg-yellow-500"
+                          title={`Fora de Contexto: ${analysis.analysis_metrics.out_of_context_score || 0}%`}
+                        />
+                      )}
                       {analysis.analysis_metrics.unverified_score > 0 && (
-                        <div 
-                          style={{ width: `${analysis.analysis_metrics.unverified_score}%` }} 
+                        <div
+                          style={{ width: `${analysis.analysis_metrics.unverified_score}%` }}
                           className="h-full bg-status-unverifiable"
                           title={`Fontes insuficientes para verificar: ${analysis.analysis_metrics.unverified_score}%`}
                         />
@@ -514,7 +524,7 @@ const Verification = () => {
                     </div>
 
                     {/* Legenda e Contadores */}
-                    <div className="grid grid-cols-3 gap-4 pt-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
                       <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
                         <span className="text-xl md:text-2xl font-bold text-status-true">{analysis.analysis_metrics.true_count}</span>
                         <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Verdadeiras</span>
@@ -526,8 +536,13 @@ const Verification = () => {
                         <span className="text-[10px] md:text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.fake_score}%</span>
                       </div>
                       <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
+                        <span className="text-xl md:text-2xl font-bold text-yellow-500">{analysis.analysis_metrics.out_of_context_count || 0}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Fora de Contexto</span>
+                        <span className="text-[10px] md:text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.out_of_context_score || 0}%</span>
+                      </div>
+                      <div className="flex flex-col items-center p-2 rounded-lg bg-background border shadow-sm">
                         <span className="text-xl md:text-2xl font-bold text-status-unverifiable">{analysis.analysis_metrics.unverified_count}</span>
-                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Outros</span>
+                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">Não Verificadas</span>
                         <span className="text-[10px] md:text-xs text-muted-foreground mt-1">{analysis.analysis_metrics.unverified_score}%</span>
                       </div>
                     </div>

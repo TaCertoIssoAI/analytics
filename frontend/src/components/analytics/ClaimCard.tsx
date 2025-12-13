@@ -26,6 +26,11 @@ const resultConfig: Record<string, { label: string; icon: any; className: string
     icon: HelpCircle,
     className: "bg-status-unverifiable/10 text-status-unverifiable border-status-unverifiable/20",
   },
+  FORA_DE_CONTEXTO: {
+    label: "Fora de Contexto",
+    icon: AlertTriangle,
+    className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  },
   CHECK: {
     label: "Fontes insuficientes para verificar",
     icon: HelpCircle,

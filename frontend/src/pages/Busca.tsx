@@ -523,6 +523,12 @@ const Busca = () => {
                                       title={`Falso: ${analysis.analysis_metrics.fake_score}%`}
                                     />
                                   )}
+                                  {(analysis.analysis_metrics.out_of_context_count || 0) > 0 && (
+                                    <div
+                                      className="h-3 w-3 rounded-full bg-yellow-500"
+                                      title={`Fora de Contexto: ${analysis.analysis_metrics.out_of_context_score || 0}%`}
+                                    />
+                                  )}
                                   {analysis.analysis_metrics.unverified_count > 0 && (
                                     <div
                                       className="h-3 w-3 rounded-full bg-status-unverifiable"

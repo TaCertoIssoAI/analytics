@@ -1,6 +1,6 @@
 export type MessageType = "FromWhatsappGroup" | "FromDirectMessage";
 
-export type VerificationResult = "VERDADEIRO" | "FALSO" | "ENGANOSO" | "CHECK" | "UNVERIFIED";
+export type VerificationResult = "VERDADEIRO" | "FALSO" | "ENGANOSO" | "FORA_DE_CONTEXTO" | "CHECK" | "UNVERIFIED";
 
 export interface ScrapedLink {
   url: string;
@@ -40,9 +40,11 @@ export interface AnalysisMetrics {
   total_claims: number;
   true_count: number;
   fake_count: number;
+  out_of_context_count: number;
   unverified_count: number;
   truth_score: number;
   fake_score: number;
+  out_of_context_score: number;
   unverified_score: number;
 }
 

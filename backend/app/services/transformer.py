@@ -194,6 +194,8 @@ class AnaliseTransformer:
             return "VERDADEIRO"
         if "FALSO" in v or "FAKE" in v:
             return "FALSO"
+        if "FORA DE CONTEXTO" in v:
+            return "FORA_DE_CONTEXTO"
         return "CHECK"
 
     @staticmethod
@@ -266,23 +268,25 @@ class AnaliseTransformer:
     def _calculate_metrics(claims: List[ClaimNewFormat]) -> AnalysisMetrics:
         """Calcula métricas da análise baseada nas claims."""
         total_claims = len(claims)
-        
+
         if total_claims == 0:
             return AnalysisMetrics()
 
         true_count = sum(1 for c in claims if c.verdict == "VERDADEIRO")
         fake_count = sum(1 for c in claims if c.verdict == "FALSO")
-        # Considera UNVERIFIED, CHECK, ENGANOSO como "unverified" para fins de score simplificado,
-        # ou podemos ser mais específicos. Aqui vou agrupar o restante.
-        unverified_count = total_claims - true_count - fake_count
+        out_of_context_count = sum(1 for c in claims if c.verdict == "FORA_DE_CONTEXTO")
+        # Everything else (CHECK and any other verdicts) goes to unverified
+        unverified_count = total_claims - true_count - fake_count - out_of_context_count
 
         return AnalysisMetrics(
             total_claims=total_claims,
             true_count=true_count,
             fake_count=fake_count,
+            out_of_context_count=out_of_context_count,
             unverified_count=unverified_count,
             truth_score=int(round((true_count / total_claims) * 100)),
             fake_score=int(round((fake_count / total_claims) * 100)),
+            out_of_context_score=int(round((out_of_context_count / total_claims) * 100)),
             unverified_score=int(round((unverified_count / total_claims) * 100))
         )
 
