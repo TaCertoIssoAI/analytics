@@ -59,9 +59,13 @@ const NotFoundVerification = () => {
                   Voltar para Início
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" onClick={() => window.location.reload()}>
-                Tentar Novamente
-              </Button>
+              {id && (
+                <Button variant="outline" size="lg" asChild>
+                  <Link to={`/verificacao/${id}`}>
+                    Tentar Novamente
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

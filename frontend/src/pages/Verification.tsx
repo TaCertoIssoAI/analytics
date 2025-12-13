@@ -95,7 +95,7 @@ const Verification = () => {
         const response = await fetch(`${apiUrl}/analises/${id}`);
 
         if (!response.ok) {
-          navigate("/verificacao-nao-encontrada");
+          navigate(`/verificacao-nao-encontrada/${id}`);
           return;
         }
 
@@ -111,17 +111,17 @@ const Verification = () => {
           setDislikedBy(dislikedByList);
           setLikes(likedByList.length);
           setDislikes(dislikedByList.length);
-          
+
           if (currentUser) {
             setUserLiked(likedByList.includes(currentUser.uid));
             setUserDisliked(dislikedByList.includes(currentUser.uid));
           }
         } else {
-          navigate("/verificacao-nao-encontrada");
+          navigate(`/verificacao-nao-encontrada/${id}`);
         }
       } catch (error) {
         console.error("Erro ao carregar análise:", error);
-        navigate("/verificacao-nao-encontrada");
+        navigate(`/verificacao-nao-encontrada/${id}`);
       } finally {
         setLoading(false);
       }
