@@ -294,6 +294,22 @@ class BigQueryService:
              # Se filtros foram passados mas nenhum selecionado
             clauses.append("1=0")
 
+        # Filtro por intervalo de datas (processed_at)
+        # Aceita datetime ou string ISO.
+        start_date = filters.get("start_date")
+        end_date = filters.get("end_date")
+
+        if start_date:
+            if isinstance(start_date, datetime):
+                start_date = start_date.isoformat()
+            # CAST(processed_at AS TIMESTAMP) funciona tanto para coluna TIMESTAMP quanto STRING/DATETIME compatíveis
+            clauses.append(f"CAST(processed_at AS TIMESTAMP) >= TIMESTAMP('{start_date}')")
+
+        if end_date:
+            if isinstance(end_date, datetime):
+                end_date = end_date.isoformat()
+            clauses.append(f"CAST(processed_at AS TIMESTAMP) <= TIMESTAMP('{end_date}')")
+
         # Filtro de resultado (overall_verdict) - REMOVIDO
         # Agora usamos filtros de porcentagem (analysis_metrics)
         # verdicts = []

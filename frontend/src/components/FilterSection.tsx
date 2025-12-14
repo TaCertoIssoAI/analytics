@@ -1,26 +1,68 @@
-import { Calendar, Filter, Download, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Filter, Search, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState } from "react";
 import type { AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+export type DateFilterMode = "last24h" | "last7d" | "last30d" | "custom";
+
+export interface DateFilterValue {
+  mode: DateFilterMode;
+  startDate?: string; // YYYY-MM-DD (apenas para custom)
+  endDate?: string; // YYYY-MM-DD (apenas para custom)
+}
 
 interface FilterSectionProps {
   filters?: AnalysisFilters;
   onFilterChange?: (filters: AnalysisFilters) => void;
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
+  dateFilter?: DateFilterValue;
+  onDateFilterChange?: (value: DateFilterValue) => void;
 }
 
 export const FilterSection = ({
   filters,
   onFilterChange,
   searchTerm = "",
-  onSearchChange
+  onSearchChange,
+  dateFilter,
+  onDateFilterChange,
 }: FilterSectionProps) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const parseYmdToDate = (ymd?: string): Date | undefined => {
+    if (!ymd) return undefined;
+    const [y, m, d] = ymd.split("-").map(Number);
+    if (!y || !m || !d) return undefined;
+    // Mantém em meia-noite local para comparação/seleção por dia.
+    return new Date(y, m - 1, d);
+  };
+
+  const formatDateDisplay = (ymd?: string) => {
+    const dt = parseYmdToDate(ymd);
+    if (!dt) return "";
+    return format(dt, "dd/MM/yyyy", { locale: ptBR });
+  };
+
+  const formatDateYmd = (dt?: Date) => {
+    if (!dt) return "";
+    return format(dt, "yyyy-MM-dd");
+  };
 
   const handlePercentageChange = (field: 'minTruthScore' | 'maxTruthScore' | 'minFakeScore' | 'maxFakeScore' | 'minUnverifiedScore' | 'maxUnverifiedScore', value: number) => {
     if (filters && onFilterChange) {
@@ -107,6 +149,137 @@ export const FilterSection = ({
           </Button>
         )}
       </div>
+
+      {/* Filtro por Data */}
+      {dateFilter && onDateFilterChange && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-base font-semibold">Período</Label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm" htmlFor="dateMode">
+                Seleção
+              </Label>
+              <Select
+                value={dateFilter.mode}
+                onValueChange={(value) =>
+                  onDateFilterChange({
+                    ...dateFilter,
+                    mode: value as DateFilterMode,
+                  })
+                }
+              >
+                <SelectTrigger id="dateMode">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last24h">Últimas 24h</SelectItem>
+                  <SelectItem value="last7d">Últimos 7 dias</SelectItem>
+                  <SelectItem value="last30d">Últimos 30 dias</SelectItem>
+                  <SelectItem value="custom">Data personalizada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {dateFilter.mode === "custom" && (
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate" className="text-sm">
+                    Data de início
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="startDate"
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-between font-normal group"
+                      >
+                        <span
+                          className={
+                            dateFilter.startDate
+                              ? "group-hover:text-foreground"
+                              : "text-muted-foreground group-hover:text-foreground"
+                          }
+                        >
+                          {dateFilter.startDate ? formatDateDisplay(dateFilter.startDate) : "Selecionar"}
+                        </span>
+                        <Calendar className="h-4 w-4 text-muted-foreground opacity-70 group-hover:text-foreground group-hover:opacity-100" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={parseYmdToDate(dateFilter.startDate)}
+                        onSelect={(selected) =>
+                          onDateFilterChange({
+                            ...dateFilter,
+                            startDate: selected ? formatDateYmd(selected) : undefined,
+                          })
+                        }
+                        disabled={(day) => {
+                          const end = parseYmdToDate(dateFilter.endDate);
+                          return end ? day > end : false;
+                        }}
+                        initialFocus
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="endDate" className="text-sm">
+                    Data de fim
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="endDate"
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-between font-normal group"
+                      >
+                        <span
+                          className={
+                            dateFilter.endDate
+                              ? "group-hover:text-foreground"
+                              : "text-muted-foreground group-hover:text-foreground"
+                          }
+                        >
+                          {dateFilter.endDate ? formatDateDisplay(dateFilter.endDate) : "Selecionar"}
+                        </span>
+                        <Calendar className="h-4 w-4 text-muted-foreground opacity-70 group-hover:text-foreground group-hover:opacity-100" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={parseYmdToDate(dateFilter.endDate)}
+                        onSelect={(selected) =>
+                          onDateFilterChange({
+                            ...dateFilter,
+                            endDate: selected ? formatDateYmd(selected) : undefined,
+                          })
+                        }
+                        disabled={(day) => {
+                          const start = parseYmdToDate(dateFilter.startDate);
+                          return start ? day < start : false;
+                        }}
+                        initialFocus
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Filtros em Grid */}
       {filters && showAdvancedFilters && (

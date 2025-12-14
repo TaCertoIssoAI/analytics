@@ -1,5 +1,6 @@
 import os
 from typing import Optional, Dict, Any, List
+from datetime import datetime
 from google.cloud import firestore
 from app.config import settings
 from app.models.new_format import AnaliseNewFormat
@@ -72,6 +73,21 @@ class FirestoreService:
             return None
 
         try:
+            def _parse_dt(value: Any) -> Optional[datetime]:
+                if value is None:
+                    return None
+                if isinstance(value, datetime):
+                    return value
+                if isinstance(value, str) and value:
+                    try:
+                        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    except Exception:
+                        return None
+                return None
+
+            start_dt = _parse_dt(filters.get("start_date")) if filters else None
+            end_dt = _parse_dt(filters.get("end_date")) if filters else None
+
             # Referência para a coleção
             query = self.analises_collection
 
@@ -122,6 +138,15 @@ class FirestoreService:
                             continue
                         if unverified < filters.get("min_unverified_score", 0) or unverified > filters.get("max_unverified_score", 100):
                             continue
+
+                    # Filtro de Data
+                    if start_dt or end_dt:
+                        processed_dt = _parse_dt(data.get("processed_at"))
+                        if processed_dt:
+                            if start_dt and processed_dt < start_dt:
+                                continue
+                            if end_dt and processed_dt > end_dt:
+                                continue
 
                 items.append(data)
 

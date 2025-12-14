@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FilterSection } from "@/components/FilterSection";
+import { FilterSection, type DateFilterValue } from "@/components/FilterSection";
 import { type AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
 import { MetricsCard } from "@/components/analytics/MetricsCard";
 import { MessageDetailDialog } from "@/components/analytics/MessageDetailDialog";
@@ -58,6 +58,12 @@ const Busca = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    mode: "last30d",
+    startDate: "",
+    endDate: "",
+  });
+
   // Pagination State - Messages
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -97,6 +103,34 @@ const Busca = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+  const getDateRangeIso = useCallback((): { start?: string; end?: string } => {
+    const now = new Date();
+
+    if (dateFilter.mode === "last24h") {
+      const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      return { start: start.toISOString(), end: now.toISOString() };
+    }
+
+    if (dateFilter.mode === "last7d") {
+      const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return { start: start.toISOString(), end: now.toISOString() };
+    }
+
+    if (dateFilter.mode === "last30d") {
+      const start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return { start: start.toISOString(), end: now.toISOString() };
+    }
+
+    // custom: espera YYYY-MM-DD
+    const toStartOfDayIso = (dateStr: string) => new Date(`${dateStr}T00:00:00`).toISOString();
+    const toEndOfDayIso = (dateStr: string) => new Date(`${dateStr}T23:59:59.999`).toISOString();
+
+    const start = dateFilter.startDate ? toStartOfDayIso(dateFilter.startDate) : undefined;
+    const end = dateFilter.endDate ? toEndOfDayIso(dateFilter.endDate) : undefined;
+
+    return { start, end };
+  }, [dateFilter.endDate, dateFilter.mode, dateFilter.startDate]);
+
   const buildQueryParams = useCallback(() => {
     const params = new URLSearchParams();
 
@@ -115,8 +149,13 @@ const Busca = () => {
     params.append("min_unverified_score", String(filters.percentage.minUnverifiedScore));
     params.append("max_unverified_score", String(filters.percentage.maxUnverifiedScore));
 
+    // Filtro de data
+    const { start, end } = getDateRangeIso();
+    if (start) params.append("start_date", start);
+    if (end) params.append("end_date", end);
+
     return params;
-  }, [filters, searchTerm]);
+  }, [filters, getDateRangeIso, searchTerm]);
 
   const handleExportDashboard = async () => {
     setExportLoading(prev => ({ ...prev, dashboard: true }));
@@ -254,6 +293,12 @@ const Busca = () => {
     return () => clearTimeout(timeoutId);
   }, [fetchData]);
 
+  useEffect(() => {
+    // Quando muda qualquer filtro, volta pra primeira página
+    setPage(1);
+    setSourcesPage(1);
+  }, [filters, searchTerm, dateFilter.mode, dateFilter.startDate, dateFilter.endDate]);
+
   const getMainResult = (analysis: Analysis) => {
     const verdict = analysis.overall_verdict.toUpperCase();
     if (verdict === "VERDADEIRO") return "True";
@@ -344,6 +389,8 @@ const Busca = () => {
             onFilterChange={setFilters}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            dateFilter={dateFilter}
+            onDateFilterChange={setDateFilter}
           />
         </div>
 

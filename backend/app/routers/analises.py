@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import csv
 import io
 from datetime import datetime
@@ -79,6 +79,8 @@ async def get_stats() -> Dict[str, Any]:
 )
 async def get_dashboard(
     search: str = Query(None, description="Termo de busca"),
+    start_date: Optional[datetime] = Query(None, description="Data/hora inicial (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Data/hora final (ISO 8601)"),
     message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
     message_type_direct: bool = Query(True, description="Incluir Direct"),
     modality_text: bool = Query(True, description="Incluir Texto"),
@@ -101,6 +103,8 @@ async def get_dashboard(
     try:
         filters = {
             "search": search,
+            "start_date": start_date,
+            "end_date": end_date,
             "message_type_whatsapp": message_type_whatsapp,
             "message_type_direct": message_type_direct,
             "modality_text": modality_text,
@@ -155,6 +159,8 @@ async def list_analises(
     limit: int = Query(default=10, ge=1, le=100, description="Número de resultados por página"),
     offset: int = Query(default=0, ge=0, description="Número de resultados a pular"),
     search: str = Query(None, description="Termo de busca"),
+    start_date: Optional[datetime] = Query(None, description="Data/hora inicial (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Data/hora final (ISO 8601)"),
     message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
     message_type_direct: bool = Query(True, description="Incluir Direct"),
     modality_text: bool = Query(True, description="Incluir Texto"),
@@ -175,6 +181,8 @@ async def list_analises(
     try:
         filters = {
             "search": search,
+            "start_date": start_date,
+            "end_date": end_date,
             "message_type_whatsapp": message_type_whatsapp,
             "message_type_direct": message_type_direct,
             "modality_text": modality_text,
@@ -255,6 +263,8 @@ async def list_sources(
     limit: int = Query(default=10, ge=1, le=100, description="Número de resultados por página"),
     offset: int = Query(default=0, ge=0, description="Número de resultados a pular"),
     search: str = Query(None, description="Termo de busca"),
+    start_date: Optional[datetime] = Query(None, description="Data/hora inicial (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Data/hora final (ISO 8601)"),
     message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
     message_type_direct: bool = Query(True, description="Incluir Direct"),
     modality_text: bool = Query(True, description="Incluir Texto"),
@@ -275,6 +285,8 @@ async def list_sources(
     try:
         filters = {
             "search": search,
+            "start_date": start_date,
+            "end_date": end_date,
             "message_type_whatsapp": message_type_whatsapp,
             "message_type_direct": message_type_direct,
             "modality_text": modality_text,
@@ -548,6 +560,8 @@ async def get_analise_interactions(document_id: str):
 )
 async def export_dashboard_csv(
     search: str = Query(None, description="Termo de busca"),
+    start_date: Optional[datetime] = Query(None, description="Data/hora inicial (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Data/hora final (ISO 8601)"),
     message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
     message_type_direct: bool = Query(True, description="Incluir Direct"),
     modality_text: bool = Query(True, description="Incluir Texto"),
@@ -570,6 +584,8 @@ async def export_dashboard_csv(
     try:
         filters = {
             "search": search,
+            "start_date": start_date,
+            "end_date": end_date,
             "message_type_whatsapp": message_type_whatsapp,
             "message_type_direct": message_type_direct,
             "modality_text": modality_text,
@@ -666,6 +682,8 @@ async def export_dashboard_csv(
 )
 async def export_messages_csv(
     search: str = Query(None, description="Termo de busca"),
+    start_date: Optional[datetime] = Query(None, description="Data/hora inicial (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Data/hora final (ISO 8601)"),
     message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
     message_type_direct: bool = Query(True, description="Incluir Direct"),
     modality_text: bool = Query(True, description="Incluir Texto"),
@@ -689,6 +707,8 @@ async def export_messages_csv(
     try:
         filters = {
             "search": search,
+            "start_date": start_date,
+            "end_date": end_date,
             "message_type_whatsapp": message_type_whatsapp,
             "message_type_direct": message_type_direct,
             "modality_text": modality_text,
@@ -891,6 +911,8 @@ async def export_messages_csv(
 )
 async def export_sources_csv(
     search: str = Query(None, description="Termo de busca"),
+    start_date: Optional[datetime] = Query(None, description="Data/hora inicial (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Data/hora final (ISO 8601)"),
     message_type_whatsapp: bool = Query(True, description="Incluir WhatsApp"),
     message_type_direct: bool = Query(True, description="Incluir Direct"),
     modality_text: bool = Query(True, description="Incluir Texto"),
@@ -914,6 +936,8 @@ async def export_sources_csv(
     try:
         filters = {
             "search": search,
+            "start_date": start_date,
+            "end_date": end_date,
             "message_type_whatsapp": message_type_whatsapp,
             "message_type_direct": message_type_direct,
             "modality_text": modality_text,
