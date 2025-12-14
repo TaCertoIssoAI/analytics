@@ -127,58 +127,57 @@ Acesse: `http://localhost:5173`
 ## 🏗 Arquitetura do Sistema
 
 ```
-┌─────────────────┐
-│   WhatsApp Bot  │
-│  (Mensagens)    │
-└────────┬────────┘
+┌─────────────────────────────────┐
+│ Backend do Bot de fact-checking │
+└────────┬────────────────────────┘
          │ POST
          ↓
 ┌─────────────────────────────────────────────────────────┐
-│                    Backend (FastAPI)                     │
+│                    Backend (FastAPI)                    │
 ├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │         Endpoints de Ingestão (POST)             │  │
-│  │  - /analises (criar nova análise)                │  │
-│  │  - Transformação de dados                        │  │
-│  │  - Classificação IPTC                            │  │
-│  │  - Normalização de vereditos                     │  │
-│  │  - Cálculo de métricas                           │  │
-│  └──────────────────┬───────────────────────────────┘  │
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │         Endpoints de Ingestão (POST)             │   │
+│  │  - /analises (criar nova análise)                │   │
+│  │  - Transformação de dados                        │   │
+│  │  - Classificação IPTC                            │   │
+│  │  - Normalização de vereditos                     │   │
+│  │  - Cálculo de métricas                           │   │
+│  └──────────────────┬───────────────────────────────┘   │
 │                     │                                   │
 │                     ↓                                   │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │           Serviços de Dados                      │  │
-│  │  ┌────────────────────┐  ┌──────────────────┐   │  │
-│  │  │  BigQuery Service  │  │ Firestore Service│   │  │
-│  │  │  - VECTOR_SEARCH   │  │ - get_analise()  │   │  │
-│  │  │  - insert_analise()│  │ - save_analise() │   │  │
-│  │  │  - list_analises() │  │ - list_analises()│   │  │
-│  │  │  - get_stats()     │  │ - interactions   │   │  │
-│  │  └────────────────────┘  └──────────────────┘   │  │
-│  └──────────────────┬───────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │           Serviços de Dados                      │   │
+│  │  ┌────────────────────┐  ┌──────────────────┐    │   │
+│  │  │  BigQuery Service  │  │ Firestore Service│    │   │
+│  │  │  - VECTOR_SEARCH   │  │ - get_analise()  │    │   │
+│  │  │  - insert_analise()│  │ - save_analise() │    │   │
+│  │  │  - list_analises() │  │ - list_analises()│    │   │
+│  │  │  - get_stats()     │  │ - interactions   │    │   │
+│  │  └────────────────────┘  └──────────────────┘    │   │
+│  └──────────────────┬───────────────────────────────┘   │ 
 │                     │                                   │
 │                     ↓                                   │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │         Endpoints de Consulta (GET)              │  │
-│  │  - /analises (listar com filtros)                │  │
-│  │  - /analises/{id} (buscar por ID)                │  │
-│  │  - /analises/dashboard (métricas agregadas)      │  │
-│  │  - /analises/stats (estatísticas gerais)         │  │
-│  │  - /analises/sources (fontes citadas)            │  │
-│  │  - /analises/export/* (exportação CSV)           │  │
-│  └──────────────────┬───────────────────────────────┘  │
-│                                                          │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │         Endpoints de Consulta (GET)              │   │
+│  │  - /analises (listar com filtros)                │   │
+│  │  - /analises/{id} (buscar por ID)                │   │
+│  │  - /analises/dashboard (métricas agregadas)      │   │
+│  │  - /analises/stats (estatísticas gerais)         │   │
+│  │  - /analises/sources (fontes citadas)            │   │
+│  │  - /analises/export/* (exportação CSV)           │   │
+│  └──────────────────-┬──────────────────────────────┘   │
+│                      |                                  │
 └──────────────────────┼──────────────────────────────────┘
                        │ HTTP/REST
                        ↓
 ┌─────────────────────────────────────────────────────────┐
-│                  Frontend (React)                        │
+│                  Frontend (React)                       │
 ├─────────────────────────────────────────────────────────┤
 │  - Página Inicial (verificações recentes)               │
 │  - Busca (filtros avançados + busca semântica)          │
 │  - Verificação (visualização detalhada)                 │
-│  - Perfil de usuário                                     │
+│  - Perfil de usuário                                    │
 │  - Login/Cadastro (Firebase Auth)                       │
 │  - Acessibilidade (VLibras)                             │
 └─────────────────────────────────────────────────────────┘
