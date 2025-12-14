@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { translateContentTags } from "@/lib/translateContentTags";
 
 interface MessageDetailDialogProps {
   analysis: Analysis | null;
@@ -100,7 +101,9 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
             <CardContent className="space-y-3">
               <div>
                 <h4 className="font-semibold text-sm mb-1">Mensagem Original</h4>
-                <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.user_message_text}</p>
+                <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">
+                  {translateContentTags(analysis.user_message_text)}
+                </p>
               </div>
               {analysis.media_info.has_audio && analysis.media_info.audio_text && (
                 <div>

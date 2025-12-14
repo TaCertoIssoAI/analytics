@@ -6,15 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { Analysis, Claim, VerificationResult } from "@/types/analysis";
+import { translateContentTags } from "@/lib/translateContentTags";
 import {
+  Camera,
   CheckCircle,
   ExternalLink,
   HelpCircle,
   Home,
   Loader2,
+  Mic,
+  Image as ImageIcon,
   MessageSquare,
   XCircle,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 type AnaliseGetResponse =
   | { success: true; data: Analysis; message?: string }
@@ -120,6 +125,107 @@ const Verification = () => {
 
   const verdictUi = useMemo(() => getVerdictUi(analysis?.overall_verdict), [analysis?.overall_verdict]);
 
+  const userMessageText = useMemo(() => {
+    const raw = analysis?.user_message_text;
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [analysis?.user_message_text]);
+
+  const normalizeMarkdown = (text: string) =>
+    text
+      // Alguns registros chegam com quebras "duplamente escapadas" ("\\n")
+      .replace(/\\r\\n/g, "\n")
+      .replace(/\\n/g, "\n")
+      // Normaliza diferentes "asteriscos" unicode para '*'
+      .replace(/[＊∗✱✳✲✴]/g, "*")
+      // Normaliza bullets comuns para '- '
+      .replace(/^(\s*)[•·]\s+/gm, "$1- ")
+      // Evita que listas virem bloco de código (CommonMark: >=4 espaços vira code block)
+      .replace(/^\s{4,}([*-])\s+/gm, "  $1 ")
+      .replace(/^\s{4,}(\d+\.)\s+/gm, "  $1 ")
+      // Evita CRLF quebrando parsing
+      .replace(/\r\n/g, "\n");
+
+  const userMessageDisplay = useMemo(() => translateContentTags(userMessageText), [userMessageText]);
+
+  const audioTextRaw = useMemo(() => {
+    const raw = analysis?.media_info?.audio_text;
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [analysis?.media_info?.audio_text]);
+
+  const imageTextRaw = useMemo(() => {
+    const raw = analysis?.media_info?.image_text;
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [analysis?.media_info?.image_text]);
+
+  const videoTextRaw = useMemo(() => {
+    const raw = analysis?.media_info?.video_text;
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [analysis?.media_info?.video_text]);
+
+  const combinedTextRaw = useMemo(() => {
+    const raw = analysis?.full_combined_text;
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [analysis?.full_combined_text]);
+
+  const hasAnyMedia = Boolean(
+    analysis?.media_info?.has_audio || analysis?.media_info?.has_image || analysis?.media_info?.has_video
+  );
+
+  const mediaFlagsCount =
+    Number(Boolean(analysis?.media_info?.has_audio)) +
+    Number(Boolean(analysis?.media_info?.has_image)) +
+    Number(Boolean(analysis?.media_info?.has_video));
+
+  const audioMarkdown = useMemo(() => {
+    const candidate =
+      audioTextRaw ||
+      (mediaFlagsCount === 1 && analysis?.media_info?.has_audio ? combinedTextRaw : "");
+    return translateContentTags(normalizeMarkdown(candidate));
+  }, [analysis?.media_info?.has_audio, audioTextRaw, combinedTextRaw, mediaFlagsCount]);
+
+  const imageMarkdown = useMemo(() => {
+    const candidate =
+      imageTextRaw ||
+      (mediaFlagsCount === 1 && analysis?.media_info?.has_image ? combinedTextRaw : "");
+    return translateContentTags(normalizeMarkdown(candidate));
+  }, [analysis?.media_info?.has_image, imageTextRaw, combinedTextRaw, mediaFlagsCount]);
+
+  const videoMarkdown = useMemo(() => {
+    const candidate =
+      videoTextRaw ||
+      (mediaFlagsCount === 1 && analysis?.media_info?.has_video ? combinedTextRaw : "");
+    return translateContentTags(normalizeMarkdown(candidate));
+  }, [analysis?.media_info?.has_video, videoTextRaw, combinedTextRaw, mediaFlagsCount]);
+
+  const combinedMarkdown = useMemo(() => {
+    // Se já mostramos texto específico de mídia, evita duplicar o combinado.
+    if (!combinedTextRaw) return "";
+    if (!hasAnyMedia) return "";
+    if (mediaFlagsCount <= 1) return "";
+    if (audioTextRaw || imageTextRaw || videoTextRaw) return "";
+    return translateContentTags(normalizeMarkdown(combinedTextRaw));
+  }, [audioTextRaw, combinedTextRaw, hasAnyMedia, imageTextRaw, mediaFlagsCount, videoTextRaw]);
+
+  const MarkdownText = ({ text }: { text: string }) => (
+    <ReactMarkdown
+      components={{
+        h1: (props) => <h3 className="text-base font-semibold" {...props} />,
+        h2: (props) => <h4 className="text-sm font-semibold" {...props} />,
+        h3: (props) => <h5 className="text-sm font-semibold" {...props} />,
+        p: (props) => <p className="text-sm leading-relaxed" {...props} />,
+        ul: (props) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+        ol: (props) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+        li: (props) => <li className="text-sm leading-relaxed" {...props} />,
+        strong: (props) => <strong className="font-semibold" {...props} />,
+        em: (props) => <em className="italic" {...props} />,
+        code: (props) => <code className="rounded bg-muted px-1 py-0.5 text-xs" {...props} />,
+        pre: (props) => <pre className="overflow-x-auto rounded bg-muted p-3 text-xs" {...props} />,
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
+
   const topics = useMemo(() => {
     if (!analysis) return [] as string[];
     return Array.from(new Set(analysis.claims.flatMap((c) => c.topics ?? [])));
@@ -208,15 +314,69 @@ const Verification = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                Mensagem analisada
+            {userMessageDisplay && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  Mensagem analisada
+                </div>
+                <div className="rounded-lg border bg-card p-4 text-sm whitespace-pre-wrap">
+                  {userMessageDisplay}
+                </div>
               </div>
-              <div className="rounded-lg border bg-card p-4 text-sm whitespace-pre-wrap">
-                {analysis.user_message_text}
+            )}
+
+            {(audioMarkdown || imageMarkdown || videoMarkdown || combinedMarkdown) && (
+              <div className="space-y-4">
+                {audioMarkdown && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Mic className="h-4 w-4 text-muted-foreground" />
+                      Transcrição do áudio
+                    </div>
+                    <div className="rounded-lg border bg-card p-4 break-words">
+                      <MarkdownText text={audioMarkdown} />
+                    </div>
+                  </div>
+                )}
+
+                {imageMarkdown && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      Descrição da imagem
+                    </div>
+                    <div className="rounded-lg border bg-card p-4 break-words">
+                      <MarkdownText text={imageMarkdown} />
+                    </div>
+                  </div>
+                )}
+
+                {videoMarkdown && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Camera className="h-4 w-4 text-muted-foreground" />
+                      Descrição completa do vídeo
+                    </div>
+                    <div className="rounded-lg border bg-card p-4 break-words">
+                      <MarkdownText text={videoMarkdown} />
+                    </div>
+                  </div>
+                )}
+
+                {combinedMarkdown && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      Conteúdo extraído
+                    </div>
+                    <div className="rounded-lg border bg-card p-4 break-words">
+                      <MarkdownText text={combinedMarkdown} />
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               <div className="text-sm font-medium">Conclusão</div>

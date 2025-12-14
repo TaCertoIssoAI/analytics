@@ -178,7 +178,36 @@ class FirestoreService:
 
             if doc.exists:
                 print(f"✅ Análise {document_id} encontrada no Firestore")
-                return doc.to_dict()
+                data = doc.to_dict() or {}
+
+                # Normaliza payloads antigos / registros incompletos
+                user_message_text = data.get("user_message_text")
+                if user_message_text is None or (isinstance(user_message_text, str) and not user_message_text.strip()):
+                    media_info = data.get("media_info") or {}
+                    has_media = any(
+                        bool(media_info.get(k))
+                        for k in ("has_audio", "has_image", "has_video")
+                    )
+
+                    # Possíveis chaves antigas / alternativas
+                    fallback = (
+                        data.get("userMessageText")
+                        or data.get("user_message")
+                        or data.get("PureText")
+                        or data.get("pure_text")
+                    )
+
+                    # Se não houver mídia, ainda tentamos usar o texto combinado como fallback.
+                    if not has_media and not fallback:
+                        fallback = (
+                            data.get("full_combined_text")
+                            or data.get("FinalTranscribedText")
+                            or data.get("final_transcribed_text")
+                        )
+
+                    data["user_message_text"] = (fallback or "").strip() if isinstance(fallback, str) else ""
+
+                return data
             else:
                 print(f"⚠️  Análise {document_id} não encontrada no Firestore")
                 return None

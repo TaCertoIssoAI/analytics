@@ -201,13 +201,13 @@ export const FilterSection = ({
                         <span
                           className={
                             dateFilter.startDate
-                              ? "group-hover:text-foreground"
-                              : "text-muted-foreground group-hover:text-foreground"
+                              ? "group-hover:text-black"
+                              : "text-muted-foreground group-hover:text-black"
                           }
                         >
                           {dateFilter.startDate ? formatDateDisplay(dateFilter.startDate) : "Selecionar"}
                         </span>
-                        <Calendar className="h-4 w-4 text-muted-foreground opacity-70 group-hover:text-foreground group-hover:opacity-100" />
+                        <Calendar className="h-4 w-4 text-muted-foreground opacity-70 group-hover:text-black group-hover:opacity-100" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -246,13 +246,13 @@ export const FilterSection = ({
                         <span
                           className={
                             dateFilter.endDate
-                              ? "group-hover:text-foreground"
-                              : "text-muted-foreground group-hover:text-foreground"
+                              ? "group-hover:text-black"
+                              : "text-muted-foreground group-hover:text-black"
                           }
                         >
                           {dateFilter.endDate ? formatDateDisplay(dateFilter.endDate) : "Selecionar"}
                         </span>
-                        <Calendar className="h-4 w-4 text-muted-foreground opacity-70 group-hover:text-foreground group-hover:opacity-100" />
+                        <Calendar className="h-4 w-4 text-muted-foreground opacity-70 group-hover:text-black group-hover:opacity-100" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
