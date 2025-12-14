@@ -705,6 +705,152 @@ async def export_messages_csv(
     Exporta mensagens como CSV
     """
     try:
+        def _escape_newlines(value: Any) -> str:
+            if value is None:
+                return ""
+            text = str(value)
+            text = text.replace("\r\n", "\n").replace("\r", "\n")
+            return text.replace("\n", "\\n")
+
+        def _normalize_claim_verdict(verdict_value: Any) -> str:
+            v = str(verdict_value or "").upper().strip()
+
+            # True
+            if "VERDADEIRO" in v or v in {"TRUE"}:
+                return "VERDADEIRO"
+
+            # False
+            if "FALSO" in v or v in {"FALSE"} or "FAKE" in v:
+                return "FALSO"
+
+            # Out of context
+            if "FORA_DE_CONTEXTO" in v or "FORA DE CONTEXTO" in v or "OUT_OF_CONTEXT" in v or "OUT OF CONTEXT" in v:
+                return "FORA_DE_CONTEXTO"
+
+            # Everything else counts as unverified/insufficient sources for our UI
+            return "UNVERIFIED"
+
+        def _verdict_label(verdict_value: Any) -> str:
+            normalized = _normalize_claim_verdict(verdict_value)
+            if normalized == "VERDADEIRO":
+                return "Verdadeiro"
+            if normalized == "FALSO":
+                return "Falso"
+            if normalized == "FORA_DE_CONTEXTO":
+                return "Fora de Contexto"
+            return "Fontes insuficientes para verificar"
+
+        def _format_date(date_value: str) -> str:
+            try:
+                date_obj = datetime.fromisoformat(date_value)
+                return date_obj.strftime("%d/%m/%Y")
+            except Exception:
+                return date_value or ""
+
+        def _format_type(source_type: str) -> str:
+            return "WhatsApp" if source_type == "FromWhatsappGroup" else "Direta"
+
+        def _normalize_topic(topic: str) -> str:
+            return topic.split("|")[0] if isinstance(topic, str) and "|" in topic else (topic or "")
+
+        def _join_non_empty(parts):
+            return "\n\n".join([p for p in parts if isinstance(p, str) and p.strip()])
+
+        def _compute_counts(item: Dict[str, Any]) -> Dict[str, int]:
+            metrics = item.get("analysis_metrics") or {}
+            if metrics:
+                return {
+                    "true": int(metrics.get("true_count") or 0),
+                    "fake": int(metrics.get("fake_count") or 0),
+                    "unverified": int(metrics.get("unverified_count") or 0),
+                    "out_of_context": int(metrics.get("out_of_context_count") or 0),
+                }
+
+            counts = {"true": 0, "fake": 0, "unverified": 0, "out_of_context": 0}
+            for claim in item.get("claims", []) or []:
+                verdict_norm = _normalize_claim_verdict(claim.get("verdict") or claim.get("Result") or claim.get("result"))
+                if verdict_norm == "VERDADEIRO":
+                    counts["true"] += 1
+                elif verdict_norm == "FALSO":
+                    counts["fake"] += 1
+                elif verdict_norm == "FORA_DE_CONTEXTO":
+                    counts["out_of_context"] += 1
+                else:
+                    counts["unverified"] += 1
+            return counts
+
+        def _format_result(item: Dict[str, Any]) -> str:
+            counts = _compute_counts(item)
+            # Use line breaks (will be escaped to literal \\n) to avoid
+            # consumers splitting this field into extra columns.
+            return "\n".join(
+                [
+                    f"Verdadeiro: {counts['true']}",
+                    f"Falso: {counts['fake']}",
+                    f"Fontes insuficientes para verificar: {counts['unverified']}",
+                    f"Fora de Contexto: {counts['out_of_context']}",
+                ]
+            )
+
+        def _format_content(item: Dict[str, Any]) -> str:
+            user_text = (item.get("user_message_text") or "").strip()
+            media_info = item.get("media_info") or {}
+
+            parts = []
+            if user_text:
+                parts.append(f"Mensagem Original:\n{user_text}")
+
+            audio_text = (media_info.get("audio_text") or "").strip() if media_info.get("has_audio") else ""
+            image_text = (media_info.get("image_text") or "").strip() if media_info.get("has_image") else ""
+            video_text = (media_info.get("video_text") or "").strip() if media_info.get("has_video") else ""
+
+            if audio_text:
+                parts.append(f"Transcrição do Áudio:\n{audio_text}")
+            if image_text:
+                parts.append(f"Texto da Imagem:\n{image_text}")
+            if video_text:
+                parts.append(f"Texto do Vídeo:\n{video_text}")
+
+            return _join_non_empty(parts)
+
+        def _format_claims(item: Dict[str, Any]) -> str:
+            blocks = []
+            for i, claim in enumerate(item.get("claims", []) or [], 1):
+                claim_text = (claim.get("claim_text") or claim.get("text") or "").strip()
+                verdict = _verdict_label(claim.get("verdict") or claim.get("Result") or claim.get("result"))
+                reasoning = (claim.get("reasoning") or "").strip()
+
+                sources_details = []
+                for source in claim.get("sources", []) or []:
+                    s_url = (source.get("url") or "").strip()
+                    s_title = (source.get("title") or "").strip()
+                    s_publisher = (source.get("publisher") or "").strip()
+                    s_citation = (source.get("citation_text") or "").strip()
+
+                    line = "- "
+                    if s_publisher:
+                        line += f"[{s_publisher}] "
+                    if s_title:
+                        line += f"{s_title} "
+                    if s_url:
+                        line += f"({s_url})"
+                    if s_citation:
+                        line += f"\n  Citação: {s_citation}"
+                    sources_details.append(line)
+
+                sources_block = "\n".join(sources_details) if sources_details else "Nenhuma fonte citada."
+
+                block = _join_non_empty([
+                    f"Afirmação #{i}:",
+                    f"Texto: {claim_text}" if claim_text else "Texto: ",
+                    f"Veredito: {verdict}",
+                    f"Justificativa: {reasoning}" if reasoning else "",
+                    f"Fontes:\n{sources_block}",
+                ])
+                blocks.append(block)
+
+            return "\n\n----------------------------------------\n\n".join(blocks)
+
         filters = {
             "search": search,
             "start_date": start_date,
@@ -731,7 +877,11 @@ async def export_messages_csv(
         print("="*60)
 
         # Buscar TODAS as mensagens (limitado por max_records)
-        result = firestore_service.list_analises(limit=max_records, offset=0, filters=filters)
+        if search:
+            # mesma lógica do GET /analises: busca semântica vai via BigQuery
+            result = bigquery_service.list_analises(limit=max_records, offset=0, filters=filters)
+        else:
+            result = firestore_service.list_analises(limit=max_records, offset=0, filters=filters)
 
         if result is None:
             raise HTTPException(
@@ -741,143 +891,39 @@ async def export_messages_csv(
 
         # Criar CSV
         output = io.StringIO()
-        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+        # QUOTE_ALL prevents values containing delimiters from shifting columns
+        # in Excel/Sheets imports.
+        writer = csv.writer(output, quoting=csv.QUOTE_ALL)
 
         # Header
         writer.writerow([
-            "ID",
-            "Data Processamento",
-            "Tipo Fonte",
-            "Título Análise",
-            "Veredito Geral",
-            "Comentário Final",
-            "Texto Mensagem Usuário",
-            "Transcrição Áudio",
-            "Texto Imagem (OCR)",
-            "Transcrição Vídeo",
-            "Links Raspados (Detalhado)",
-            "Quantidade de Afirmações",
-            "% Verdadeiro",
-            "% Falso",
-            "% Fontes insuficientes para verificar",
+            "Data",
+            "Tipo",
+            "Título",
+            "Número de afirmações",
+            "Resultado",
             "Tópicos",
-            "Afirmações Detalhadas (com Fontes)"
+            "Conteúdo",
+            "Afirmações verificadas",
+            "Conclusão"
         ])
 
         # Linhas
         for item in result["items"]:
-            # ID
-            doc_id = item.get("document_id", "")
-
-            # Formatar data
-            try:
-                date_obj = datetime.fromisoformat(item.get("processed_at", ""))
-                formatted_date = date_obj.strftime("%d/%m/%Y %H:%M:%S")
-            except:
-                formatted_date = item.get("processed_at", "")
-
-            # Tipo
-            msg_type = "WhatsApp" if item.get("source_type") == "FromWhatsappGroup" else "Direta"
-
-            # Título
-            title = item.get("analysis_title") or "Sem título"
-
-            # Veredito Geral
-            overall_verdict = item.get("overall_verdict", "")
-
-            # Comentário Final
-            final_comment = item.get("final_comment", "")
-
-            # Conteúdos Específicos
-            user_msg_text = item.get("user_message_text", "")
-            
-            media_info = item.get("media_info", {})
-            audio_text = media_info.get("audio_text", "") if media_info.get("has_audio") else ""
-            image_text = media_info.get("image_text", "") if media_info.get("has_image") else ""
-            video_text = media_info.get("video_text", "") if media_info.get("has_video") else ""
-
-            # Links Raspados Detalhados
-            scraped_links_details = []
-            for link in item.get("scraped_links", []):
-                url = link.get("url", "")
-                link_title = link.get("title", "Sem título")
-                scraped_text = link.get("scraped_text", "")[:200] + "..." if link.get("scraped_text") else ""
-                if url:
-                    scraped_links_details.append(f"Título: {link_title}\nURL: {url}\nPreview: {scraped_text}")
-            
-            scraped_links_str = "\n\n".join(scraped_links_details)
-
-            # Métricas
-            metrics = item.get("analysis_metrics", {})
-            total_claims = len(item.get("claims", []))
-            truth_score = metrics.get("truth_score", 0) if metrics else 0
-            fake_score = metrics.get("fake_score", 0) if metrics else 0
-            unverified_score = metrics.get("unverified_score", 0) if metrics else 0
-
-            # Tópicos e Afirmações Detalhadas
-            all_topics = []
-            claims_details = []
-            
-            for i, claim in enumerate(item.get("claims", []), 1):
-                # Tópicos
-                for topic in claim.get("topics", []):
-                    topic_name = topic.split('|')[0] if '|' in topic else topic
-                    if topic_name and topic_name not in all_topics:
-                        all_topics.append(topic_name)
-                
-                # Detalhes da afirmação
-                claim_text = claim.get("claim_text", "") or claim.get("text", "")
-                verdict = claim.get("verdict", "Desconhecido")
-                reasoning = claim.get("reasoning", "")
-                
-                # Fontes da afirmação
-                sources_details = []
-                for source in claim.get("sources", []):
-                    s_url = source.get("url", "")
-                    s_title = source.get("title", "")
-                    s_publisher = source.get("publisher", "")
-                    s_citation = source.get("citation_text", "")
-                    
-                    source_str = f"- "
-                    if s_publisher: source_str += f"[{s_publisher}] "
-                    if s_title: source_str += f"{s_title} "
-                    if s_url: source_str += f"({s_url})"
-                    if s_citation: source_str += f"\n  Citação: {s_citation}"
-                    
-                    sources_details.append(source_str)
-                
-                sources_block = "\n".join(sources_details) if sources_details else "Nenhuma fonte citada."
-                
-                claim_block = (
-                    f"Afirmação #{i}:\n"
-                    f"Texto: {claim_text}\n"
-                    f"Veredito: {verdict}\n"
-                    f"Justificativa: {reasoning}\n"
-                    f"Fontes:\n{sources_block}"
-                )
-                claims_details.append(claim_block)
-
-            topics_str = ", ".join(all_topics)
-            claims_str = "\n\n----------------------------------------\n\n".join(claims_details)
-
             writer.writerow([
-                doc_id,
-                formatted_date,
-                msg_type,
-                title,
-                overall_verdict,
-                final_comment,
-                user_msg_text,
-                audio_text,
-                image_text,
-                video_text,
-                scraped_links_str,
-                total_claims,
-                f"{truth_score}%",
-                f"{fake_score}%",
-                f"{unverified_score}%",
-                topics_str,
-                claims_str
+                _escape_newlines(_format_date(item.get("processed_at", ""))),
+                _escape_newlines(_format_type(item.get("source_type", ""))),
+                _escape_newlines(item.get("analysis_title") or "Sem título"),
+                _escape_newlines(str(len(item.get("claims", []) or []))),
+                _escape_newlines(_format_result(item)),
+                _escape_newlines(", ".join(
+                    sorted(
+                        {t for claim in (item.get("claims", []) or []) for t in [_normalize_topic(x) for x in (claim.get("topics", []) or [])] if t}
+                    )
+                )),
+                _escape_newlines(_format_content(item)),
+                _escape_newlines(_format_claims(item)),
+                _escape_newlines(item.get("final_comment", "") or ""),
             ])
 
         output.seek(0)

@@ -66,12 +66,12 @@ const Busca = () => {
 
   // Pagination State - Messages
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(20);
   const [totalMessages, setTotalMessages] = useState(0);
 
   // Pagination State - Sources
   const [sourcesPage, setSourcesPage] = useState(1);
-  const [sourcesLimit] = useState(10);
+  const [sourcesLimit] = useState(20);
   const [totalSources, setTotalSources] = useState(0);
   const [sources, setSources] = useState<Array<{ source: string; count: number }>>([]);
   const [filters, setFilters] = useState<AnalysisFilters>({
@@ -257,7 +257,7 @@ const Busca = () => {
       const messagesParams = new URLSearchParams(params);
       messagesParams.append("limit", String(limit));
       messagesParams.append("offset", String((page - 1) * limit));
-      
+
       const listRes = await fetch(`${apiUrl}/analises?${messagesParams.toString()}`);
       if (listRes.ok) {
         const result = await listRes.json();
@@ -286,7 +286,7 @@ const Busca = () => {
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, buildQueryParams, page, limit, sourcesPage, sourcesLimit]);
+  }, [apiUrl, buildQueryParams, limit, page, sourcesLimit, sourcesPage]);
 
   useEffect(() => {
     // Debounce search to avoid too many requests
@@ -619,30 +619,30 @@ const Busca = () => {
                   </TableBody>
                 </Table>
 
-
                 {/* Pagination - Messages */}
                 {totalMessages > limit && (
                   <Pagination className="mt-4">
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
-                          href="#" 
+                        <PaginationPrevious
+                          href="#"
                           onClick={(e) => {
                             e.preventDefault();
                             if (page > 1) setPage(page - 1);
-                          }} 
+                          }}
                           className={page === 1 ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
-                      
-                      {/* Simple pagination logic: show current page */}
+
                       <PaginationItem>
-                        <PaginationLink href="#" isActive>{page}</PaginationLink>
+                        <PaginationLink href="#" isActive>
+                          {page}
+                        </PaginationLink>
                       </PaginationItem>
-                      
+
                       <PaginationItem>
-                        <PaginationNext 
-                          href="#" 
+                        <PaginationNext
+                          href="#"
                           onClick={(e) => {
                             e.preventDefault();
                             if (page * limit < totalMessages) setPage(page + 1);
@@ -653,6 +653,7 @@ const Busca = () => {
                     </PaginationContent>
                   </Pagination>
                 )}
+
               </TabsContent>
 
               {/* Aba Fontes */}

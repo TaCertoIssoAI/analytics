@@ -100,83 +100,106 @@ class FirestoreService:
             # exceto limit/offset que aplicamos no final.
             # Se a coleção crescer muito, precisaremos criar índices no Firebase Console.
             
-            # Pega TODOS os documentos (limitado a um número razoável para não estourar memória, ex: 1000)
-            # Idealmente, usaríamos query.where() aqui, mas vamos simplificar para garantir funcionamento sem índices manuais.
-            docs_stream = query.limit(200).stream() 
-            
-            items = []
-            for doc in docs_stream:
-                data = doc.to_dict()
-                
-                # --- Filtragem em Memória ---
-                if filters:
-                    # Busca textual (case insensitive)
-                    if filters.get("search"):
-                        term = filters["search"].lower()
-                        text = (data.get("user_message_text") or "").lower()
-                        title = (data.get("analysis_title") or "").lower()
-                        if term not in text and term not in title:
+            # Varre documentos em lotes para permitir contagem total correta.
+            # Mantemos um limite de segurança para não estourar memória/tempo em coleções muito grandes.
+            max_scan = 10000
+            batch_size = 500
+
+            items: List[Dict[str, Any]] = []
+            scanned = 0
+            last_doc = None
+
+            while True:
+                batched_query = query.limit(batch_size)
+                if last_doc is not None:
+                    batched_query = batched_query.start_after(last_doc)
+
+                docs = list(batched_query.stream())
+                if not docs:
+                    break
+
+                for doc in docs:
+                    scanned += 1
+                    data = doc.to_dict()
+
+                    # --- Filtragem em Memória ---
+                    if filters:
+                        # Busca textual (case insensitive)
+                        if filters.get("search"):
+                            term = filters["search"].lower()
+                            text = (data.get("user_message_text") or "").lower()
+                            title = (data.get("analysis_title") or "").lower()
+                            if term not in text and term not in title:
+                                continue
+
+                        # Filtro de Message Type
+                        msg_type = data.get("source_type")
+                        if filters.get("message_type_whatsapp") is False and msg_type == "FromWhatsappGroup":
+                            continue
+                        if filters.get("message_type_direct") is False and msg_type == "FromDirectMessage":
                             continue
 
-                    # Filtro de Message Type
-                    msg_type = data.get("source_type")
-                    if filters.get("message_type_whatsapp") is False and msg_type == "FromWhatsappGroup":
-                        continue
-                    if filters.get("message_type_direct") is False and msg_type == "FromDirectMessage":
-                        continue
+                        # Filtro de Modalidade (OR logic)
+                        # Mantém compatível com a lógica do BigQuery: incluir se tiver ao menos uma modalidade selecionada.
+                        media_info = data.get("media_info") or {}
+                        has_text = bool((data.get("user_message_text") or "").strip())
+                        has_audio = bool(media_info.get("has_audio"))
+                        has_video = bool(media_info.get("has_video"))
+                        has_image = bool(media_info.get("has_image"))
 
-                    # Filtro de Modalidade (OR logic)
-                    # Mantém compatível com a lógica do BigQuery: incluir se tiver ao menos uma modalidade selecionada.
-                    media_info = data.get("media_info") or {}
-                    has_text = bool((data.get("user_message_text") or "").strip())
-                    has_audio = bool(media_info.get("has_audio"))
-                    has_video = bool(media_info.get("has_video"))
-                    has_image = bool(media_info.get("has_image"))
+                        selected_text = bool(filters.get("modality_text"))
+                        selected_audio = bool(filters.get("modality_audio"))
+                        selected_video = bool(filters.get("modality_video"))
+                        selected_image = bool(filters.get("modality_image"))
 
-                    selected_text = bool(filters.get("modality_text"))
-                    selected_audio = bool(filters.get("modality_audio"))
-                    selected_video = bool(filters.get("modality_video"))
-                    selected_image = bool(filters.get("modality_image"))
-
-                    # Se filtros de modalidade foram passados mas nenhum selecionado, não retorna nada
-                    if any(k.startswith("modality_") for k in filters.keys()) and not any(
-                        [selected_text, selected_audio, selected_video, selected_image]
-                    ):
-                        continue
-
-                    if selected_text or selected_audio or selected_video or selected_image:
-                        if not (
-                            (selected_text and has_text)
-                            or (selected_audio and has_audio)
-                            or (selected_video and has_video)
-                            or (selected_image and has_image)
+                        # Se filtros de modalidade foram passados mas nenhum selecionado, não retorna nada
+                        if any(k.startswith("modality_") for k in filters.keys()) and not any(
+                            [selected_text, selected_audio, selected_video, selected_image]
                         ):
                             continue
 
-                    # Filtro de Scores
-                    metrics = data.get("analysis_metrics", {})
-                    if metrics:
-                        truth = metrics.get("truth_score", 0)
-                        fake = metrics.get("fake_score", 0)
-                        unverified = metrics.get("unverified_score", 0)
-                        
-                        if truth < filters.get("min_truth_score", 0) or truth > filters.get("max_truth_score", 100):
-                            continue
-                        if fake < filters.get("min_fake_score", 0) or fake > filters.get("max_fake_score", 100):
-                            continue
-                        if unverified < filters.get("min_unverified_score", 0) or unverified > filters.get("max_unverified_score", 100):
-                            continue
-
-                    # Filtro de Data
-                    if start_dt or end_dt:
-                        processed_dt = _parse_dt(data.get("processed_at"))
-                        if processed_dt:
-                            if start_dt and processed_dt < start_dt:
-                                continue
-                            if end_dt and processed_dt > end_dt:
+                        if selected_text or selected_audio or selected_video or selected_image:
+                            if not (
+                                (selected_text and has_text)
+                                or (selected_audio and has_audio)
+                                or (selected_video and has_video)
+                                or (selected_image and has_image)
+                            ):
                                 continue
 
-                items.append(data)
+                        # Filtro de Scores
+                        metrics = data.get("analysis_metrics", {})
+                        if metrics:
+                            truth = metrics.get("truth_score", 0)
+                            fake = metrics.get("fake_score", 0)
+                            unverified = metrics.get("unverified_score", 0)
+
+                            if truth < filters.get("min_truth_score", 0) or truth > filters.get("max_truth_score", 100):
+                                continue
+                            if fake < filters.get("min_fake_score", 0) or fake > filters.get("max_fake_score", 100):
+                                continue
+                            if unverified < filters.get("min_unverified_score", 0) or unverified > filters.get("max_unverified_score", 100):
+                                continue
+
+                        # Filtro de Data
+                        if start_dt or end_dt:
+                            processed_dt = _parse_dt(data.get("processed_at"))
+                            if processed_dt:
+                                if start_dt and processed_dt < start_dt:
+                                    continue
+                                if end_dt and processed_dt > end_dt:
+                                    continue
+
+                    items.append(data)
+
+                    if scanned >= max_scan:
+                        break
+
+                last_doc = docs[-1]
+
+                if scanned >= max_scan:
+                    print(f"⚠️  Firestore scan atingiu limite de segurança ({max_scan}). Total pode ser truncado.")
+                    break
 
             # --- Paginação em Memória ---
             total_filtered = len(items)
@@ -184,7 +207,7 @@ class FirestoreService:
 
             return {
                 "items": paginated_items,
-                "total": total_filtered, # Nota: Total aproximado (baseado no limit de fetch inicial)
+                "total": total_filtered,
                 "limit": limit,
                 "offset": offset
             }
