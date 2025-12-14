@@ -18,7 +18,7 @@ import type { AnalysisFilters } from "@/components/analytics/AnalysisSidebar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export type DateFilterMode = "last24h" | "last7d" | "last30d" | "custom";
+export type DateFilterMode = "all" | "last24h" | "last7d" | "last30d" | "custom";
 
 export interface DateFilterValue {
   mode: DateFilterMode;
@@ -176,6 +176,7 @@ export const FilterSection = ({
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Todas as mensagens</SelectItem>
                   <SelectItem value="last24h">Últimas 24h</SelectItem>
                   <SelectItem value="last7d">Últimos 7 dias</SelectItem>
                   <SelectItem value="last30d">Últimos 30 dias</SelectItem>

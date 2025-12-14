@@ -1,8 +1,8 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, Camera, Image as ImageIcon, FileText, Users, User, ExternalLink, Link as LinkIcon, Eye } from "lucide-react";
+import { Mic, Camera, Image as ImageIcon, FileText, Users, User, ExternalLink, Link as LinkIcon, Eye, X } from "lucide-react";
 import { Analysis, ScrapedLink } from "@/types/analysis";
 import { ClaimCard } from "./ClaimCard";
 import { ScrapedLinkModal } from "./ScrapedLinkModal";
@@ -11,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { translateContentTags } from "@/lib/translateContentTags";
+import ReactMarkdown from "react-markdown";
 
 interface MessageDetailDialogProps {
   analysis: Analysis | null;
@@ -44,18 +45,66 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
     new Set(analysis.claims.flatMap(claim => claim.topics))
   );
 
+  const normalizeMarkdown = (text: string) =>
+    text
+      // Alguns registros chegam com quebras "duplamente escapadas" ("\\n")
+      .replace(/\\r\\n/g, "\n")
+      .replace(/\\n/g, "\n")
+      // Normaliza diferentes "asteriscos" unicode para '*'
+      .replace(/[＊∗✱✳✲✴]/g, "*")
+      // Normaliza bullets comuns para '- '
+      .replace(/^(\s*)[•·]\s+/gm, "$1- ")
+      // Evita que listas virem bloco de código (CommonMark: >=4 espaços vira code block)
+      .replace(/^\s{4,}([*-])\s+/gm, "  $1 ")
+      .replace(/^\s{4,}(\d+\.)\s+/gm, "  $1 ")
+      // Evita CRLF quebrando parsing
+      .replace(/\r\n/g, "\n");
+
+  const MarkdownText = ({ text }: { text: string }) => (
+    <ReactMarkdown
+      components={{
+        h1: (props) => <h3 className="text-base font-semibold" {...props} />,
+        h2: (props) => <h4 className="text-sm font-semibold" {...props} />,
+        h3: (props) => <h5 className="text-sm font-semibold" {...props} />,
+        p: (props) => <p className="text-sm leading-relaxed" {...props} />,
+        ul: (props) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+        ol: (props) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+        li: (props) => <li className="text-sm leading-relaxed" {...props} />,
+        strong: (props) => <strong className="font-semibold" {...props} />,
+        em: (props) => <em className="italic" {...props} />,
+        code: (props) => <code className="rounded bg-muted px-1 py-0.5 text-xs" {...props} />,
+        pre: (props) => <pre className="overflow-x-auto rounded bg-muted p-3 text-xs" {...props} />,
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
+        <DialogHeader className="text-left">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <DialogTitle>{analysis.analysis_title || "Detalhes da Análise"}</DialogTitle>
-            {fileId && (
-              <Button onClick={handleExpandClick} variant="outline" size="sm" className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Expandir
-              </Button>
-            )}
+            <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+              {fileId && (
+                <Button onClick={handleExpandClick} variant="outline" size="sm" className="gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Expandir
+                </Button>
+              )}
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-sm opacity-70 hover:opacity-100"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Fechar</span>
+                </Button>
+              </DialogClose>
+            </div>
           </div>
           <DialogDescription className="sr-only">
             Detalhes completos da análise, incluindo conteúdo original, transcrições e verificações.
@@ -101,26 +150,32 @@ export const MessageDetailDialog = ({ analysis, fileId, open, onOpenChange }: Me
             <CardContent className="space-y-3">
               <div>
                 <h4 className="font-semibold text-sm mb-1">Mensagem Original</h4>
-                <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">
-                  {translateContentTags(analysis.user_message_text)}
-                </p>
+                <div className="text-sm text-muted-foreground break-words">
+                  <MarkdownText text={translateContentTags(normalizeMarkdown(analysis.user_message_text))} />
+                </div>
               </div>
               {analysis.media_info.has_audio && analysis.media_info.audio_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Transcrição do Áudio</h4>
-                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.media_info.audio_text}</p>
+                  <div className="text-sm text-muted-foreground break-words">
+                    <MarkdownText text={translateContentTags(normalizeMarkdown(analysis.media_info.audio_text))} />
+                  </div>
                 </div>
               )}
               {analysis.media_info.has_image && analysis.media_info.image_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Texto da Imagem</h4>
-                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.media_info.image_text}</p>
+                  <div className="text-sm text-muted-foreground break-words">
+                    <MarkdownText text={translateContentTags(normalizeMarkdown(analysis.media_info.image_text))} />
+                  </div>
                 </div>
               )}
               {analysis.media_info.has_video && analysis.media_info.video_text && (
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Texto do Vídeo</h4>
-                  <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{analysis.media_info.video_text}</p>
+                  <div className="text-sm text-muted-foreground break-words">
+                    <MarkdownText text={translateContentTags(normalizeMarkdown(analysis.media_info.video_text))} />
+                  </div>
                 </div>
               )}
               {analysis.scraped_links.length > 0 && (

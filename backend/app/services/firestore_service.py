@@ -125,6 +125,34 @@ class FirestoreService:
                     if filters.get("message_type_direct") is False and msg_type == "FromDirectMessage":
                         continue
 
+                    # Filtro de Modalidade (OR logic)
+                    # Mantém compatível com a lógica do BigQuery: incluir se tiver ao menos uma modalidade selecionada.
+                    media_info = data.get("media_info") or {}
+                    has_text = bool((data.get("user_message_text") or "").strip())
+                    has_audio = bool(media_info.get("has_audio"))
+                    has_video = bool(media_info.get("has_video"))
+                    has_image = bool(media_info.get("has_image"))
+
+                    selected_text = bool(filters.get("modality_text"))
+                    selected_audio = bool(filters.get("modality_audio"))
+                    selected_video = bool(filters.get("modality_video"))
+                    selected_image = bool(filters.get("modality_image"))
+
+                    # Se filtros de modalidade foram passados mas nenhum selecionado, não retorna nada
+                    if any(k.startswith("modality_") for k in filters.keys()) and not any(
+                        [selected_text, selected_audio, selected_video, selected_image]
+                    ):
+                        continue
+
+                    if selected_text or selected_audio or selected_video or selected_image:
+                        if not (
+                            (selected_text and has_text)
+                            or (selected_audio and has_audio)
+                            or (selected_video and has_video)
+                            or (selected_image and has_image)
+                        ):
+                            continue
+
                     # Filtro de Scores
                     metrics = data.get("analysis_metrics", {})
                     if metrics:

@@ -59,9 +59,9 @@ const Busca = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [dateFilter, setDateFilter] = useState<DateFilterValue>({
-    mode: "last30d",
-    startDate: "",
-    endDate: "",
+    mode: "all",
+    startDate: undefined,
+    endDate: undefined,
   });
 
   // Pagination State - Messages
@@ -105,6 +105,10 @@ const Busca = () => {
 
   const getDateRangeIso = useCallback((): { start?: string; end?: string } => {
     const now = new Date();
+
+    if (dateFilter.mode === "all") {
+      return {};
+    }
 
     if (dateFilter.mode === "last24h") {
       const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
