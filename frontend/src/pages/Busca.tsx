@@ -42,6 +42,7 @@ import {
 interface DashboardData {
   total_messages: number;
   total_claims: number;
+  total_out_of_context_claims?: number;
   results_distribution: Array<{ name: string; value: number }>;
   modalities_distribution: Array<{ name: string; value: number }>;
   top_sources: Array<{ source: string; count: number }>;
@@ -88,6 +89,8 @@ const Busca = () => {
       maxFakeScore: 100,
       minUnverifiedScore: 0,
       maxUnverifiedScore: 100,
+      minOutOfContextScore: 0,
+      maxOutOfContextScore: 100,
     },
   });
 
@@ -152,6 +155,9 @@ const Busca = () => {
     params.append("max_fake_score", String(filters.percentage.maxFakeScore));
     params.append("min_unverified_score", String(filters.percentage.minUnverifiedScore));
     params.append("max_unverified_score", String(filters.percentage.maxUnverifiedScore));
+
+    params.append("min_out_of_context_score", String(filters.percentage.minOutOfContextScore));
+    params.append("max_out_of_context_score", String(filters.percentage.maxOutOfContextScore));
 
     // Filtro de data
     const { start, end } = getDateRangeIso();
@@ -422,7 +428,7 @@ const Busca = () => {
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                   <MetricsCard
                     title="Total de Mensagens"
                     value={dashboardData?.total_messages || 0}
@@ -432,6 +438,12 @@ const Busca = () => {
                     title="Total de Afirmações"
                     value={dashboardData?.total_claims || 0}
                     icon={FileText}
+                  />
+                  <MetricsCard
+                    title="Total Fora de Contexto"
+                    value={dashboardData?.total_out_of_context_claims || 0}
+                    icon={HelpCircle}
+                    className="text-status-unverifiable"
                   />
                   <MetricsCard
                     title="Total Verdadeiras"

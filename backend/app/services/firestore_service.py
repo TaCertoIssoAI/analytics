@@ -173,12 +173,19 @@ class FirestoreService:
                             truth = metrics.get("truth_score", 0)
                             fake = metrics.get("fake_score", 0)
                             unverified = metrics.get("unverified_score", 0)
+                            out_of_context_count = metrics.get("out_of_context_count", 0)
+                            out_of_context_score = metrics.get("out_of_context_score", 0)
 
                             if truth < filters.get("min_truth_score", 0) or truth > filters.get("max_truth_score", 100):
                                 continue
                             if fake < filters.get("min_fake_score", 0) or fake > filters.get("max_fake_score", 100):
                                 continue
                             if unverified < filters.get("min_unverified_score", 0) or unverified > filters.get("max_unverified_score", 100):
+                                continue
+
+                            min_ooc = filters.get("min_out_of_context_score", 0)
+                            max_ooc = filters.get("max_out_of_context_score", 100)
+                            if out_of_context_score < min_ooc or out_of_context_score > max_ooc:
                                 continue
 
                         # Filtro de Data

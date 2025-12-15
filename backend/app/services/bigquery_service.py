@@ -37,6 +37,11 @@ class BigQueryService:
             api_key=api_key,
         )
 
+        # Small in-memory embedding cache to speed up repeated queries
+        self._embedding_cache: Dict[str, list[float]] = {}
+        self._embedding_cache_order: list[str] = []
+        self._embedding_cache_max = 128
+
         print(f"📊 BigQuery client inicializado:")
         print(f"   Project: {settings.PROJECT_ID}")
         print(f"   Dataset: {settings.DATASET_ID}")
@@ -347,6 +352,15 @@ class BigQueryService:
         if max_unverified is not None and max_unverified < 100:
             clauses.append(f"analysis_metrics.unverified_score <= {max_unverified}")
 
+        # Filtros de porcentagem: fora de contexto
+        min_ooc = filters.get("min_out_of_context_score")
+        max_ooc = filters.get("max_out_of_context_score")
+
+        if min_ooc is not None and min_ooc > 0:
+            clauses.append(f"analysis_metrics.out_of_context_score >= {min_ooc}")
+        if max_ooc is not None and max_ooc < 100:
+            clauses.append(f"analysis_metrics.out_of_context_score <= {max_ooc}")
+
         return " AND ".join(clauses) if clauses else "1=1"
 
     def list_analises(self, limit: int = 5, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
@@ -364,6 +378,11 @@ class BigQueryService:
                 query_text = filters["search"]
                 query_embedding = self._embed_text(query_text)
 
+                # Tune for speed; caller accepts fewer results.
+                # COSINE distance: smaller is more similar.
+                top_k = 200
+                max_distance = 0.45
+
                 # Build WHERE clause without search (other filters only)
                 non_semantic_filters = {k: v for k, v in filters.items() if k != "search"}
                 where_clause = self._build_filter_clause(non_semantic_filters)
@@ -371,25 +390,25 @@ class BigQueryService:
                 print(f"🔍 Using VECTOR_SEARCH for semantic search: '{query_text}'")
 
                 # Query with VECTOR_SEARCH
-                # Note: VECTOR_SEARCH doesn't support traditional OFFSET, so we need a workaround
-                # We'll fetch more results and slice them in memory
-                # Using same pattern as get_analytics_dashboard
-                # we will use limit for the TOP-K results in vector search
+                # OFFSET isn't supported; we fetch a sufficiently large TOP-K and paginate in memory.
+                # Safety cap avoids runaway queries.
                 query = f"""
-                    SELECT base.*
+                    SELECT base.*, distance
                     FROM VECTOR_SEARCH(
-                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause}),
+                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL),
                         'embedding',
                         (SELECT @query_emb AS prompt_embedding),
-                        top_k => {limit},
+                        top_k => {top_k},
                         distance_type => 'COSINE'
                     )
-                    ORDER BY processed_at DESC
+                    WHERE distance <= @max_distance
+                    ORDER BY distance ASC, processed_at DESC
                 """
 
                 job_config = bigquery.QueryJobConfig(
                     query_parameters=[
-                        bigquery.ArrayQueryParameter("query_emb", "FLOAT64", query_embedding)
+                        bigquery.ArrayQueryParameter("query_emb", "FLOAT64", query_embedding),
+                        bigquery.ScalarQueryParameter("max_distance", "FLOAT64", max_distance),
                     ]
                 )
 
@@ -441,6 +460,30 @@ class BigQueryService:
             for row in results:
                 data = dict(row.items())
                 data = self._convert_datetimes_to_strings(data)
+                # VECTOR_SEARCH returns an extra column
+                data.pop("distance", None)
+
+                metrics = data.get("analysis_metrics")
+                if isinstance(metrics, dict):
+                    for key in (
+                        "true_count",
+                        "fake_count",
+                        "unverified_count",
+                        "out_of_context_count",
+                        "truth_score",
+                        "fake_score",
+                        "unverified_score",
+                        "out_of_context_score",
+                    ):
+                        if metrics.get(key) is None:
+                            metrics[key] = 0
+                        else:
+                            try:
+                                metrics[key] = int(metrics.get(key))
+                            except Exception:
+                                metrics[key] = 0
+                    data["analysis_metrics"] = metrics
+
                 items.append(data)
 
             response = {
@@ -457,7 +500,7 @@ class BigQueryService:
             print(f"❌ Erro ao listar análises: {e}")
             return None
 
-    def get_analytics_dashboard(self, filters: Dict[str, Any] = None, k_results:int = 10) -> Optional[Dict[str, Any]]:
+    def get_analytics_dashboard(self, filters: Dict[str, Any] = None, k_results:int = 200) -> Optional[Dict[str, Any]]:
         try:
             filters = filters or {}
 
@@ -471,23 +514,28 @@ class BigQueryService:
                 query_text = filters["search"]
                 query_embedding = self._embed_text(query_text)
 
+                max_distance = 0.45
+
                 filtered_analyses_base = f"""
                     (
-                        SELECT
-                        base.*
+                        SELECT base.*
                         FROM VECTOR_SEARCH(
-                            (SELECT * FROM `{self.full_table_id}` WHERE {where_clause}),
+                            (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL),
                             'embedding',
                             (SELECT @query_emb AS prompt_embedding),
                             top_k => {k_results},
                             distance_type => 'COSINE'
                         )
+                        WHERE distance <= @max_distance
                     )
                 """
 
                 from google.cloud import bigquery
                 query_parameters.append(
                     bigquery.ArrayQueryParameter("query_emb", "FLOAT64", query_embedding)
+                )
+                query_parameters.append(
+                    bigquery.ScalarQueryParameter("max_distance", "FLOAT64", max_distance)
                 )
             else:
                 filtered_analyses_base = f"""
@@ -519,6 +567,7 @@ class BigQueryService:
                     (SELECT COUNTIF(UPPER(claim_verdict) IN ('FAKE', 'FALSO', 'FALSE')) FROM claims_unpacked) AS count_fake,
                     (SELECT COUNTIF(UPPER(claim_verdict) IN ('TRUE', 'VERDADEIRO', 'VERDADE')) FROM claims_unpacked) AS count_true,
                     (SELECT COUNTIF(UPPER(claim_verdict) IN ('UNKNOWN', 'CHECK', 'UNVERIFIED', 'DESCONHECIDO', 'FONTES INSUFICIENTES', 'INSUFFICIENT_RESOURCES', 'MISLEADING', 'ENGANOSO')) FROM claims_unpacked) AS count_unverifiable,
+                    (SELECT COUNTIF(UPPER(claim_verdict) IN ('FORA_DE_CONTEXTO', 'FORA DE CONTEXTO', 'OUT_OF_CONTEXT', 'OUT OF CONTEXT')) FROM claims_unpacked) AS count_out_of_context,
 
                     -- modalities
                     (SELECT COUNTIF(user_message_text IS NOT NULL AND LENGTH(user_message_text) > 0)
@@ -553,6 +602,7 @@ class BigQueryService:
                 return {
                     "total_messages": 0,
                     "total_claims": 0,
+                    "total_out_of_context_claims": 0,
                     "results_distribution": [
                         {"name": "Falso", "value": 0},
                         {"name": "Verdadeiro", "value": 0},
@@ -573,6 +623,7 @@ class BigQueryService:
             dashboard_data = {
                 "total_messages": row["total_messages"],
                 "total_claims": row["total_claims"],
+                "total_out_of_context_claims": row["count_out_of_context"],
                 "results_distribution": [
                     {"name": "Falso", "value": row["count_fake"]},
                     {"name": "Verdadeiro", "value": row["count_true"]},
@@ -604,18 +655,46 @@ class BigQueryService:
         try:
             filters = filters or {}
             
-            # Remove search do filtro padrão pois vamos tratar diferente para fontes
-            # Se o search for para buscar NOME da fonte, precisamos ajustar.
-            # Por enquanto, vamos assumir que os filtros filtram as ANÁLISES, e listamos as fontes dessas análises.
-            
-            where_clause = self._build_filter_clause(filters)
-            
-            # Query base para filtrar análises
-            filtered_analyses_query = f"""
-                SELECT *
-                FROM `{self.full_table_id}`
-                WHERE {where_clause}
-            """
+            has_search = bool(filters.get("search"))
+
+            query_parameters = []
+
+            if has_search:
+                # Semantic search over analyses content (same behavior as list_analises)
+                query_text = filters["search"]
+                query_embedding = self._embed_text(query_text)
+
+                top_k = 200
+                max_distance = 0.45
+
+                non_semantic_filters = {k: v for k, v in filters.items() if k != "search"}
+                where_clause = self._build_filter_clause(non_semantic_filters)
+
+                filtered_analyses_query = f"""
+                    SELECT base.*
+                    FROM VECTOR_SEARCH(
+                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL),
+                        'embedding',
+                        (SELECT @query_emb AS prompt_embedding),
+                        top_k => {top_k},
+                        distance_type => 'COSINE'
+                    )
+                    WHERE distance <= @max_distance
+                """
+
+                query_parameters.append(
+                    bigquery.ArrayQueryParameter("query_emb", "FLOAT64", query_embedding)
+                )
+                query_parameters.append(
+                    bigquery.ScalarQueryParameter("max_distance", "FLOAT64", max_distance)
+                )
+            else:
+                where_clause = self._build_filter_clause(filters)
+                filtered_analyses_query = f"""
+                    SELECT *
+                    FROM `{self.full_table_id}`
+                    WHERE {where_clause}
+                """
 
             # Query para extrair, agrupar e contar fontes
             # Usamos uma CTE para primeiro filtrar as análises, depois explodir as fontes
@@ -659,15 +738,19 @@ class BigQueryService:
             """
 
             # Executa count
-            count_job = self.client.query(count_query)
+            count_job = self.client.query(
+                count_query,
+                job_config=bigquery.QueryJobConfig(query_parameters=query_parameters) if query_parameters else None,
+            )
             count_results = list(count_job.result())
             total = count_results[0]["total"] if count_results else 0
 
             # Executa listagem
             job_config = bigquery.QueryJobConfig(
                 query_parameters=[
+                    *query_parameters,
                     bigquery.ScalarQueryParameter("limit", "INT64", limit),
-                    bigquery.ScalarQueryParameter("offset", "INT64", offset)
+                    bigquery.ScalarQueryParameter("offset", "INT64", offset),
                 ]
             )
 
@@ -696,6 +779,14 @@ class BigQueryService:
         pass
 
     def _embed_text(self,text:str)->list[float]:
+        key = (text or "").strip().lower()
+        if not key:
+            return []
+
+        cached = self._embedding_cache.get(key)
+        if cached is not None:
+            return cached
+
         resp = self.google_genai_client.models.embed_content(
             model="gemini-embedding-001",
             contents=[text],
@@ -703,6 +794,13 @@ class BigQueryService:
         )
 
         vector = resp.embeddings[0].values  # list[float]
+
+        self._embedding_cache[key] = vector
+        self._embedding_cache_order.append(key)
+        if len(self._embedding_cache_order) > self._embedding_cache_max:
+            oldest = self._embedding_cache_order.pop(0)
+            self._embedding_cache.pop(oldest, None)
+
         return vector
 # Instância global
 bigquery_service = BigQueryService()

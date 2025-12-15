@@ -89,6 +89,7 @@ export const FilterSection = ({
   };
 
 
+
   const handleClearFilters = () => {
     if (onFilterChange) {
       onFilterChange({
@@ -96,7 +97,8 @@ export const FilterSection = ({
         percentage: { 
           minTruthScore: 0, maxTruthScore: 100, 
           minFakeScore: 0, maxFakeScore: 100,
-          minUnverifiedScore: 0, maxUnverifiedScore: 100 
+          minUnverifiedScore: 0, maxUnverifiedScore: 100,
+          minOutOfContextScore: 0, maxOutOfContextScore: 100,
         },
       });
     }
@@ -338,7 +340,7 @@ export const FilterSection = ({
           {/* Filtros por Porcentagem */}
           <div className="border-t pt-6">
             <Label className="text-base font-semibold mb-4 block">Filtrar por Porcentagem</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Porcentagem de Afirmações Verdadeiras */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Afirmações Verdadeiras (%)</Label>
@@ -426,6 +428,37 @@ export const FilterSection = ({
                       max="100"
                       value={filters.percentage.maxUnverifiedScore}
                       onChange={(e) => handlePercentageChange('maxUnverifiedScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Porcentagem de Afirmações Fora de Contexto */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Fora de Contexto (%)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="minOutOfContext" className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      id="minOutOfContext"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.minOutOfContextScore}
+                      onChange={(e) => handlePercentageChange('minOutOfContextScore', Number(e.target.value))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="maxOutOfContext" className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      id="maxOutOfContext"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filters.percentage.maxOutOfContextScore}
+                      onChange={(e) => handlePercentageChange('maxOutOfContextScore', Number(e.target.value))}
                       className="h-9"
                     />
                   </div>

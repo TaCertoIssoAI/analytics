@@ -90,6 +90,8 @@ async def get_dashboard(
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
     result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_out_of_context_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de fora de contexto"),
+    max_out_of_context_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de fora de contexto"),
     min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
@@ -114,6 +116,8 @@ async def get_dashboard(
             "result_fake": result_fake,
             "result_true": result_true,
             "result_unknown": result_unknown,
+            "min_out_of_context_score": min_out_of_context_score,
+            "max_out_of_context_score": max_out_of_context_score,
             "min_truth_score": min_truth_score,
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
@@ -170,10 +174,14 @@ async def list_analises(
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
     result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_out_of_context_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de fora de contexto"),
+    max_out_of_context_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de fora de contexto"),
     min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
     max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    min_unverified_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de inverificável"),
+    max_unverified_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de inverificável"),
 ) -> Dict[str, Any]:
     """
     Endpoint para listar análises com paginação e filtros.
@@ -192,10 +200,14 @@ async def list_analises(
             "result_fake": result_fake,
             "result_true": result_true,
             "result_unknown": result_unknown,
+            "min_out_of_context_score": min_out_of_context_score,
+            "max_out_of_context_score": max_out_of_context_score,
             "min_truth_score": min_truth_score,
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
             "max_fake_score": max_fake_score,
+            "min_unverified_score": min_unverified_score,
+            "max_unverified_score": max_unverified_score,
         }
 
         print("\n" + "="*60)
@@ -274,10 +286,14 @@ async def list_sources(
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
     result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_out_of_context_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de fora de contexto"),
+    max_out_of_context_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de fora de contexto"),
     min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
     max_fake_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de falso"),
+    min_unverified_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de inverificável"),
+    max_unverified_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de inverificável"),
 ) -> Dict[str, Any]:
     """
     Endpoint para listar fontes com paginação.
@@ -296,10 +312,14 @@ async def list_sources(
             "result_fake": result_fake,
             "result_true": result_true,
             "result_unknown": result_unknown,
+            "min_out_of_context_score": min_out_of_context_score,
+            "max_out_of_context_score": max_out_of_context_score,
             "min_truth_score": min_truth_score,
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
             "max_fake_score": max_fake_score,
+            "min_unverified_score": min_unverified_score,
+            "max_unverified_score": max_unverified_score,
         }
 
         print("\n" + "="*60)
@@ -571,6 +591,8 @@ async def export_dashboard_csv(
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
     result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_out_of_context_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de fora de contexto"),
+    max_out_of_context_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de fora de contexto"),
     min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
@@ -595,6 +617,8 @@ async def export_dashboard_csv(
             "result_fake": result_fake,
             "result_true": result_true,
             "result_unknown": result_unknown,
+            "min_out_of_context_score": min_out_of_context_score,
+            "max_out_of_context_score": max_out_of_context_score,
             "min_truth_score": min_truth_score,
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
@@ -625,6 +649,7 @@ async def export_dashboard_csv(
         # Stats
         writer.writerow(["Total de Mensagens", data["total_messages"]])
         writer.writerow(["Total de Afirmações", data["total_claims"]])
+        writer.writerow(["Total de Afirmações Fora de Contexto", data.get("total_out_of_context_claims", 0)])
 
         # Calculate totals from results distribution
         total_true = 0
@@ -693,6 +718,8 @@ async def export_messages_csv(
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
     result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_out_of_context_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de fora de contexto"),
+    max_out_of_context_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de fora de contexto"),
     min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
@@ -864,6 +891,8 @@ async def export_messages_csv(
             "result_fake": result_fake,
             "result_true": result_true,
             "result_unknown": result_unknown,
+            "min_out_of_context_score": min_out_of_context_score,
+            "max_out_of_context_score": max_out_of_context_score,
             "min_truth_score": min_truth_score,
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
@@ -968,6 +997,8 @@ async def export_sources_csv(
     result_fake: bool = Query(True, description="Incluir Falso"),
     result_true: bool = Query(True, description="Incluir Verdadeiro"),
     result_unknown: bool = Query(True, description="Incluir Fontes insuficientes para verificar"),
+    min_out_of_context_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de fora de contexto"),
+    max_out_of_context_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de fora de contexto"),
     min_truth_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de verdadeiro"),
     max_truth_score: int = Query(100, ge=0, le=100, description="Porcentagem máxima de verdadeiro"),
     min_fake_score: int = Query(0, ge=0, le=100, description="Porcentagem mínima de falso"),
@@ -993,6 +1024,8 @@ async def export_sources_csv(
             "result_fake": result_fake,
             "result_true": result_true,
             "result_unknown": result_unknown,
+            "min_out_of_context_score": min_out_of_context_score,
+            "max_out_of_context_score": max_out_of_context_score,
             "min_truth_score": min_truth_score,
             "max_truth_score": max_truth_score,
             "min_fake_score": min_fake_score,
