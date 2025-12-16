@@ -17,6 +17,7 @@ import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2
 import { Analysis, ScrapedLink } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
 import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
+import { RecommendationsSection } from "@/components/analytics/RecommendationsSection";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/auth/useAuth";
@@ -780,6 +781,11 @@ const Verification = () => {
             );
           })()}
         </div>
+
+        {/* Seção de Recomendações */}
+        {analysis && (
+          <RecommendationsSection documentId={analysis.document_id} />
+        )}
       </article>
 
       <ScrapedLinkModal

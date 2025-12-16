@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from google.cloud import bigquery
 from google.api_core import exceptions
 from datetime import datetime
@@ -773,6 +773,134 @@ class BigQueryService:
 
         except Exception as e:
             print(f"❌ Erro ao listar fontes: {e}")
+            return None
+
+    def get_similar_analyses(self, document_id: str, limit: int = 8) -> Optional[List[Dict[str, Any]]]:
+        """
+        Busca análises similares baseado nos tópicos IPTC.
+        Rankeia por nível de especificidade: primeiro busca tópicos de nível mais baixo (mais específicos),
+        depois vai subindo na hierarquia IPTC para tópicos mais gerais.
+
+        Args:
+            document_id: ID do documento para buscar similares
+            limit: Número máximo de resultados (default: 8)
+
+        Returns:
+            Lista de análises similares ordenadas por relevância, ou None em caso de erro
+        """
+        try:
+            # 1. Buscar a análise original e extrair seus tópicos IPTC
+            original = self.get_analise(document_id)
+            if not original:
+                print(f"⚠️  Análise original {document_id} não encontrada")
+                return []
+
+            # Extrair todos os tópicos de todas as claims
+            all_topics = []
+            for claim in original.get("claims", []):
+                topics = claim.get("topics", [])
+                all_topics.extend(topics)
+
+            if not all_topics:
+                print(f"⚠️  Análise {document_id} não possui tópicos IPTC")
+                return []
+
+            # 2. Normalizar e organizar tópicos por nível hierárquico
+            # Tópicos IPTC seguem padrão: "categoria > subcategoria > tópico específico"
+            # Exemplo: "política > eleições > campanha eleitoral"
+            topics_by_level = {}
+            for topic in set(all_topics):  # Remove duplicatas
+                parts = topic.split(" > ")
+                level = len(parts)
+                if level not in topics_by_level:
+                    topics_by_level[level] = []
+                topics_by_level[level].append(topic)
+
+            # 3. Construir query que busca por tópicos, priorizando níveis mais específicos
+            # Vamos criar uma pontuação onde tópicos mais específicos (maior nível) têm maior peso
+            max_level = max(topics_by_level.keys()) if topics_by_level else 0
+            
+            # Construir condições de matching para cada nível
+            level_conditions = []
+            for level in sorted(topics_by_level.keys(), reverse=True):  # Do mais específico ao mais geral
+                topics_at_level = topics_by_level[level]
+                # Peso: níveis mais específicos têm pontuação maior
+                weight = level
+                
+                # Para cada tópico neste nível, verificar se existe em alguma claim
+                topic_checks = []
+                for topic in topics_at_level:
+                    topic_escaped = topic.replace("'", "\\'")
+                    topic_checks.append(f"'{topic_escaped}' IN UNNEST(c.topics)")
+                
+                if topic_checks:
+                    condition = " OR ".join(topic_checks)
+                    level_conditions.append(f"WHEN ({condition}) THEN {weight}")
+
+            if not level_conditions:
+                return []
+
+            # 4. Query que calcula score de similaridade e ordena
+            query = f"""
+                WITH topic_matches AS (
+                    SELECT 
+                        a.document_id,
+                        a.analysis_title,
+                        a.overall_verdict,
+                        a.processed_at,
+                        a.analysis_metrics,
+                        c.topics as claim_topics,
+                        CASE
+                            {chr(10).join(level_conditions)}
+                            ELSE 0
+                        END as match_score
+                    FROM `{self.full_table_id}` a,
+                    UNNEST(a.claims) as c
+                    WHERE a.document_id != @document_id
+                ),
+                aggregated_scores AS (
+                    SELECT
+                        document_id,
+                        analysis_title,
+                        overall_verdict,
+                        processed_at,
+                        analysis_metrics,
+                        SUM(match_score) as total_score,
+                        MAX(match_score) as max_level_match
+                    FROM topic_matches
+                    WHERE match_score > 0
+                    GROUP BY document_id, analysis_title, overall_verdict, processed_at, analysis_metrics
+                )
+                SELECT *
+                FROM aggregated_scores
+                ORDER BY max_level_match DESC, total_score DESC, processed_at DESC
+                LIMIT @limit
+            """
+
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter("document_id", "STRING", document_id),
+                    bigquery.ScalarQueryParameter("limit", "INT64", limit)
+                ]
+            )
+
+            query_job = self.client.query(query, job_config=job_config)
+            results = list(query_job.result())
+
+            # 5. Converter resultados para formato esperado
+            similar_analyses = []
+            for row in results:
+                data = dict(row.items())
+                data = self._convert_datetimes_to_strings(data)
+                similar_analyses.append(data)
+
+            print(f"✅ Encontradas {len(similar_analyses)} análises similares para {document_id}")
+            return similar_analyses
+
+        except Exception as e:
+            print(f"❌ Erro ao buscar análises similares: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def semantic_search(self, query:str):

@@ -504,6 +504,70 @@ async def get_analise(document_id: str) -> AnaliseGetResponse:
             detail=f"Erro interno ao buscar análise: {str(e)}"
         )
 
+
+@router.get(
+    "/{document_id}/recommendations",
+    summary="Buscar verificações similares",
+    description="""
+    Busca verificações similares baseado nos tópicos IPTC das afirmações.
+    Rankeia da classificação de nível mais baixo (mais específico) para o mais alto (mais geral).
+    Retorna até 8 verificações similares.
+    """
+)
+async def get_recommendations(
+    document_id: str,
+    limit: int = Query(default=8, ge=1, le=20, description="Número máximo de recomendações")
+) -> Dict[str, Any]:
+    """
+    Endpoint para buscar verificações similares.
+    
+    Args:
+        document_id: ID da análise para buscar similares
+        limit: Número máximo de resultados (default: 8)
+    
+    Returns:
+        Lista de análises similares ordenadas por relevância
+    
+    Raises:
+        HTTPException 404: Se a análise original não for encontrada
+        HTTPException 500: Se houver erro ao buscar
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"🔍 Buscando recomendações para: {document_id}")
+        print(f"{'='*60}")
+
+        # Busca análises similares no BigQuery
+        similar = bigquery_service.get_similar_analyses(document_id, limit)
+
+        if similar is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao buscar recomendações"
+            )
+
+        print(f"✅ {len(similar)} recomendações encontradas!")
+        print(f"{'='*60}\n")
+
+        return {
+            "success": True,
+            "data": {
+                "items": similar,
+                "total": len(similar)
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao buscar recomendações: {e}")
+        print(f"{'='*60}\n")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno ao buscar recomendações: {str(e)}"
+        )
+
+
 class InteractionRequest(BaseModel):
     uid: str
     action: str
