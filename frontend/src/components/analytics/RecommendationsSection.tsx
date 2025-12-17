@@ -88,6 +88,7 @@ export const RecommendationsSection = ({ documentId }: RecommendationsSectionPro
               key={rec.document_id}
               to={`/verificacao/${rec.document_id}`}
               className="block transition-transform hover:scale-105"
+              onClick={() => window.scrollTo(0, 0)}
             >
               <Card className="h-full hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
