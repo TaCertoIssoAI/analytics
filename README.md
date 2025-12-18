@@ -53,7 +53,7 @@ npm run dev
 
 ## 🛠 Tecnologias Principais
 
-**Backend:** FastAPI • BigQuery • Firestore • Google Gemini  
+**Backend:** FastAPI • BigQuery • Firestore • Google Gemini • OpenAI  
 **Frontend:** React • TypeScript • Tailwind CSS • Shadcn UI • Firebase Auth
 
 📖 **Detalhes completos:** [Tecnologias](./docs/tecnologias.md)

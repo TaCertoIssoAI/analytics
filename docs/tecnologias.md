@@ -9,6 +9,7 @@
 - **Google BigQuery** - Data warehouse para análise em larga escala
 - **Google Firestore** - Banco NoSQL para recuperação rápida
 - **Google Gemini** - Embeddings para busca semântica
+- **OpenAI** - Modelos de IA para processamento de linguagem natural
 - **Pydantic** - Validação de dados e serialização
 - **IPTC Media Topics** - Classificação automática de tópicos
 
