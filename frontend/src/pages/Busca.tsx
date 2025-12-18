@@ -58,6 +58,7 @@ const Busca = () => {
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeSearchTerm, setActiveSearchTerm] = useState(""); // Term actually used for filtering
 
   const [dateFilter, setDateFilter] = useState<DateFilterValue>({
     mode: "all",
@@ -141,7 +142,8 @@ const Busca = () => {
   const buildQueryParams = useCallback(() => {
     const params = new URLSearchParams();
 
-    if (searchTerm) params.append("search", searchTerm);
+    // Only use activeSearchTerm (set when user clicks the button)
+    if (activeSearchTerm) params.append("search", activeSearchTerm);
 
     params.append("modality_text", String(filters.modality.text));
     params.append("modality_audio", String(filters.modality.audio));
@@ -165,7 +167,7 @@ const Busca = () => {
     if (end) params.append("end_date", end);
 
     return params;
-  }, [filters, getDateRangeIso, searchTerm]);
+  }, [filters, getDateRangeIso, activeSearchTerm]);
 
   const handleExportDashboard = async () => {
     setExportLoading(prev => ({ ...prev, dashboard: true }));
@@ -294,20 +296,23 @@ const Busca = () => {
     }
   }, [apiUrl, buildQueryParams, limit, page, sourcesLimit, sourcesPage]);
 
-  useEffect(() => {
-    // Debounce search to avoid too many requests
-    const timeoutId = setTimeout(() => {
-      fetchData();
-    }, 500);
+  // Handler for manual search
+  const handleSearch = useCallback(() => {
+    setActiveSearchTerm(searchTerm);
+    setPage(1);
+    setSourcesPage(1);
+  }, [searchTerm]);
 
-    return () => clearTimeout(timeoutId);
+  // Fetch data when filters change or when activeSearchTerm changes
+  useEffect(() => {
+    fetchData();
   }, [fetchData]);
 
   useEffect(() => {
-    // Quando muda qualquer filtro, volta pra primeira página
+    // Quando muda qualquer filtro (exceto searchTerm), volta pra primeira página
     setPage(1);
     setSourcesPage(1);
-  }, [filters, searchTerm, dateFilter.mode, dateFilter.startDate, dateFilter.endDate]);
+  }, [filters, activeSearchTerm, dateFilter.mode, dateFilter.startDate, dateFilter.endDate]);
 
   const getMainResult = (analysis: Analysis) => {
     const verdict = analysis.overall_verdict.toUpperCase();
@@ -399,6 +404,7 @@ const Busca = () => {
             onFilterChange={setFilters}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            onSearch={handleSearch}
             dateFilter={dateFilter}
             onDateFilterChange={setDateFilter}
           />

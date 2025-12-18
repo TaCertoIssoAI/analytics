@@ -31,6 +31,7 @@ interface FilterSectionProps {
   onFilterChange?: (filters: AnalysisFilters) => void;
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
+  onSearch?: () => void;
   dateFilter?: DateFilterValue;
   onDateFilterChange?: (value: DateFilterValue) => void;
 }
@@ -40,6 +41,7 @@ export const FilterSection = ({
   onFilterChange,
   searchTerm = "",
   onSearchChange,
+  onSearch,
   dateFilter,
   onDateFilterChange,
 }: FilterSectionProps) => {
@@ -64,7 +66,7 @@ export const FilterSection = ({
     return format(dt, "yyyy-MM-dd");
   };
 
-  const handlePercentageChange = (field: 'minTruthScore' | 'maxTruthScore' | 'minFakeScore' | 'maxFakeScore' | 'minUnverifiedScore' | 'maxUnverifiedScore', value: number) => {
+  const handlePercentageChange = (field: 'minTruthScore' | 'maxTruthScore' | 'minFakeScore' | 'maxFakeScore' | 'minUnverifiedScore' | 'maxUnverifiedScore' | 'minOutOfContextScore' | 'maxOutOfContextScore', value: number) => {
     if (filters && onFilterChange) {
       onFilterChange({
         ...filters,
@@ -118,15 +120,29 @@ export const FilterSection = ({
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
         <div className="space-y-2">
           <Label htmlFor="search">Buscar por conteúdo</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="search"
-              placeholder="Digite palavras-chave, tópico ou ID..."
-              className="w-full pl-10"
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder="Digite palavras-chave, tópico ou ID..."
+                className="w-full pl-10"
+                value={searchTerm}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onSearch?.();
+                  }
+                }}
+              />
+            </div>
+            <Button
+              onClick={onSearch}
+              className="gap-2 shrink-0"
+            >
+              <Search className="h-4 w-4" />
+              Buscar
+            </Button>
           </div>
         </div>
 
