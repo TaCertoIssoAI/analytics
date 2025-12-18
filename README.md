@@ -2,8 +2,6 @@
 
 Plataforma de analytics e verificação de fatos para o bot de WhatsApp "Tá Certo Isso AI". Sistema completo para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas por inteligência artificial.
 
-
-
 ## 📚 Documentação
 
 ### 🚀 Início Rápido
