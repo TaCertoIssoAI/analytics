@@ -6,7 +6,7 @@
 
 Interface web construída com React e TypeScript para visualização de dados.
 
----
+
 
 ## Páginas Principais
 
@@ -88,7 +88,7 @@ Interface web construída com React e TypeScript para visualização de dados.
 - **Seja um Revisor (`/seja-um-revisor`)**: Página de convite para participar como revisor
 - **Verificação Não Encontrada (`/verificacao-nao-encontrada/:id?`)**: Tratamento de erros 404
 
----
+
 
 ## Recursos de Acessibilidade
 
@@ -111,7 +111,7 @@ Interface web construída com React e TypeScript para visualização de dados.
 - **Alt text**: Todas as imagens com descrição
 - **Tooltips descritivos**: Em ícones e botões
 
----
+
 
 ## Integração com Firebase Auth
 
@@ -144,7 +144,7 @@ Ações sensíveis (likes, dislikes) verificam autenticação antes de executar.
 - Sincronização com Firestore
 - Exibição de revisores que avaliaram
 
----
+
 
 ## Funcionalidade de Busca
 
@@ -205,7 +205,7 @@ Os resultados filtrados podem ser exportados em formato CSV, mantendo todos os f
 - Tópicos IPTC
 - Afirmações detalhadas com fontes
 
----
+
 
 ## CI/CD
 
@@ -256,7 +256,7 @@ No Netlify Dashboard → Site Settings → Environment Variables:
 - Assets com hash para cache-busting
 - Preload de componentes críticos
 
----
+
 
 ## Documentação Relacionada
 
@@ -265,6 +265,6 @@ No Netlify Dashboard → Site Settings → Environment Variables:
 - [🛠 Como Rodar Localmente](./setup.md)
 - [✨ Funcionalidades](./funcionalidades.md)
 
----
+
 
 [⬅️ Voltar ao Índice](../README.md)

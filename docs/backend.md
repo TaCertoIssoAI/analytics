@@ -6,7 +6,7 @@
 
 O backend é construído com **FastAPI** e organizado em camadas para separação de responsabilidades.
 
----
+
 
 ## Endpoints de Ingestão (POST)
 
@@ -69,7 +69,7 @@ Cria uma nova análise de verificação.
 }
 ```
 
----
+
 
 ## Serviços de Dados
 
@@ -135,7 +135,7 @@ ORDER BY processed_at DESC
 - `analises`: Análises de verificação
 - `users`: Perfis de usuários revisores
 
----
+
 
 ## Endpoints de Consulta (GET)
 
@@ -181,7 +181,7 @@ Lista fontes citadas com contagem de citações.
 
 Exporta dados em formato CSV.
 
----
+
 
 ## CI/CD
 
@@ -216,7 +216,7 @@ No Google Cloud Console → Cloud Run → Service → Variables:
 5. Deploy no Cloud Run (sem downtime)
 6. Health check automático
 
----
+
 
 ## Documentação Relacionada
 
@@ -225,6 +225,6 @@ No Google Cloud Console → Cloud Run → Service → Variables:
 - [🛠 Como Rodar Localmente](./setup.md)
 - [✨ Funcionalidades](./funcionalidades.md)
 
----
+
 
 [⬅️ Voltar ao Índice](../README.md)

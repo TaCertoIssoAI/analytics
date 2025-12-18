@@ -12,7 +12,7 @@
 - **Pydantic** - Validação de dados e serialização
 - **IPTC Media Topics** - Classificação automática de tópicos
 
----
+
 
 ## Frontend
 
@@ -26,7 +26,7 @@
 - **Firebase Auth** - Autenticação de usuários
 - **VLibras** - Acessibilidade para Libras
 
----
+
 
 ## Documentação Relacionada
 
@@ -35,6 +35,6 @@
 - [🔧 Backend](./backend.md)
 - [💻 Frontend](./frontend.md)
 
----
+
 
 [⬅️ Voltar ao Índice](../README.md)

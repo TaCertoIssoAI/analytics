@@ -14,7 +14,7 @@
 - ✅ **Acessibilidade VLibras** - Tradução para Libras
 - ✅ **Responsivo** - Funciona em mobile, tablet e desktop
 
----
+
 
 ## Para Pesquisadores
 
@@ -25,7 +25,7 @@
 - ✅ **Classificação IPTC** - Tópicos padronizados internacionalmente
 - ✅ **Embeddings semânticos** - Análise de similaridade
 
----
+
 
 ## Documentação Relacionada
 
@@ -34,6 +34,6 @@
 - [💻 Frontend](./frontend.md)
 - [🛠 Como Rodar Localmente](./setup.md)
 
----
+
 
 [⬅️ Voltar ao Índice](../README.md)

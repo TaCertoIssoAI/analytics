@@ -61,7 +61,7 @@
 └─────────────────────────────────────────────────────────┘
 ```
 
----
+
 
 ## Fluxo de Dados
 
@@ -80,7 +80,7 @@
 3. Dados são formatados e retornados
 4. Frontend renderiza visualizações
 
----
+
 
 ## Documentação Relacionada
 
@@ -89,6 +89,6 @@
 - [🛠 Como Rodar Localmente](./setup.md)
 - [🚀 Tecnologias](./tecnologias.md)
 
----
+
 
 [⬅️ Voltar ao Índice](../README.md)

@@ -10,7 +10,7 @@
 - API Key do Google Gemini
 - Firebase Project
 
----
+
 
 ## Backend
 
@@ -108,7 +108,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Acesse: `http://localhost:8000/docs` (Swagger UI)
 
----
+
 
 ## Frontend
 
@@ -146,7 +146,7 @@ npm run dev
 
 Acesse: `http://localhost:5173`
 
----
+
 
 ## Documentação Relacionada
 
@@ -155,6 +155,6 @@ Acesse: `http://localhost:5173`
 - [🔧 Backend](./backend.md)
 - [💻 Frontend](./frontend.md)
 
----
+
 
 [⬅️ Voltar ao Índice](../README.md)
