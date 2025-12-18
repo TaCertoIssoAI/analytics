@@ -11,7 +11,7 @@
 - **Google Gemini** - Embeddings para busca semântica
 - **OpenAI** - Modelos de IA para processamento de linguagem natural
 - **Pydantic** - Validação de dados e serialização
-- **IPTC Media Topics** - Classificação automática de tópicos
+- **[IPTC Media Topics](https://iptc.org/standards/media-topics/)** - Classificação automática de tópicos
 
 
 

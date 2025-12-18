@@ -23,7 +23,7 @@ Cria uma nova análise de verificação.
    - Converte claims e fontes para formato unificado
    - Agrega vereditos de múltiplas fontes de dados
    - Normaliza vereditos (`VERDADEIRO`, `FALSO`, `FORA_DE_CONTEXTO`, `CHECK`)
-   - Classifica tópicos usando **IPTC Media Topics** com LLM reranking
+   - Classifica tópicos usando **[IPTC Media Topics](https://iptc.org/standards/media-topics/)** com LLM reranking
    - Calcula métricas agregadas (total de claims, scores percentuais)
    - Gera título da análise com LLM
 3. **Salva em duas bases**:
@@ -155,7 +155,7 @@ Lista análises com filtros avançados e paginação.
 - `result_true/fake/unknown` (bool): Filtrar por resultado
 - `min/max_truth_score` (int): Filtrar por % verdadeiro
 - `min/max_fake_score` (int): Filtrar por % falso
-- `min/max_unverified_score` (int): Filtrar por % não verificado
+- `min/max_unverified_score` (int): Filtrar por % inverificáveis
 
 **Comportamento:**
 - **Sem busca**: Consulta Firestore (rápido, ordenado por data)

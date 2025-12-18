@@ -51,7 +51,7 @@ Interface web construída com React e TypeScript para visualização de dados.
 **Funcionalidades:**
 - Visualização detalhada de uma análise
 - Barra de "Nível de Veracidade" segmentada (verde/vermelho/amarelo/cinza)
-- Contadores de métricas (verdadeiras, falsas, fora de contexto, não verificadas)
+- Contadores de métricas (verdadeiras, falsas, fora de contexto, inverificáveis)
 - Indicadores coloridos (bolinhas) por tipo de claim
 - Acordeões expansíveis para cada claim
 - Visualização de árvore de decisão IPTC
@@ -102,10 +102,18 @@ Interface web construída com React e TypeScript para visualização de dados.
 - Integração com script oficial do VLibras
 - Persistência de preferência em localStorage
 
+### Alto Contraste
+
+**Funcionalidades:**
+- Modo de alto contraste para melhor legibilidade
+- Toggle no header para ativar/desativar
+- Cores ajustadas para acessibilidade WCAG AAA
+- Persistência de preferência em localStorage
+
 ### Outros Recursos
 
 - **Componentes Shadcn UI**: Todos acessíveis por padrão (ARIA labels, keyboard navigation)
-- **Contraste de cores**: Segue WCAG 2.1 AA
+- **Contraste de cores**: Segue WCAG 2.1 AA (AAA no modo Alto Contraste)
 - **Títulos semânticos**: Hierarquia correta de H1-H6
 - **Focus visível**: Indicadores de foco para navegação por teclado
 - **Alt text**: Todas as imagens com descrição
@@ -178,7 +186,7 @@ Sistema avançado de busca com filtros múltiplos e busca semântica.
 4. **Percentuais (Sliders):**
    - % mínimo/máximo de verdadeiro
    - % mínimo/máximo de falso
-   - % mínimo/máximo de não verificado
+   - % mínimo/máximo de inverificáveis
 
 ### Debouncing de Busca
 
@@ -201,7 +209,7 @@ Os resultados filtrados podem ser exportados em formato CSV, mantendo todos os f
 - Texto da mensagem, transcrições
 - Links raspados (detalhado)
 - Quantidade de afirmações
-- Percentuais (verdadeiro, falso, não verificado)
+- Percentuais (verdadeiro, falso, fora de contexto, inverificáveis)
 - Tópicos IPTC
 - Afirmações detalhadas com fontes
 

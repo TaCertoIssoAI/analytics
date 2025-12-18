@@ -11,7 +11,7 @@
 - ✅ **Árvore de decisão IPTC** - Visualização interativa de classificação
 - ✅ **Sistema de avaliação** - Like/dislike de verificações (requer login)
 - ✅ **Exportação CSV** - Dashboard, mensagens e fontes
-- ✅ **Acessibilidade VLibras** - Tradução para Libras
+- ✅ **Acessibilidade** - VLibras (Libras) e Alto Contraste
 - ✅ **Responsivo** - Funciona em mobile, tablet e desktop
 
 
