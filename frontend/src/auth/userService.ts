@@ -124,10 +124,15 @@ export interface TopReviewer {
   count: number;
 }
 
+export interface TopReviewersResponse {
+  reviewers: TopReviewer[];
+  period: 'week' | 'all_time';
+}
+
 /**
  * Get top reviewers via Backend API
  */
-export const getTopReviewers = async (): Promise<TopReviewer[]> => {
+export const getTopReviewers = async (): Promise<TopReviewersResponse> => {
   try {
     const response = await fetch(`${API_URL}/users/top-reviewers`);
     
@@ -136,9 +141,9 @@ export const getTopReviewers = async (): Promise<TopReviewer[]> => {
     }
 
     const result = await response.json();
-    return result.data || [];
+    return result.data || { reviewers: [], period: 'week' };
   } catch (error) {
     console.error("Error fetching top reviewers:", error);
-    return [];
+    return { reviewers: [], period: 'week' };
   }
 };

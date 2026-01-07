@@ -390,11 +390,15 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar interações do usuário: {e}")
             return []
-    def get_top_reviewers(self, days: int = 7, limit: int = 5) -> List[Dict[str, Any]]:
+    def get_top_reviewers(self, days: int = 7, limit: int = 5) -> Dict[str, Any]:
         """
         Retorna os usuários com mais interações (likes/dislikes) nos últimos 'days' dias.
+        Se não houver revisores na semana, retorna os top 5 revisores de todos os tempos.
+        
+        Returns:
+            Dict com 'reviewers' (lista) e 'period' ('week' ou 'all_time')
         """
-        if not self.client: return []
+        if not self.client: return {"reviewers": [], "period": "week"}
         
         try:
             from datetime import datetime, timedelta
@@ -405,6 +409,54 @@ class FirestoreService:
             # Nota: Em produção com muitos dados, isso deve ser feito com uma Collection Group Query 
             # ou um contador incrementado em cada usuário. Para este MVP, agregação em memória serve.
             query = self.analises_collection.where("processed_at", ">=", cutoff_date).stream()
+            
+            user_counts = {}
+            
+            for doc in query:
+                data = doc.to_dict()
+                
+                # Conta likes
+                for uid in data.get("liked_by", []):
+                    user_counts[uid] = user_counts.get(uid, 0) + 1
+                    
+                # Conta dislikes
+                for uid in data.get("disliked_by", []):
+                    user_counts[uid] = user_counts.get(uid, 0) + 1
+            
+            # Se não houver revisores na semana, busca os top 5 de todos os tempos
+            if not user_counts:
+                print("ℹ️  Nenhum revisor encontrado na semana. Buscando top revisores de todos os tempos...")
+                all_time_reviewers = self._get_all_time_top_reviewers(limit)
+                return {"reviewers": all_time_reviewers, "period": "all_time"}
+            
+            # Ordena por contagem decrescente
+            sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
+            
+            # Busca dados dos usuários
+            top_reviewers = []
+            for uid, count in sorted_users:
+                user_profile = self.get_user_profile(uid)
+                if user_profile:
+                    top_reviewers.append({
+                        "user": user_profile,
+                        "count": count
+                    })
+            
+            return {"reviewers": top_reviewers, "period": "week"}
+            
+        except Exception as e:
+            print(f"❌ Erro ao buscar top reviewers: {e}")
+            return {"reviewers": [], "period": "week"}
+    
+    def _get_all_time_top_reviewers(self, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Retorna os top revisores de todos os tempos (sem filtro de data).
+        """
+        if not self.client: return []
+        
+        try:
+            # Busca TODAS as análises (sem filtro de data)
+            query = self.analises_collection.stream()
             
             user_counts = {}
             
@@ -432,10 +484,11 @@ class FirestoreService:
                         "count": count
                     })
             
+            print(f"✅ Top {len(top_reviewers)} revisores de todos os tempos encontrados")
             return top_reviewers
             
         except Exception as e:
-            print(f"❌ Erro ao buscar top reviewers: {e}")
+            print(f"❌ Erro ao buscar top reviewers de todos os tempos: {e}")
             return []
 # Instância global
 firestore_service = FirestoreService()

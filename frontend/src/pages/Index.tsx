@@ -3,7 +3,7 @@ import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
 import { Database, FileText, AlertTriangle, BadgeCheck, Trophy, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getTopReviewers, TopReviewer } from "@/auth/userService";
+import { getTopReviewers, TopReviewer, TopReviewersResponse } from "@/auth/userService";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,7 +20,7 @@ interface Stats {
 const Index = () => {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [topReviewers, setTopReviewers] = useState<TopReviewer[]>([]);
+  const [topReviewersData, setTopReviewersData] = useState<TopReviewersResponse>({ reviewers: [], period: 'week' });
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -46,8 +46,8 @@ const Index = () => {
     };
 
     const loadTopReviewers = async () => {
-      const reviewers = await getTopReviewers();
-      setTopReviewers(reviewers);
+      const reviewersData = await getTopReviewers();
+      setTopReviewersData(reviewersData);
     };
 
     loadStats();
@@ -208,18 +208,22 @@ const Index = () => {
                     <Trophy className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Top Revisores da Semana</h3>
-                    <p className="text-sm text-muted-foreground">Quem mais contribuiu para a verdade</p>
+                    <h3 className="font-bold text-lg">
+                      {topReviewersData.period === 'week' ? 'Top Revisores da Semana' : 'Top Revisores de Todos os Tempos'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {topReviewersData.period === 'week' ? 'Quem mais contribuiu esta semana' : 'Os maiores contribuidores da plataforma'}
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {topReviewers.length === 0 ? (
+                  {topReviewersData.reviewers.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       Carregando ranking...
                     </div>
                   ) : (
-                    topReviewers.map((reviewer, index) => (
+                    topReviewersData.reviewers.map((reviewer, index) => (
                       <Link 
                         key={reviewer.user.uid} 
                         to={`/perfil/${reviewer.user.uid}`}
