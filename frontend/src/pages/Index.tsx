@@ -29,42 +29,35 @@ const Index = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-  // PRIORIDADE 1: Carrega análises (verificações recentes) primeiro
+  // Carrega estatísticas
   useEffect(() => {
-    loadAnalyses(0);
-    
-    // PRIORIDADE 2: Depois carrega estatísticas e ranking em paralelo
-    // Aguarda um pequeno delay para dar prioridade às verificações
-    const timer = setTimeout(() => {
-      loadStats();
-      loadTopReviewers();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [apiUrl]);
-
-  const loadStats = async () => {
-    try {
-      const response = await fetch(`${apiUrl}/analises/stats`);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          setStats(result.data);
+    const loadStats = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/analises/stats`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setStats(result.data);
+          }
         }
+      } catch (error) {
+        console.error("Erro ao carregar estatísticas:", error);
       }
-    } catch (error) {
-      console.error("Erro ao carregar estatísticas:", error);
-    }
-  };
+    };
 
-  const loadTopReviewers = async () => {
-    try {
+    const loadTopReviewers = async () => {
       const reviewersData = await getTopReviewers();
       setTopReviewersData(reviewersData);
-    } catch (error) {
-      console.error("Erro ao carregar top reviewers:", error);
-    }
-  };
+    };
+
+    loadStats();
+    loadTopReviewers();
+  }, [apiUrl]);
+
+  // Carrega análises (verificações recentes)
+  useEffect(() => {
+    loadAnalyses(0);
+  }, [apiUrl]);
 
   const loadAnalyses = async (currentOffset: number) => {
     const isLoadingMore = currentOffset > 0;
@@ -128,7 +121,6 @@ const Index = () => {
       }
       return { name };
     });
-
 
     // Determina status baseado no overall_verdict
     let status: 'true' | 'false' | 'unverifiable' = 'unverifiable';
@@ -208,7 +200,6 @@ const Index = () => {
               </div>
             </div>
 
-
             {/* Right Column: Top Reviewers */}
             <div className="lg:pl-12">
               <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-6 shadow-xl">
@@ -287,7 +278,6 @@ const Index = () => {
         </div>
 
       </section>
-
 
       {/* Results Section */}
       <section className="container py-16">
