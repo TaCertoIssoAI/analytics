@@ -45,9 +45,9 @@ const About = () => {
             </p>
             {/* Vídeo explicativo incorporado abaixo do subtítulo */}
             <div className="flex justify-center py-4">
-              <div className="w-full max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-3xl relative overflow-hidden rounded-lg shadow-lg" style={{ paddingTop: '56.25%' }}>
+              <div className="relative w-full max-w-2xl aspect-[16/9] overflow-hidden rounded-lg shadow-lg">
                 <iframe
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  className="absolute inset-0 h-full w-full rounded-lg"
                   src="https://www.youtube.com/embed/Tr7s_vxDnKk?cc_load_policy=1&cc_lang_pref=pt"
                   title="Demonstração Tá Certo Isso AI"
                   frameBorder="0"
@@ -56,6 +56,7 @@ const About = () => {
                 />
               </div>
             </div>
+
           </div>
 
           {/* Main Content */}
