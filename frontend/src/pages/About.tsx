@@ -9,21 +9,21 @@ const About = () => {
     {
       name: "Caue Paiva Lira",
       role: "Desenvolvedor",
-      photo: "https://media.licdn.com/dms/image/v2/D4D03AQFjIDBHEO3aoQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1701005815941?e=1766016000&v=beta&t=vdoGM59hdk8d_3pDAt4tflzqr3bG8oiVEjgfoT98ZUU",
+      photo: "https://avatars.githubusercontent.com/u/128509727?v=4",
       linkedin: "https://www.linkedin.com/in/cauepaiva/overlay/photo/",
       github: "https://github.com/caue-paiva",
     },
     {
       name: "Luiz Felipe Diniz Costa",
       role: "Desenvolvedor",
-      photo: "https://media.licdn.com/dms/image/v2/D4D03AQHTD1JBPbZLrg/profile-displayphoto-shrink_800_800/B4DZdm0F_FG8Ac-/0/1749776623147?e=1766016000&v=beta&t=YwOwhFxByu-UfXq0NmUQuoJiuz0yf-tyK4Sd9WFQBAY",
+      photo: "https://avatars.githubusercontent.com/u/61145881?v=4",
       linkedin: "https://www.linkedin.com/in/lfelipediniz/",
       github: "https://github.com/lfelipediniz",
     },
     {
       name: "Pedro H. Ferreira Silva",
       role: "Desenvolvedor",
-      photo: "https://media.licdn.com/dms/image/v2/D4D03AQFCc3e-AtVsig/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1723834226943?e=1766016000&v=beta&t=v276hxo_-I0DA1lt69nivkswPWj1F8M8veDChCMGS-8",
+      photo: "https://avatars.githubusercontent.com/u/61637621?v=4",
       linkedin: "https://www.linkedin.com/in/pedrohfsilva2/",
       github: "https://github.com/pedrohfsilva",
     },
@@ -68,8 +68,10 @@ const About = () => {
             </section>
 
             <div className="flex justify-center py-4">
-              <Button asChild size="lg" className="text-lg px-8">
-                <Link to="/metodologia">Conheça nossa Metodologia</Link>
+              <Button asChild size="lg" variant="outline" className="text-lg px-8">
+                <Link to="/metodologia" className="text-foreground">
+                  Conheça nossa Metodologia
+                </Link>
               </Button>
             </div>
 
