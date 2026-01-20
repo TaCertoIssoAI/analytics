@@ -9,7 +9,7 @@ const SplashScreen: React.FC = () => {
     <AnimatePresence>
       {isVisible && (
         <motion.div 
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background overflow-hidden"
           exit={{ 
             y: "-100%",
             transition: { 
