@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/loadAnalyses";
 import type { Analysis } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
 import { useCachedData } from "@/hooks/useCachedData";
+import { useSplash } from "@/context/SplashContext";
 
 interface Stats {
   total_verificacoes: number;
@@ -72,6 +73,22 @@ const Index = () => {
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  
+  const { addTask, removeTask } = useSplash();
+
+  // Register splash task for initial data load
+  useEffect(() => {
+    addTask('home-data');
+    
+    if (!initialLoading) {
+        removeTask('home-data');
+    }
+
+    return () => {
+        // Cleanup in case component unmounts
+        removeTask('home-data');
+    };
+  }, [addTask, removeTask, initialLoading]);
 
   // Sync cached initial data with local state when it changes (or on mount)
   useEffect(() => {

@@ -16,7 +16,6 @@ import {
   updatePassword,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { AnimatePresence } from 'framer-motion';
 import { auth, googleProvider, isUsingMockAuth } from './firebaseConfig';
 import {
   mockSignInWithEmailAndPassword,
@@ -29,6 +28,7 @@ import {
 } from './mockFirebase';
 import { createUserProfile } from './userService';
 import SplashScreen from '@/components/SplashScreen';
+import { SplashProvider, useSplash } from '@/context/SplashContext';
 
 // User type that works for both real and mock auth
 export type AuthUser = FirebaseUser | MockUser | null;
@@ -54,29 +54,18 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-/**
- * AuthProvider Component
- * Wraps the application and provides authentication state and methods
- */
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AuthUser>(null);
   const [loading, setLoading] = useState(true);
+  const { addTask, removeTask } = useSplash();
 
   useEffect(() => {
+    addTask('auth-init');
     let unsubscribe: (() => void) | undefined;
 
-    // Minimum display time for splash screen to prevent flickering
-    // Increased to 5000ms as requested for longer animation
-    const minLoadTime = 5000; 
-    const startTime = Date.now();
-
     const finishLoading = () => {
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, minLoadTime - elapsedTime);
-      
-      setTimeout(() => {
-        setLoading(false);
-      }, remainingTime);
+      setLoading(false);
+      removeTask('auth-init');
     };
 
     if (isUsingMockAuth) {
@@ -101,7 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [addTask, removeTask]);
 
   /**
    * Sign in with email and password
@@ -269,11 +258,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      <AnimatePresence mode="wait">
-        {loading && <SplashScreen key="splash" />}
-      </AnimatePresence>
-      {!loading && children}
+      <SplashScreen />
+      {children}
     </AuthContext.Provider>
+  );
+};
+
+/**
+ * AuthProvider Component
+ * Wraps the application and provides authentication state and methods
+ */
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  return (
+    <SplashProvider>
+      <AuthContent>{children}</AuthContent>
+    </SplashProvider>
   );
 };
 
