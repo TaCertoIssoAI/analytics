@@ -1,15 +1,15 @@
 import { Header } from "@/components/Header";
 import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, FileText, AlertTriangle, BadgeCheck, Trophy, MessageCircle } from "lucide-react";
+import { Database, Trophy, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getTopReviewers, TopReviewer, TopReviewersResponse } from "@/auth/userService";
-import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
-import { useEffect, useState } from "react";
+import { getTopReviewers, TopReviewersResponse } from "@/auth/userService";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/loadAnalyses";
 import type { Analysis } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
+import { useCachedData } from "@/hooks/useCachedData";
 
 interface Stats {
   total_verificacoes: number;
@@ -17,89 +17,97 @@ interface Stats {
   percentual_falso: number;
 }
 
+interface AnalysesResponse {
+  items: Analysis[];
+  has_more: boolean;
+}
+
 const Index = () => {
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [topReviewersData, setTopReviewersData] = useState<TopReviewersResponse>({ reviewers: [], period: 'week' });
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [offset, setOffset] = useState(0);
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const LIMIT = 9; // 3x3 grid
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  // --- Caching Strategies ---
 
-  // Carrega estatísticas
+  // 1. Stats Caching
+  const fetchStats = useCallback(async () => {
+    const response = await fetch(`${apiUrl}/analises/stats`);
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    const result = await response.json();
+    return result.success && result.data ? result.data : null;
+  }, [apiUrl]);
+
+  const { data: stats } = useCachedData<Stats | null>(
+    'tacerto-stats',
+    fetchStats,
+    null
+  );
+
+  // 2. Top Reviewers Caching
+  const fetchTopReviewers = useCallback(async () => {
+    return await getTopReviewers();
+  }, []);
+
+  const { data: topReviewersData } = useCachedData<TopReviewersResponse>(
+    'tacerto-top-reviewers',
+    fetchTopReviewers,
+    { reviewers: [], period: 'week' }
+  );
+
+  // 3. Recent Verifications Caching (Initial Load Only)
+  const fetchInitialAnalyses = useCallback(async () => {
+    const response = await fetch(`${apiUrl}/analises?limit=${LIMIT}&offset=0`);
+    if (!response.ok) throw new Error('Failed to fetch analyses');
+    const result = await response.json();
+    return result.success && result.data ? result.data : { items: [], has_more: false };
+  }, [apiUrl]);
+
+  const { data: initialAnalysesData, loading: initialLoading } = useCachedData<AnalysesResponse>(
+    'tacerto-recent-verifications',
+    fetchInitialAnalyses,
+    { items: [], has_more: false }
+  );
+
+  // --- State Management for Pagination ---
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Sync cached initial data with local state when it changes (or on mount)
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await fetch(`${apiUrl}/analises/stats`);
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            setStats(result.data);
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao carregar estatísticas:", error);
+    if (initialAnalysesData.items.length > 0) {
+      // Only set if we haven't loaded more data yet (offset is 0 or initial)
+      if (offset === 0) {
+        setAnalyses(initialAnalysesData.items);
+        setHasMore(initialAnalysesData.has_more);
+        setOffset(initialAnalysesData.items.length);
       }
-    };
-
-    const loadTopReviewers = async () => {
-      const reviewersData = await getTopReviewers();
-      setTopReviewersData(reviewersData);
-    };
-
-    loadStats();
-    loadTopReviewers();
-  }, [apiUrl]);
-
-  // Carrega análises (verificações recentes)
-  useEffect(() => {
-    loadAnalyses(0);
-  }, [apiUrl]);
-
-  const loadAnalyses = async (currentOffset: number) => {
-    const isLoadingMore = currentOffset > 0;
-    if (isLoadingMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
     }
+  }, [initialAnalysesData]);
 
+  // Load More Functionality (Pagination - Not Cached)
+  const loadMoreAnalyses = async () => {
+    setLoadingMore(true);
     try {
-      const response = await fetch(`${apiUrl}/analises?limit=${LIMIT}&offset=${currentOffset}`);
+      const response = await fetch(`${apiUrl}/analises?limit=${LIMIT}&offset=${offset}`);
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
           const newAnalyses = result.data.items;
-
-          if (isLoadingMore) {
-            setAnalyses(prev => [...prev, ...newAnalyses]);
-          } else {
-            setAnalyses(newAnalyses);
-          }
-
+          setAnalyses(prev => [...prev, ...newAnalyses]);
           setHasMore(result.data.has_more);
-          setOffset(currentOffset + newAnalyses.length);
+          setOffset(prev => prev + newAnalyses.length);
         }
       }
     } catch (error) {
-      console.error("Erro ao carregar análises:", error);
+      console.error("Erro ao carregar mais análises:", error);
     } finally {
-      setLoading(false);
       setLoadingMore(false);
     }
   };
 
-  const handleLoadMore = () => {
-    loadAnalyses(offset);
-  };
-
   // Converte análises para o formato esperado pelo VerificationCard
   const verifications = analyses.map((analysis) => {
-
-
     const allTopics: Tag[] = Array.from(
       new Set(analysis.claims.flatMap(claim => claim.topics))
     ).map(topicStr => {
@@ -174,8 +182,6 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-
-
 
               {/* Mini Stats Grid */}
               <div className="grid grid-cols-3 gap-4 pt-8 border-t">
@@ -288,7 +294,7 @@ const Index = () => {
           </p>
         </div>
 
-        {loading ? (
+        {initialLoading && verifications.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando verificações...</p>
           </div>
@@ -309,7 +315,7 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={handleLoadMore}
+                  onClick={loadMoreAnalyses}
                   disabled={loadingMore}
                 >
                   {loadingMore ? "Carregando..." : "Carregar Mais Verificações"}
