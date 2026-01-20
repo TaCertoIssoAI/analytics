@@ -123,7 +123,7 @@ export const Header = () => {
                 variant="ghost"
                 size="icon"
                 onClick={toggleHighContrast}
-                className={`h-9 w-9 border-2 ${
+                className={`h-9 w-9 border-2 hover:text-foreground ${
                   theme === 'dark' || highContrast
                     ? 'border-yellow-400 hover:bg-yellow-400/10' 
                     : 'border-red-600 hover:bg-red-600/10'
@@ -142,13 +142,15 @@ export const Header = () => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleUserClick}
-                className="p-2 rounded-full hover:bg-accent transition-colors"
+                className="rounded-full"
                 aria-label="User profile"
               >
                 <User className="h-5 w-5" />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>
               <p>{currentUser ? "Ver Perfil" : "Entrar"}</p>
