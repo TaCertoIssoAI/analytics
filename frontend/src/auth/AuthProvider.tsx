@@ -16,6 +16,7 @@ import {
   updatePassword,
   User as FirebaseUser,
 } from 'firebase/auth';
+import { AnimatePresence } from 'framer-motion';
 import { auth, googleProvider, isUsingMockAuth } from './firebaseConfig';
 import {
   mockSignInWithEmailAndPassword,
@@ -27,6 +28,7 @@ import {
   MockUser,
 } from './mockFirebase';
 import { createUserProfile } from './userService';
+import SplashScreen from '@/components/SplashScreen';
 
 // User type that works for both real and mock auth
 export type AuthUser = FirebaseUser | MockUser | null;
@@ -63,21 +65,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
+    // Minimum display time for splash screen to prevent flickering
+    // Increased to 5000ms as requested for longer animation
+    const minLoadTime = 5000; 
+    const startTime = Date.now();
+
+    const finishLoading = () => {
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadTime - elapsedTime);
+      
+      setTimeout(() => {
+        setLoading(false);
+      }, remainingTime);
+    };
+
     if (isUsingMockAuth) {
       // Use mock authentication
       unsubscribe = mockOnAuthStateChanged((user) => {
         setCurrentUser(user);
-        setLoading(false);
+        finishLoading();
       });
     } else if (auth) {
       // Use real Firebase authentication
       unsubscribe = onAuthStateChanged(auth, (user) => {
         setCurrentUser(user);
-        setLoading(false);
+        finishLoading();
       });
     } else {
       // Fallback: no auth available
-      setLoading(false);
+      finishLoading();
     }
 
     return () => {
@@ -253,7 +269,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      <AnimatePresence mode="wait">
+        {loading && <SplashScreen key="splash" />}
+      </AnimatePresence>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
+
