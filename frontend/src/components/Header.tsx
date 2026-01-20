@@ -124,7 +124,7 @@ export const Header = () => {
                 size="icon"
                 onClick={toggleHighContrast}
                 className={`h-9 w-9 border-2 ${
-                  theme === 'dark' 
+                  theme === 'dark' || highContrast
                     ? 'border-yellow-400 hover:bg-yellow-400/10' 
                     : 'border-red-600 hover:bg-red-600/10'
                 }`}
