@@ -45,15 +45,34 @@ export const SplashProvider: React.FC<SplashProviderProps> = ({ children, minDur
     }
 
     let animationFrame: number;
-    const targetProgress = tasks.size === 0 ? 100 : 90; // Go to 90% while waiting, 100% when done
     
     const animate = () => {
       setProgress(prev => {
-        if (prev >= targetProgress) return prev;
-        // Slow down as we get closer to 90%
-        const remaining = targetProgress - prev;
-        const step = Math.max(0.1, remaining * 0.05); 
-        return Math.min(prev + step, targetProgress);
+        const target = tasks.size === 0 ? 100 : 99; // Aim for 99% if waiting
+        
+        if (prev >= target) return prev;
+
+        let step = 0;
+        const remaining = target - prev;
+
+        if (tasks.size === 0) {
+            // Fast finish
+            step = Math.max(0.5, remaining * 0.1);
+        } else {
+            // Waiting mode
+            if (prev < 80) {
+                // Fast initial load
+                step = Math.max(0.5, remaining * 0.05);
+            } else if (prev < 90) {
+                // Slow down
+                step = Math.max(0.1, remaining * 0.02);
+            } else {
+                // Very slow creep (the "travadinha" effect but still moving)
+                step = 0.05; 
+            }
+        }
+        
+        return Math.min(prev + step, target);
       });
       animationFrame = requestAnimationFrame(animate);
     };
