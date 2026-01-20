@@ -14,6 +14,11 @@ import {
   SheetTrigger,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const Header = () => {
   const { currentUser } = useAuth();
@@ -95,32 +100,60 @@ export const Header = () => {
               Adicionar Bot
             </a>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleVLibras}
-            className="h-9 w-9"
-            aria-label="Toggle VLibras"
-          >
-            <Ear className={`h-4 w-4 ${vlibrasEnabled ? "text-primary" : ""}`} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleHighContrast}
-            className="h-9 w-9"
-            aria-label="Toggle high contrast"
-          >
-            <Eye className={`h-4 w-4 ${highContrast ? "text-primary" : ""}`} />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleVLibras}
+                className="h-9 w-9"
+                aria-label="Toggle VLibras"
+              >
+                <Ear className={`h-4 w-4 ${vlibrasEnabled ? "text-primary" : ""}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{vlibrasEnabled ? "Desativar VLibras" : "Ativar VLibras"}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleHighContrast}
+                className={`h-9 w-9 border-2 ${
+                  theme === 'dark' 
+                    ? 'border-yellow-400 hover:bg-yellow-400/10' 
+                    : 'border-red-600 hover:bg-red-600/10'
+                }`}
+                aria-label="Toggle high contrast"
+              >
+                <Eye className={`h-4 w-4 ${highContrast ? "text-primary" : ""}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Alto Contraste</p>
+            </TooltipContent>
+          </Tooltip>
+
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-          <button
-            onClick={handleUserClick}
-            className="p-2 rounded-full hover:bg-accent transition-colors"
-            aria-label="User profile"
-          >
-            <User className="h-5 w-5" />
-          </button>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleUserClick}
+                className="p-2 rounded-full hover:bg-accent transition-colors"
+                aria-label="User profile"
+              >
+                <User className="h-5 w-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{currentUser ? "Ver Perfil" : "Entrar"}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Mobile Actions */}
