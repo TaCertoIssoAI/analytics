@@ -45,6 +45,7 @@ export interface AuthContextType {
   getToken: () => Promise<string | null>;
   isAuthenticated: boolean;
   isMockMode: boolean;
+  isAdmin: boolean;
 }
 
 // Create the context with undefined as initial value
@@ -57,6 +58,7 @@ interface AuthProviderProps {
 const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AuthUser>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { addTask, removeTask } = useSplash();
 
   useEffect(() => {
@@ -76,8 +78,21 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
       });
     } else if (auth) {
       // Use real Firebase authentication
-      unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
         setCurrentUser(user);
+        
+        if (user) {
+          try {
+            const tokenResult = await user.getIdTokenResult();
+            setIsAdmin(!!tokenResult.claims.admin);
+          } catch (error) {
+            console.error("Error fetching ID token result:", error);
+            setIsAdmin(false);
+          }
+        } else {
+          setIsAdmin(false);
+        }
+
         finishLoading();
       });
     } else {
@@ -254,6 +269,7 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
     getToken,
     isAuthenticated: !!currentUser,
     isMockMode: isUsingMockAuth,
+    isAdmin,
   };
 
   return (

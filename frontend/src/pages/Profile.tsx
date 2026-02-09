@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const Profile = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -236,9 +236,16 @@ const Profile = () => {
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-2 mt-4 justify-center">
-                    <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
-                    <BadgeCheck className="h-6 w-6 text-primary" />
+                  <div className="flex flex-col items-center gap-2 mt-4 justify-center">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
+                      <BadgeCheck className="h-6 w-6 text-primary" />
+                    </div>
+                    {isOwnProfile && isAdmin && (
+                      <Badge variant="destructive" className="mt-1">
+                        ADMIN
+                      </Badge>
+                    )}
                   </div>
                   
                   {profile.occupation && (
