@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional
 from app.services.firestore_service import firestore_service
+from app.utils.auth import verify_admin
+from firebase_admin import auth
+from fastapi import Depends
 
 router = APIRouter(
     prefix="/users",
@@ -17,6 +20,9 @@ class UserProfile(BaseModel):
     bio: Optional[str] = None
     occupation: Optional[str] = None
     socials: Optional[dict] = None  # { "linkedin": "...", "twitter": "...", "instagram": "..." }
+
+class UserRoleRequest(BaseModel):
+    role: str
 
 @router.post("/profile")
 async def create_user_profile(profile: UserProfile):
@@ -50,3 +56,54 @@ async def get_top_reviewers():
 async def get_user_interactions(uid: str):
     interactions = firestore_service.get_user_interactions(uid)
     return {"interactions": interactions}
+
+@router.get("")
+async def list_users(
+    limit: int = 10, 
+    offset: int = 0,
+    admin_user: dict = Depends(verify_admin)
+):
+    """
+    Lista todos os usuários (apenas admin).
+    """
+    return firestore_service.list_users(limit, offset)
+
+@router.post("/{uid}/role")
+async def set_user_role(
+    uid: str, 
+    role_request: UserRoleRequest,
+    admin_user: dict = Depends(verify_admin)
+):
+    """
+    Define o papel (role) de um usuário (apenas admin).
+    Isso atualiza tanto o Firestore quanto as Custom Claims do Firebase Auth.
+    """
+    role = role_request.role
+    if role not in ["admin", "user"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role must be 'admin' or 'user'"
+        )
+    
+    try:
+        # 1. Atualiza Custom Claims no Firebase Auth
+        claims = {"admin": True} if role == "admin" else {"admin": False}
+        auth.set_custom_user_claims(uid, claims)
+        
+        # 2. Atualiza Firestore
+        success = firestore_service.update_user_role(uid, role)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update role in Firestore"
+            )
+            
+        return {"message": f"User {uid} role updated to {role}"}
+        
+    except Exception as e:
+        print(f"❌ Error setting user role: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

@@ -15,6 +15,7 @@ export interface UserProfile {
     twitter?: string;
     instagram?: string;
   };
+  role?: 'admin' | 'user';
 }
 
 /**
@@ -145,5 +146,59 @@ export const getTopReviewers = async (): Promise<TopReviewersResponse> => {
   } catch (error) {
     console.error("Error fetching top reviewers:", error);
     return { reviewers: [], period: 'week' };
+  }
+};
+
+interface UsersListResponse {
+  users: UserProfile[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Get all users (Admin only)
+ */
+export const getAllUsers = async (token: string, limit = 50, offset = 0): Promise<UsersListResponse> => {
+  try {
+    const response = await fetch(`${API_URL}/users?limit=${limit}&offset=${offset}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return { users: [], total: 0, limit, offset };
+  }
+};
+
+/**
+ * Set user role (Admin only)
+ */
+export const setUserRole = async (token: string, uid: string, role: 'admin' | 'user'): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_URL}/users/${uid}/role`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ role })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update user role: ${response.statusText}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    return false;
   }
 };

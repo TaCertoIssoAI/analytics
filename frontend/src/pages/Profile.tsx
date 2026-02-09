@@ -242,9 +242,11 @@ const Profile = () => {
                       <BadgeCheck className="h-6 w-6 text-primary" />
                     </div>
                     {isOwnProfile && isAdmin && (
-                      <Badge variant="destructive" className="mt-1">
-                        ADMIN
-                      </Badge>
+                      <Link to="/admin">
+                        <Badge variant="destructive" className="mt-1 hover:bg-destructive/80 cursor-pointer">
+                          ADMIN
+                        </Badge>
+                      </Link>
                     )}
                   </div>
                   

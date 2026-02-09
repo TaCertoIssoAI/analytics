@@ -322,6 +322,53 @@ class FirestoreService:
             print(f"❌ Erro ao buscar usuários em lote: {e}")
             return []
 
+    def list_users(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
+        """
+        Lista usuários com paginação básica.
+        """
+        if not self.client: return {"users": [], "total": 0}
+        
+        try:
+            # Nota: Offset em Firestore é caro (lê todos docs anteriores).
+            # Para produção, usar cursor (start_after).
+            # Para este MVP com poucos usuários, stream() e slice em memória é aceitável.
+            docs = list(self.users_collection.stream())
+            total = len(docs)
+            
+            # Ordena por nome
+            users = []
+            for doc in docs:
+                data = doc.to_dict()
+                users.append(data)
+                
+            users.sort(key=lambda x: (x.get("displayName") or "").lower())
+            
+            paginated_users = users[offset : offset + limit]
+            
+            return {
+                "users": paginated_users,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        except Exception as e:
+            print(f"❌ Erro ao listar usuários: {e}")
+            return {"users": [], "total": 0}
+
+    def update_user_role(self, uid: str, role: str) -> bool:
+        """
+        Atualiza o papel (role) do usuário no Firestore.
+        """
+        if not self.client: return False
+        try:
+            doc_ref = self.users_collection.document(uid)
+            doc_ref.set({"role": role}, merge=True)
+            print(f"✅ Role do usuário {uid} atualizada para {role}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao atualizar role do usuário: {e}")
+            return False
+
     def update_analise_interaction(self, document_id: str, uid: str, action: str) -> bool:
         """
         Atualiza likes/dislikes de uma análise.
