@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, Trophy, BadgeCheck } from "lucide-react";
+import { Database, Trophy, BadgeCheck, RefreshCw } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTopReviewers, TopReviewersResponse } from "@/auth/userService";
 import { useEffect, useState, useCallback } from "react";
@@ -62,7 +62,12 @@ const Index = () => {
     return result.success && result.data ? result.data : { items: [], has_more: false };
   }, [apiUrl]);
 
-  const { data: initialAnalysesData, loading: initialLoading } = useCachedData<AnalysesResponse>(
+  const { 
+    data: initialAnalysesData, 
+    loading: initialLoading,
+    refetch: refetchAnalyses,
+    isRefetching: isRefetchingAnalyses
+  } = useCachedData<AnalysesResponse>(
     'tacerto-recent-verifications',
     fetchInitialAnalyses,
     { items: [], has_more: false }
@@ -304,11 +309,28 @@ const Index = () => {
 
       {/* Results Section */}
       <section className="container py-16">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2">Verificações Recentes</h2>
-          <p className="text-muted-foreground">
-            Explore as verificações mais recentes realizadas pela nossa IA
-          </p>
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+              Verificações Recentes
+              {isRefetchingAnalyses && (
+                 <span className="text-xs font-normal text-muted-foreground animate-pulse">Atualizando...</span>
+              )}
+            </h2>
+            <p className="text-muted-foreground">
+              Explore as verificações mais recentes realizadas pela nossa IA
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetchAnalyses()}
+            disabled={isRefetchingAnalyses}
+            className="self-start md:self-center"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefetchingAnalyses ? 'animate-spin' : ''}`} />
+            Atualizar Verificações
+          </Button>
         </div>
 
         {initialLoading && verifications.length === 0 ? (

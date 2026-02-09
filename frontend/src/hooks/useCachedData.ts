@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface UseCachedDataResult<T> {
   data: T;
   loading: boolean;
   error: Error | null;
+  refetch: () => Promise<void>;
+  isRefetching: boolean;
 }
 
 /**
@@ -32,51 +34,52 @@ export function useCachedData<T>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const isMounted = React.useRef(true);
+  const [isRefetching, setIsRefetching] = useState<boolean>(false);
 
-    const fetchData = async () => {
-      try {
-        // If we have data from cache, we're not "loading" in the blocking sense,
-        // but we are fetching in the background. 
-        // However, for the UI to know if it should show a spinner (when no cache),
-        // we keep loading true initially if no cache, or false if cache exists?
-        // Actually, the requirement is "not separate with extensive loading".
-        // So if we have cache, we show it.
-        
-        // We set loading to true only if we don't have cached data to show?
-        // Or we can expose a separate 'isRefetching' state if needed.
-        // For now, let's stick to a simple loading state that reflects "initial fetch".
-        
+  const fetchData = async (forceUpdate = false) => {
+    try {
+      if (forceUpdate) {
+        setIsRefetching(true);
+      } else {
         const cached = localStorage.getItem(key);
         if (!cached) {
             setLoading(true);
         } else {
             setLoading(false);
         }
-
-        const freshData = await fetcher();
-
-        if (isMounted) {
-          setData(freshData);
-          localStorage.setItem(key, JSON.stringify(freshData));
-          setLoading(false);
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.error(`Error fetching data for key "${key}":`, err);
-          setError(err instanceof Error ? err : new Error(String(err)));
-          setLoading(false);
-        }
       }
-    };
 
+      const freshData = await fetcher();
+
+      if (isMounted.current) {
+        setData(freshData);
+        localStorage.setItem(key, JSON.stringify(freshData));
+        setLoading(false);
+        setIsRefetching(false);
+      }
+    } catch (err) {
+      if (isMounted.current) {
+        console.error(`Error fetching data for key "${key}":`, err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        setLoading(false);
+        setIsRefetching(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    isMounted.current = true;
     fetchData();
 
     return () => {
-      isMounted = false;
+      isMounted.current = false;
     };
   }, [key, fetcher]);
 
-  return { data, loading, error };
+  const refetch = async () => {
+    await fetchData(true);
+  };
+
+  return { data, loading, error, refetch, isRefetching };
 }
