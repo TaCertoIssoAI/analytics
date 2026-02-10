@@ -3,13 +3,14 @@ import { useAuth } from "@/auth/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
 import { getAllUsers, setUserRole, createUser, deleteUser, UserProfile, CreateUserRequest } from "@/auth/userService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera } from "lucide-react";
+import ImageCropper from "@/components/ImageCropper";
 import { Input } from "@/components/ui/input";
 import {
     Dialog,
@@ -61,6 +62,7 @@ const Admin = () => {
     email: '',
     password: '',
     displayName: '',
+    photoURL: '',
     role: 'user'
   });
   const [isCreating, setIsCreating] = useState(false);
@@ -68,6 +70,11 @@ const Admin = () => {
   // Delete User State
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Image Cropper State
+  const [showCropper, setShowCropper] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -137,7 +144,7 @@ const Admin = () => {
       if (result.success) {
         toast.success("Usuário criado com sucesso!");
         setIsAddUserOpen(false);
-        setNewUser({ email: '', password: '', displayName: '', role: 'user' }); // Reset form
+        setNewUser({ email: '', password: '', displayName: '', photoURL: '', role: 'user' }); // Reset form
         fetchUsers(); // Reload list
       } else {
         toast.error(result.message || "Erro ao criar usuário");
@@ -179,6 +186,34 @@ const Admin = () => {
   };
 
 
+
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setTempImage(event.target?.result as string);
+      setShowCropper(true);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    setNewUser({ ...newUser, photoURL: croppedImage });
+    setShowCropper(false);
+    setTempImage(null);
+    toast.success("Imagem recortada com sucesso!");
+  };
 
   const filteredUsers = users.filter(user => 
     user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -260,6 +295,47 @@ const Admin = () => {
                                     required
                                 />
                                 <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Foto de Perfil (Opcional):</Label>
+                                <div className="flex items-center gap-4">
+                                  <Avatar className="h-16 w-16 border-2 border-muted">
+                                    <AvatarImage src={getValidPhotoUrl(newUser.photoURL)} />
+                                    <AvatarFallback>
+                                      {newUser.displayName ? newUser.displayName.charAt(0).toUpperCase() : <UserIcon className="h-8 w-8 text-muted-foreground" />}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  
+                                  <div className="flex flex-col gap-2">
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => fileInputRef.current?.click()}
+                                    >
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Carregar Foto
+                                    </Button>
+                                    {newUser.photoURL && (
+                                      <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-destructive hover:text-destructive h-auto p-0 px-2"
+                                        onClick={() => setNewUser({...newUser, photoURL: ''})}
+                                      >
+                                        Remover
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                  />
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="role">Função:</Label>
@@ -410,6 +486,13 @@ const Admin = () => {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <ImageCropper
+        open={showCropper}
+        imageSrc={tempImage}
+        onClose={() => setShowCropper(false)}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };

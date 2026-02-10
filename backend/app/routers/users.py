@@ -29,6 +29,7 @@ class CreateUserRequest(BaseModel):
     email: str
     password: str
     displayName: str
+    photoURL: Optional[str] = None
     role: str = "user"
 
 
@@ -143,6 +144,7 @@ async def create_user(
             "uid": user.uid,
             "email": user.email,
             "displayName": user.display_name,
+            "photoURL": user_request.photoURL, # Salva Base64 apenas no Firestore
             "createdAt": int(datetime.utcnow().timestamp() * 1000),
             "role": user_request.role
         }

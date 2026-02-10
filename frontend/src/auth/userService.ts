@@ -207,6 +207,7 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   displayName: string;
+  photoURL?: string;
   role: 'admin' | 'user';
 }
 
