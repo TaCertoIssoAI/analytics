@@ -301,9 +301,20 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar perfil de usuário: {e}")
             return None
-        except Exception as e:
             print(f"❌ Erro ao buscar perfil de usuário: {e}")
             return None
+
+    def delete_user_profile(self, uid: str) -> bool:
+        """Deleta um perfil de usuário do Firestore."""
+        if not self.client: return False
+        try:
+            doc_ref = self.users_collection.document(uid)
+            doc_ref.delete()
+            print(f"✅ Perfil de usuário {uid} deletado.")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao deletar perfil de usuário: {e}")
+            return False
 
     def get_users_by_ids(self, uids: List[str]) -> List[Dict[str, Any]]:
         """Busca múltiplos perfis de usuário."""

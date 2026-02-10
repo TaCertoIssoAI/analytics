@@ -202,3 +202,66 @@ export const setUserRole = async (token: string, uid: string, role: 'admin' | 'u
     return false;
   }
 };
+
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  displayName: string;
+  role: 'admin' | 'user';
+}
+
+/**
+ * Create a new user (Admin only)
+ */
+export const createUser = async (token: string, data: CreateUserRequest): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { 
+        success: false, 
+        message: errorData.detail || `Failed to create user: ${response.statusText}` 
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating user:", error);
+    return { success: false, message: "Network error or server unreachable" };
+  }
+};
+
+/**
+ * Delete a user (Admin only)
+ */
+export const deleteUser = async (token: string, uid: string): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/users/${uid}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { 
+          success: false, 
+          message: errorData.detail || `Failed to delete user: ${response.statusText}` 
+        };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return { success: false, message: "Network error or server unreachable" };
+  }
+};
