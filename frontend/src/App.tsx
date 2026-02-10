@@ -10,6 +10,7 @@ import NotFoundVerification from "./pages/NotFoundVerification";
 import Busca from "./pages/Busca";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import Unauthorized from "./pages/Unauthorized";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/seja-um-revisor" element={<JoinReviewers />} />
               <Route path="/metodologia" element={<Methodology />} />
               <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
+              <Route path="/nao-autorizado" element={<Unauthorized />} />
               <Route path="/admin" element={
                 <AdminRoute>
                   <Admin />

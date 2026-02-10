@@ -44,7 +44,7 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
 
   // If authenticated but not admin
   if (showAccessDenied || !isAdmin) {
-     return <Navigate to="/" replace />;
+     return <Navigate to="/nao-autorizado" replace />;
   }
 
   // User is authenticated and is admin

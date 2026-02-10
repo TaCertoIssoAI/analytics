@@ -166,6 +166,11 @@ export const getAllUsers = async (token: string, limit = 50, offset = 0): Promis
         'Authorization': `Bearer ${token}`
       }
     });
+
+    if (response.status === 403) {
+      window.location.href = "/nao-autorizado";
+      throw new Error("Access denied");
+    }
     
     if (!response.ok) {
       throw new Error(`Failed to fetch users: ${response.statusText}`);
@@ -191,6 +196,11 @@ export const setUserRole = async (token: string, uid: string, role: 'admin' | 'u
       },
       body: JSON.stringify({ role })
     });
+
+    if (response.status === 403) {
+      window.location.href = "/nao-autorizado";
+      return false;
+    }
     
     if (!response.ok) {
       throw new Error(`Failed to update user role: ${response.statusText}`);
@@ -224,6 +234,11 @@ export const createUser = async (token: string, data: CreateUserRequest): Promis
       },
       body: JSON.stringify(data)
     });
+
+    if (response.status === 403) {
+      window.location.href = "/nao-autorizado";
+      return { success: false, message: "Access denied" };
+    }
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -251,6 +266,11 @@ export const deleteUser = async (token: string, uid: string): Promise<{ success:
         'Authorization': `Bearer ${token}`
       }
     });
+
+    if (response.status === 403) {
+      window.location.href = "/nao-autorizado";
+      return { success: false, message: "Access denied" };
+    }
     
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
