@@ -25,7 +25,16 @@ import { VLibrasController } from "@/components/VLibrasController";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Fix for high_contrast flicker: Apply class before paint
+  if (typeof window !== "undefined") {
+    const savedHighContrast = localStorage.getItem("highContrast") === "true";
+    if (savedHighContrast) {
+      document.documentElement.classList.add("high-contrast");
+    }
+  }
+
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <VLibrasController />
@@ -61,5 +70,7 @@ const App = () => (
     </ThemeProvider>
   </QueryClientProvider>
 );
+
+};
 
 export default App;

@@ -6,6 +6,10 @@ import { useTheme } from 'next-themes';
 const SplashScreen: React.FC = () => {
   const { isVisible, progress } = useSplash();
   const { resolvedTheme } = useTheme();
+  
+  // Check for high contrast mode (synced with Header.tsx logic)
+  // We read directly from localStorage to ensure it's available immediately
+  const isHighContrast = typeof window !== 'undefined' ? localStorage.getItem("highContrast") === "true" : false;
 
   return (
     <AnimatePresence>
@@ -46,7 +50,7 @@ const SplashScreen: React.FC = () => {
               className="mb-8"
             >
               <motion.img
-                src={resolvedTheme === 'light' ? "/tacertoissoai-logo-whitemode.svg" : "/tacertoissoai-logo.svg"}
+                src={resolvedTheme === 'light' && !isHighContrast ? "/tacertoissoai-logo-whitemode.svg" : "/tacertoissoai-logo.svg"}
                 alt="Tá Certo Isso? Logo"
                 className="w-56 h-56 md:w-80 md:h-80 drop-shadow-2xl"
                 animate={{ 
