@@ -2,7 +2,7 @@
  * Authentication Context and Provider
  *
  * This module provides authentication state management using React Context.
- * It supports both real Firebase authentication and mock mode for testing.
+ * It supports real Firebase authentication.
  */
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
@@ -16,22 +16,13 @@ import {
   updatePassword,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { auth, googleProvider, isUsingMockAuth } from './firebaseConfig';
-import {
-  mockSignInWithEmailAndPassword,
-  mockSignInWithPopup,
-  mockSignOut,
-  mockGetIdToken,
-  mockOnAuthStateChanged,
-  getMockCurrentUser,
-  MockUser,
-} from './mockFirebase';
+import { auth, googleProvider } from './firebaseConfig';
 import { createUserProfile } from './userService';
 import SplashScreen from '@/components/SplashScreen';
 import { SplashProvider, useSplash } from '@/context/SplashContext';
 
-// User type that works for both real and mock auth
-export type AuthUser = FirebaseUser | MockUser | null;
+// User type for real auth
+export type AuthUser = FirebaseUser | null;
 
 export interface AuthContextType {
   currentUser: AuthUser;
@@ -44,7 +35,6 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
   isAuthenticated: boolean;
-  isMockMode: boolean;
   isAdmin: boolean;
 }
 
@@ -63,22 +53,16 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     addTask('auth-init');
-    let unsubscribe: (() => void) | undefined;
+    
+    // Default to finish loading if auth is not initialized (error case)
+    if (!auth) {
+        console.error("Firebase Auth not initialized");
+        setLoading(false);
+        removeTask('auth-init');
+        return;
+    }
 
-    const finishLoading = () => {
-      setLoading(false);
-      removeTask('auth-init');
-    };
-
-    if (isUsingMockAuth) {
-      // Use mock authentication
-      unsubscribe = mockOnAuthStateChanged((user) => {
-        setCurrentUser(user);
-        finishLoading();
-      });
-    } else if (auth) {
-      // Use real Firebase authentication
-      unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
         setCurrentUser(user);
         
         if (user) {
@@ -93,18 +77,11 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           setIsAdmin(false);
         }
 
-        finishLoading();
+        setLoading(false);
+        removeTask('auth-init');
       });
-    } else {
-      // Fallback: no auth available
-      finishLoading();
-    }
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe();
   }, [addTask, removeTask]);
 
   /**
@@ -112,13 +89,8 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
    */
   const signInWithEmail = async (email: string, password: string): Promise<void> => {
     try {
-      if (isUsingMockAuth) {
-        await mockSignInWithEmailAndPassword(email, password);
-      } else if (auth) {
-        await firebaseSignInWithEmail(auth, email, password);
-      } else {
-        throw new Error('No authentication service available');
-      }
+      if (!auth) throw new Error('Auth not initialized');
+      await firebaseSignInWithEmail(auth, email, password);
     } catch (error) {
       console.error('❌ Sign in failed:', error);
       throw error;
@@ -130,28 +102,23 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
    */
   const signUpWithEmail = async (email: string, password: string, name: string): Promise<void> => {
     try {
-      if (isUsingMockAuth) {
-        // For mock, sign up is same as sign in (creates user if not exists in our simple mock logic)
-        await mockSignInWithEmailAndPassword(email, password);
-      } else if (auth) {
-        const userCredential = await firebaseCreateUserWithEmail(auth, email, password);
-        
-        // Update profile with name
-        await updateProfile(userCredential.user, {
-          displayName: name
-        });
+      if (!auth) throw new Error('Auth not initialized');
+      const userCredential = await firebaseCreateUserWithEmail(auth, email, password);
+      
+      // Update profile with name
+      await updateProfile(userCredential.user, {
+        displayName: name
+      });
 
-        // Force reload user to get updated profile
-        await userCredential.user.reload();
-        const updatedUser = auth.currentUser;
+      // Force reload user to get updated profile
+      await userCredential.user.reload();
+      const updatedUser = auth.currentUser;
 
-        if (updatedUser) {
-          await createUserProfile(updatedUser);
-        }
-      } else {
-        throw new Error('No authentication service available');
+      if (updatedUser) {
+        await createUserProfile(updatedUser);
       }
     } catch (error) {
+      console.error('❌ Sign up failed:', error);
       throw error;
     }
   };
@@ -173,7 +140,7 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           await createUserProfile(updatedUser);
           setCurrentUser(updatedUser);
         }
-      } else if (!isUsingMockAuth) {
+      } else {
         throw new Error('No user logged in');
       }
     } catch (error) {
@@ -189,7 +156,7 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
     try {
       if (auth && auth.currentUser) {
         await updatePassword(auth.currentUser, password);
-      } else if (!isUsingMockAuth) {
+      } else {
         throw new Error('No user logged in');
       }
     } catch (error) {
@@ -203,12 +170,10 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
    */
   const signInWithGoogle = async (): Promise<void> => {
     try {
-      if (isUsingMockAuth) {
-        await mockSignInWithPopup();
-      } else if (auth && googleProvider) {
+      if (auth && googleProvider) {
         await firebaseSignInWithPopup(auth, googleProvider);
       } else {
-        throw new Error('No authentication service available');
+        throw new Error('Auth or Google Provider not initialized');
       }
     } catch (error) {
       console.error('❌ Google sign in failed:', error);
@@ -221,12 +186,8 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
    */
   const logout = async (): Promise<void> => {
     try {
-      if (isUsingMockAuth) {
-        await mockSignOut();
-      } else if (auth) {
+      if (auth) {
         await firebaseSignOut(auth);
-      } else {
-        throw new Error('No authentication service available');
       }
     } catch (error) {
       console.error('❌ Logout failed:', error);
@@ -243,14 +204,7 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
       if (!currentUser) {
         return null;
       }
-
-      if (isUsingMockAuth) {
-        return await mockGetIdToken(currentUser as MockUser);
-      } else if (currentUser && 'getIdToken' in currentUser) {
-        return await (currentUser as FirebaseUser).getIdToken();
-      }
-
-      return null;
+      return await currentUser.getIdToken();
     } catch (error) {
       console.error('❌ Failed to get token:', error);
       return null;
@@ -268,7 +222,6 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
     logout,
     getToken,
     isAuthenticated: !!currentUser,
-    isMockMode: isUsingMockAuth,
     isAdmin,
   };
 

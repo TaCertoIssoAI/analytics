@@ -30,19 +30,9 @@ export {
 export type { HttpMethod } from './httpClient';
 
 // Firebase configuration
-export { auth, googleProvider, firebaseApp, isUsingMockAuth } from './firebaseConfig';
+export { auth, googleProvider, firebaseApp } from './firebaseConfig';
 
-// Mock services (for testing)
-export {
-  mockSignInWithEmailAndPassword,
-  mockSignInWithPopup,
-  mockSignOut,
-  mockGetIdToken,
-  mockOnAuthStateChanged,
-  getMockCurrentUser,
-  isMockMode,
-} from './mockFirebase';
-export type { MockUser, MockUserCredential } from './mockFirebase';
+
 
 // Token utilities
 export {

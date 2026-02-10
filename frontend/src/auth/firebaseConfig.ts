@@ -8,7 +8,11 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { isMockMode } from './mockFirebase';
+// Initialize Firebase
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let googleProvider: GoogleAuthProvider;
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -20,42 +24,20 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Check if we're in mock mode
-const useMockAuth = isMockMode();
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app, 'tacertoissoai');
+  googleProvider = new GoogleAuthProvider();
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
-let googleProvider: GoogleAuthProvider | null = null;
-
-// Initialize Firebase only if not in mock mode
-if (!useMockAuth) {
-  // Validate that all required config values are present
-  const missingConfig = Object.entries(firebaseConfig)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key);
-
-  if (missingConfig.length === 0) {
-    try {
-      app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
-      db = getFirestore(app, 'tacertoissoai');
-      googleProvider = new GoogleAuthProvider();
-
-      // Optional: Configure Google provider
-      googleProvider.setCustomParameters({
-        prompt: 'select_account'
-      });
-
-    } catch (error) {
-    }
-  }
+  // Optional: Configure Google provider
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  });
+} catch (error) {
+  console.error("Error initializing Firebase:", error);
+  throw error;
 }
 
-// Export the initialized instances
-// These will be null in mock mode, which is handled by the auth service layer
 export { auth, db, googleProvider };
 export const firebaseApp = app;
-
-// Export a flag to check if we're using mock mode
-export const isUsingMockAuth = useMockAuth || !auth;

@@ -7,22 +7,14 @@
  */
 
 import { auth } from './firebaseConfig';
-import { getMockCurrentUser, mockGetIdToken } from './mockFirebase';
-import { isUsingMockAuth } from './firebaseConfig';
+
 
 /**
  * Get the current authentication token
- * Works in both real Firebase and mock modes
  */
 export const getAuthToken = async (): Promise<string | null> => {
   try {
-    if (isUsingMockAuth) {
-      const mockUser = getMockCurrentUser();
-      if (!mockUser) {
-        return null;
-      }
-      return await mockGetIdToken(mockUser);
-    } else if (auth?.currentUser) {
+    if (auth?.currentUser) {
       return await auth.currentUser.getIdToken();
     }
     return null;
