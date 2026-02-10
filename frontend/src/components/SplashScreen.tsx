@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSplash } from '@/context/SplashContext';
+import { useTheme } from 'next-themes';
 
 const SplashScreen: React.FC = () => {
   const { isVisible, progress } = useSplash();
+  const { resolvedTheme } = useTheme();
 
   return (
     <AnimatePresence>
@@ -44,7 +46,7 @@ const SplashScreen: React.FC = () => {
               className="mb-8"
             >
               <motion.img
-                src="/tacertoissoai-logo.svg"
+                src={resolvedTheme === 'light' ? "/tacertoissoai-logo-whitemode.svg" : "/tacertoissoai-logo.svg"}
                 alt="Tá Certo Isso? Logo"
                 className="w-56 h-56 md:w-80 md:h-80 drop-shadow-2xl"
                 animate={{ 
