@@ -36,6 +36,7 @@ if (!useMockAuth) {
     .map(([key]) => key);
 
   if (missingConfig.length > 0) {
+    console.error("❌ Missing Firebase configuration keys:", missingConfig);
   } else {
     try {
       app = initializeApp(firebaseConfig);
