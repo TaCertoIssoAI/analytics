@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getValidPhotoUrl } from "@/lib/utils";
 
 const Admin = () => {
   const { getToken, currentUser } = useAuth();
@@ -74,6 +75,8 @@ const Admin = () => {
       setProcessingUid(null);
     }
   };
+
+
 
   const filteredUsers = users.filter(user => 
     user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -140,7 +143,7 @@ const Admin = () => {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar>
-                                <AvatarImage src={user.photoURL} />
+                                <AvatarImage src={getValidPhotoUrl(user.photoURL)} />
                                 <AvatarFallback>
                                   {user.displayName?.charAt(0).toUpperCase() || "U"}
                                 </AvatarFallback>

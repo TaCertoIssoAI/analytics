@@ -7,6 +7,7 @@ import { getTopReviewers, TopReviewersResponse } from "@/auth/userService";
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/loadAnalyses";
+import { getValidPhotoUrl } from "@/lib/utils";
 import type { Analysis } from "@/types/analysis";
 import iptcMapping from "@/data/iptcMapping.json";
 import { useCachedData } from "@/hooks/useCachedData";
@@ -263,7 +264,7 @@ const Index = () => {
                         
                         <div className="relative">
                           <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                            <AvatarImage src={reviewer.user.photoURL} alt={reviewer.user.displayName || "User"} />
+                            <AvatarImage src={getValidPhotoUrl(reviewer.user.photoURL)} alt={reviewer.user.displayName || "User"} />
                             <AvatarFallback>{reviewer.user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           {index < 3 && (

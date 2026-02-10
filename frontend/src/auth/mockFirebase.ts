@@ -25,7 +25,7 @@ const MOCK_USERS = [
     password: 'admin123',
     uid: 'mock-uid-admin-001',
     displayName: 'Admin User',
-    photoURL: 'https://via.placeholder.com/150',
+    photoURL: null,
     providerId: 'password'
   },
   {
@@ -33,7 +33,7 @@ const MOCK_USERS = [
     password: 'test123',
     uid: 'mock-uid-test-001',
     displayName: 'Test User',
-    photoURL: 'https://via.placeholder.com/150',
+    photoURL: null,
     providerId: 'password'
   }
 ];
@@ -111,7 +111,7 @@ export const mockSignInWithPopup = async (): Promise<MockUserCredential> => {
     uid: 'mock-uid-google-001',
     email: 'googleuser@gmail.com',
     displayName: 'Google User',
-    photoURL: 'https://via.placeholder.com/150',
+    photoURL: null,
     providerId: 'google.com'
   };
 
@@ -165,6 +165,8 @@ export const mockOnAuthStateChanged = (callback: (user: MockUser | null) => void
   // Immediately call with current user
   const currentUser = getMockCurrentUser();
   setTimeout(() => callback(currentUser), 0);
+  
+  return () => {}; // Unsubscribe function
 
 };
 

@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
 import iptcMapping from "@/data/iptcMapping.json";
 import { translateContentTags } from "@/lib/translateContentTags";
+import { getValidPhotoUrl } from "@/lib/utils";
 
 const statusConfig = {
   "VERDADEIRO": {
@@ -482,7 +483,7 @@ const Verification = () => {
                         >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <Avatar className="h-10 w-10 border flex-shrink-0">
-                              <AvatarImage src={reviewer.photoURL} alt={reviewer.displayName} />
+                              <AvatarImage src={getValidPhotoUrl(reviewer.photoURL)} alt={reviewer.displayName} />
                               <AvatarFallback>{reviewer.displayName.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">

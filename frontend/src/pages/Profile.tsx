@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getValidPhotoUrl } from "@/lib/utils";
 
 const Profile = () => {
   const { currentUser, logout, isAdmin } = useAuth();
@@ -221,7 +222,7 @@ const Profile = () => {
                 <div className="flex flex-col items-center -mt-12 mb-4">
                   <div className="relative group">
                     <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                      <AvatarImage src={profile.photoURL} alt={profile.displayName || "User"} className="object-cover" />
+                      <AvatarImage src={getValidPhotoUrl(profile.photoURL)} alt={profile.displayName || "User"} className="object-cover" />
                       <AvatarFallback className="text-4xl bg-primary/10 text-primary">
                         {profile.displayName?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
