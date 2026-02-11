@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle, Eye, Info } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Input } from "@/components/ui/input";
 import {
@@ -87,6 +87,8 @@ const Admin = () => {
   const [inconsistencyLoading, setInconsistencyLoading] = useState(false);
   const [inconsistencyResult, setInconsistencyResult] = useState<any>(null);
   const [showInconsistencyDialog, setShowInconsistencyDialog] = useState(false);
+  const [selectedInconsistency, setSelectedInconsistency] = useState<any>(null); // For detailed view
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
 
 
@@ -268,6 +270,49 @@ const Admin = () => {
         toast.error("Erro ao verificar inconsistências");
     } finally {
         setInconsistencyLoading(false);
+    }
+  };
+
+  const handleShowDetails = async (docId: string, source: string) => {
+    // Determine where to fetch details from based on where it EXISTS
+    // If missing in Firestore, it exists in BigQuery, and vice versa.
+    const existsIn = source === 'Firestore' ? 'firestore' : 'bigquery'; 
+    // Wait, the 'source' in the inconsistency list is the one where it EXISTS (based on my previous code: 'source': 'BigQuery' means it is missing in Firestore)
+    
+    // Let's re-verify the earlier logic:
+    // missing_in_firestore -> source="BigQuery"
+    // missing_in_bigquery -> source="Firestore"
+    
+    // So if source is BigQuery, we fetch from BigQuery.
+    // However, we don't have a direct "get raw json" endpoint for admin yet, but we can reuse search?
+    // Actually, search returns formatted data.
+    // For now, let's use the search endpoint which returns data from both if available.
+    
+    setLoading(true); // Reuse main loading or create a new one? Let's use a local one or just reuse adminSearch capabilities?
+    // Let's just set the ID in the search box and trigger search? 
+    // No, user wants a specific modal.
+    
+    // Let's fetch the data using the search endpoint as it already retrieves data.
+    try {
+        const token = await getToken();
+        if (!token) return;
+        
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/analises/admin/search?document_id=${docId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                setSelectedInconsistency(data.data);
+                setShowDetailsDialog(true);
+            }
+        }
+    } catch (e) {
+        toast.error("Erro ao buscar detalhes");
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -475,6 +520,16 @@ const Admin = () => {
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell>{item.source}</TableCell>
+                                                        <TableCell>
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                onClick={() => handleShowDetails(item.document_id, item.source)}
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                                <span className="sr-only">Ver Detalhes</span>
+                                                            </Button>
+                                                        </TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -484,6 +539,53 @@ const Admin = () => {
                             )}
                         </div>
                     ) : null}
+                </DialogContent>
+            </Dialog>
+            
+            <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Info className="h-5 w-5" />
+                            Detalhes da Análise: {selectedInconsistency?.document_id}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Dados recuperados via busca administrativa.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {selectedInconsistency && (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className={`p-4 rounded border ${selectedInconsistency.bigquery_exists ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                                    <h4 className="font-bold mb-2 flex items-center gap-2">
+                                        {selectedInconsistency.bigquery_exists ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                        BigQuery
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground mb-2">Status no Data Warehouse</p>
+                                </div>
+                                <div className={`p-4 rounded border ${selectedInconsistency.firestore_exists ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                                    <h4 className="font-bold mb-2 flex items-center gap-2">
+                                        {selectedInconsistency.firestore_exists ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                        Firestore
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground mb-2">Status no Banco de Dados App</p>
+                                </div>
+                            </div>
+                            
+                            {selectedInconsistency.analise ? (
+                                <div className="rounded-md border bg-muted/50 p-4 overflow-auto">
+                                    <pre className="text-xs font-mono whitespace-pre-wrap max-h-[400px]">
+                                        {JSON.stringify(selectedInconsistency.analise, null, 2)}
+                                    </pre>
+                                </div>
+                            ) : (
+                                <div className="p-8 text-center text-muted-foreground border rounded-md border-dashed">
+                                    Dados brutos não disponíveis ou não encontrados.
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
