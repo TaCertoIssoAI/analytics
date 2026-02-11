@@ -548,5 +548,22 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar top reviewers de todos os tempos: {e}")
             return []
+    def get_all_ids(self) -> List[str]:
+        """
+        Retorna todos os document_ids da coleção analises.
+        Usa projection query para economia de banda.
+        """
+        if not self.client: return []
+        try:
+            # Projetar apenas o __name__ (document ID) é a forma mais barata
+            # Mas o python client do firestore abstrai isso com .select([]) ou apenas iterar references
+            # list_documents() é uma opção, mas pode ser lenta se for muitos
+            # Vamos usar stream() com select vazia (apenas ID)
+            docs = self.analises_collection.select([]).stream()
+            return [doc.id for doc in docs]
+        except Exception as e:
+            print(f"❌ Erro ao buscar todos os IDs no Firestore: {e}")
+            return []
+
 # Instância global
 firestore_service = FirestoreService()

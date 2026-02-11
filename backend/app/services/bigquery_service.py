@@ -903,6 +903,20 @@ class BigQueryService:
             traceback.print_exc()
             return None
 
+    def get_all_ids(self) -> List[str]:
+        """
+        Retorna todos os document_ids da tabela.
+        Útil para verificação de chaves e consistência.
+        """
+        try:
+            query = f"SELECT document_id FROM `{self.full_table_id}`"
+            query_job = self.client.query(query)
+            results = list(query_job.result())
+            return [row.document_id for row in results]
+        except Exception as e:
+            print(f"❌ Erro ao buscar todos os IDs no BigQuery: {e}")
+            return []
+
     def semantic_search(self, query:str):
         pass
 

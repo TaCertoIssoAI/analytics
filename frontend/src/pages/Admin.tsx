@@ -83,6 +83,11 @@ const Admin = () => {
   const [adminSearchLoading, setAdminSearchLoading] = useState(false);
   const [adminSearchError, setAdminSearchError] = useState("");
 
+  // Inconsistency Check State
+  const [inconsistencyLoading, setInconsistencyLoading] = useState(false);
+  const [inconsistencyResult, setInconsistencyResult] = useState<any>(null);
+  const [showInconsistencyDialog, setShowInconsistencyDialog] = useState(false);
+
 
 
   useEffect(() => {
@@ -233,6 +238,39 @@ const Admin = () => {
     }
   };
 
+  const handleCheckInconsistencies = async () => {
+    setInconsistencyLoading(true);
+    setInconsistencyResult(null);
+    setShowInconsistencyDialog(true);
+
+    try {
+        const token = await getToken();
+        if (!token) {
+            toast.error("Sessão expirada");
+            return;
+        }
+
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/analises/admin/inconsistencies`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error("Erro ao verificar inconsistências");
+
+        const data = await response.json();
+        if (data.success) {
+            setInconsistencyResult(data.data);
+        }
+    } catch (error) {
+        console.error("Error checking inconsistencies:", error);
+        toast.error("Erro ao verificar inconsistências");
+    } finally {
+        setInconsistencyLoading(false);
+    }
+  };
+
 
 
 
@@ -371,6 +409,84 @@ const Admin = () => {
                 )}
             </CardContent>
         </Card>
+
+        <div className="flex justify-end mb-8">
+            <Dialog open={showInconsistencyDialog} onOpenChange={setShowInconsistencyDialog}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" onClick={handleCheckInconsistencies} className="gap-2">
+                        <ShieldMinus className="h-4 w-4" />
+                        Verificar Inconsistências
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Relatório de Inconsistências</DialogTitle>
+                        <DialogDescription>
+                            Comparação entre registros do BigQuery (Analytics) e Firestore (App).
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {inconsistencyLoading ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                            <p className="text-muted-foreground">Verificando consistência dos bancos...</p>
+                        </div>
+                    ) : inconsistencyResult ? (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 rounded-lg bg-secondary/20 border text-center">
+                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Total BigQuery</h4>
+                                    <p className="text-2xl font-bold">{inconsistencyResult.stats.total_bigquery}</p>
+                                </div>
+                                <div className="p-4 rounded-lg bg-secondary/20 border text-center">
+                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Total Firestore</h4>
+                                    <p className="text-2xl font-bold">{inconsistencyResult.stats.total_firestore}</p>
+                                </div>
+                            </div>
+                            
+                            {inconsistencyResult.total_inconsistencies === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-green-600 dark:text-green-400">
+                                    <CheckCircle className="h-12 w-12 mb-4" />
+                                    <h3 className="text-lg font-semibold">Tudo Certo!</h3>
+                                    <p className="text-muted-foreground">Nenhuma inconsistência encontrada entre os bancos.</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <h3 className="text-md font-semibold mb-4 flex items-center gap-2 text-destructive">
+                                        <XCircle className="h-5 w-5" />
+                                        {inconsistencyResult.total_inconsistencies} Inconsistências Encontradas
+                                    </h3>
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Document ID</TableHead>
+                                                    <TableHead>Problema</TableHead>
+                                                    <TableHead>Origem Existente</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {inconsistencyResult.inconsistencies.map((item: any) => (
+                                                    <TableRow key={item.document_id}>
+                                                        <TableCell className="font-mono text-xs">{item.document_id}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                                                                {item.issue === 'Missing in Firestore' ? 'Falta no Firestore' : 'Falta no BigQuery'}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>{item.source}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+                </DialogContent>
+            </Dialog>
+        </div>
 
         <Card>
           <CardHeader>

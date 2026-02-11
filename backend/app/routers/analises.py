@@ -549,6 +549,71 @@ async def admin_search_analise(document_id: str = Query(..., description="ID do 
 
 
 @router.get(
+    "/admin/inconsistencies",
+    summary="Verificar inconsistências (Admin)",
+    description="Identifica análises que existem em apenas um dos bancos (BigQuery ou Firestore)"
+)
+async def check_inconsistencies():
+    """
+    Endpoint administrativo para verificar consistência entre bancos.
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"🔍 [Admin] Verificando inconsistências...")
+        print(f"{'='*60}")
+
+        # Busca todos os IDs
+        bq_ids = set(bigquery_service.get_all_ids())
+        fs_ids = set(firestore_service.get_all_ids())
+
+        print(f"📊 Total BigQuery: {len(bq_ids)}")
+        print(f"🔥 Total Firestore: {len(fs_ids)}")
+
+        # Calcula diferenças
+        missing_in_firestore = list(bq_ids - fs_ids)
+        missing_in_bigquery = list(fs_ids - bq_ids)
+
+        inconsistencies = []
+
+        # Formata resposta
+        for doc_id in missing_in_firestore:
+            inconsistencies.append({
+                "document_id": doc_id,
+                "issue": "Missing in Firestore",
+                "source": "BigQuery"
+            })
+        
+        for doc_id in missing_in_bigquery:
+            inconsistencies.append({
+                "document_id": doc_id,
+                "issue": "Missing in BigQuery",
+                "source": "Firestore"
+            })
+
+        print(f"⚠️  Encontradas {len(inconsistencies)} inconsistências")
+        print(f"{'='*60}\n")
+        
+        return {
+            "success": True,
+            "data": {
+                "total_inconsistencies": len(inconsistencies),
+                "inconsistencies": inconsistencies,
+                "stats": {
+                    "total_bigquery": len(bq_ids),
+                    "total_firestore": len(fs_ids)
+                }
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ Erro na verificação de inconsistências: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
+@router.get(
     "/{document_id}/recommendations",
     summary="Buscar verificações similares",
     description="""
