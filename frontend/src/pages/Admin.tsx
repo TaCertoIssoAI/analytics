@@ -90,6 +90,7 @@ const Admin = () => {
   const [showInconsistencyDialog, setShowInconsistencyDialog] = useState(false);
   const [selectedInconsistency, setSelectedInconsistency] = useState<any>(null); // For detailed view
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showBufferInfoDialog, setShowBufferInfoDialog] = useState(false);
 
 
 
@@ -624,24 +625,41 @@ const Admin = () => {
                                                 <TableCell>{item.source}</TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-1">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="sm"
-                                                            onClick={() => handleShowDetails(item.document_id, item.source)}
-                                                            title="Ver Detalhes"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                            <span className="sr-only">Ver Detalhes</span>
-                                                        </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="sm"
-                                                            title="Apagar Inconsistência"
-                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                            <span className="sr-only">Apagar</span>
-                                                        </Button>
+                                                        {!item.document_id.includes("TEST") && (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                onClick={() => handleShowDetails(item.document_id, item.source)}
+                                                                title="Ver Detalhes"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                                <span className="sr-only">Ver Detalhes</span>
+                                                            </Button>
+                                                        )}
+                                                        
+                                                        {item.document_id.includes("TEST") ? (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                className="text-blue-500 hover:text-blue-500 hover:bg-blue-500/10"
+                                                                onClick={() => setShowBufferInfoDialog(true)}
+                                                            >
+                                                                <Info className="h-4 w-4" />
+                                                                <span className="sr-only">Informação</span>
+                                                            </Button>
+                                                        ) : (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                onClick={() => handleDeleteAnalysis(item.document_id, 'inconsistency')}
+                                                                disabled={isDeleting}
+                                                                title="Apagar Inconsistência"
+                                                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                                <span className="sr-only">Apagar</span>
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -981,6 +999,37 @@ const Admin = () => {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+            <Dialog open={showBufferInfoDialog} onOpenChange={setShowBufferInfoDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-blue-500">
+                            <Info className="h-5 w-5" />
+                            Aguardando Buffer do BigQuery
+                        </DialogTitle>
+                        <DialogDescription className="space-y-4 pt-4">
+                            <p>
+                                Quando dados são enviados para o BigQuery via streaming (ao invés de carregamento em lote), eles ficam temporariamente em uma "memória de chegada" chamada <strong>Streaming Buffer</strong>.
+                            </p>
+                            <p>
+                                Enquanto estão no Buffer, os dados ficam disponíveis para consulta (SELECT) quase imediatamente, mas o BigQuery <strong>bloqueia operações de alteração (UPDATE ou DELETE)</strong> nesses dados para garantir a alta performance da ingestão.
+                            </p>
+                            <div className="bg-secondary/50 p-4 rounded-md border-l-4 border-blue-500">
+                                <h4 className="font-semibold text-sm mb-1">Como resolver?</h4>
+                                <p className="text-sm text-muted-foreground">
+                                    O BigQuery move os dados do buffer para o armazenamento definitivo automaticamente entre <strong>30 a 90 minutos</strong>.
+                                </p>
+                                <p className="text-sm font-medium mt-2">
+                                    Recomendação: Aguarde aproximadamente 1 hora e tente apagar novamente.
+                                </p>
+                            </div>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={() => setShowBufferInfoDialog(false)}>Entendi</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
       
       <ImageCropper
         open={showCropper}
