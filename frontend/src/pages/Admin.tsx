@@ -317,8 +317,12 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteInconsistency = async (docId: string) => {
-      if (!confirm(`Tem certeza que deseja apagar a análise ${docId}? Me certifiquei que ela realmente é uma inconsistência.`)) return;
+  const handleDeleteAnalysis = async (docId: string, context: 'inconsistency' | 'search' = 'search') => {
+      const confirmMessage = context === 'inconsistency' 
+        ? `Tem certeza que deseja apagar a análise ${docId}? Me certifiquei que ela realmente é uma inconsistência.`
+        : `Tem certeza que deseja apagar a análise ${docId}? Esta ação não pode ser desfeita.`;
+
+      if (!confirm(confirmMessage)) return;
 
       setIsDeleting(true);
       try {
@@ -333,8 +337,13 @@ const Admin = () => {
 
           if (response.ok) {
               toast.success("Análise removida com sucesso");
-              // Refresh details
-              handleCheckInconsistencies();
+              
+              if (context === 'inconsistency') {
+                  handleCheckInconsistencies();
+              } else {
+                  setAdminSearchResult(null);
+                  setAdminSearchTerm("");
+              }
           } else {
               throw new Error("Erro ao deletar");
           }
@@ -486,17 +495,28 @@ const Admin = () => {
                                             <FileText className="h-4 w-4" />
                                             Dados da Análise
                                         </h3>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm"
-                                            onClick={() => {
-                                                setSelectedInconsistency(adminSearchResult);
-                                                setShowDetailsDialog(true);
-                                            }}
-                                            title="Ver JSON da Análise"
-                                        >
-                                            <Info className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSelectedInconsistency(adminSearchResult);
+                                                    setShowDetailsDialog(true);
+                                                }}
+                                                title="Ver JSON da Análise"
+                                            >
+                                                <Info className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                                variant="destructive" 
+                                                size="sm"
+                                                onClick={() => handleDeleteAnalysis(adminSearchResult.document_id, 'search')}
+                                                disabled={isDeleting}
+                                                title="Apagar Análise"
+                                            >
+                                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                            </Button>
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div>
@@ -616,8 +636,6 @@ const Admin = () => {
                                                         <Button 
                                                             variant="ghost" 
                                                             size="sm"
-                                                            onClick={() => handleDeleteInconsistency(item.document_id)}
-                                                            disabled={isDeleting}
                                                             title="Apagar Inconsistência"
                                                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                         >
