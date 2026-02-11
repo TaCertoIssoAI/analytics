@@ -527,8 +527,9 @@ async def admin_search_analise(document_id: str = Query(..., description="ID do 
         fs_data = firestore_service.get_analise(document_id)
         fs_exists = fs_data is not None
 
-        # Dados consolidados (prioriza BigQuery se existir, senão Firestore)
-        analise_data = bq_data if bq_exists else fs_data
+        # Dados consolidadados (mantendo retrocompatibilidade no campo 'analise' por enquanto, ou apenas removendo uso dele no front)
+        # Vamos manter 'analise' como um fallback/consolidado, mas adicionar os campos específicos.
+        analise_consolidada = bq_data if bq_exists else fs_data
         
         return {
             "success": True,
@@ -536,7 +537,9 @@ async def admin_search_analise(document_id: str = Query(..., description="ID do 
                 "document_id": document_id,
                 "bigquery_exists": bq_exists,
                 "firestore_exists": fs_exists,
-                "analise": analise_data
+                "analise": analise_consolidada, # Depreciado, mas mantido por segurança
+                "bigquery_data": bq_data,
+                "firestore_data": fs_data
             }
         }
 

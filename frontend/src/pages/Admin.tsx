@@ -47,6 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getValidPhotoUrl } from "@/lib/utils";
 
 const Admin = () => {
@@ -424,10 +425,23 @@ const Admin = () => {
                             
                             {adminSearchResult.analise && (
                                 <div className="space-y-2 border-l pl-6">
-                                    <h3 className="font-semibold flex items-center gap-2 mb-4">
-                                        <FileText className="h-4 w-4" />
-                                        Dados da Análise
-                                    </h3>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-semibold flex items-center gap-2">
+                                            <FileText className="h-4 w-4" />
+                                            Dados da Análise
+                                        </h3>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            onClick={() => {
+                                                setSelectedInconsistency(adminSearchResult);
+                                                setShowDetailsDialog(true);
+                                            }}
+                                            title="Ver JSON da Análise"
+                                        >
+                                            <Info className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div>
                                             <span className="text-muted-foreground">Data:</span>
@@ -555,36 +569,62 @@ const Admin = () => {
                     </DialogHeader>
                     
                     {selectedInconsistency && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className={`p-4 rounded border ${selectedInconsistency.bigquery_exists ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                                    <h4 className="font-bold mb-2 flex items-center gap-2">
-                                        {selectedInconsistency.bigquery_exists ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                                        BigQuery
-                                    </h4>
-                                    <p className="text-xs text-muted-foreground mb-2">Status no Data Warehouse</p>
+                        <Tabs defaultValue={selectedInconsistency.bigquery_exists ? "bigquery" : "firestore"} className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="bigquery" disabled={!selectedInconsistency.bigquery_exists}>
+                                    BigQuery {selectedInconsistency.bigquery_exists ? '✅' : '❌'}
+                                </TabsTrigger>
+                                <TabsTrigger value="firestore" disabled={!selectedInconsistency.firestore_exists}>
+                                    Firestore {selectedInconsistency.firestore_exists ? '✅' : '❌'}
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="bigquery">
+                                <div className="space-y-4 mt-4">
+                                    <div className={`p-4 rounded border ${selectedInconsistency.bigquery_exists ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                                        <h4 className="font-bold mb-2 flex items-center gap-2">
+                                            {selectedInconsistency.bigquery_exists ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                            Dados do BigQuery
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground">Fonte: Data Warehouse (Analytics)</p>
+                                    </div>
+                                    
+                                    {selectedInconsistency.bigquery_data ? (
+                                        <div className="rounded-md border bg-muted/50 p-4 overflow-auto">
+                                            <pre className="text-xs font-mono whitespace-pre-wrap max-h-[400px]">
+                                                {JSON.stringify(selectedInconsistency.bigquery_data, null, 2)}
+                                            </pre>
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center text-muted-foreground border rounded-md border-dashed">
+                                            Dados do BigQuery não disponíveis.
+                                        </div>
+                                    )}
                                 </div>
-                                <div className={`p-4 rounded border ${selectedInconsistency.firestore_exists ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                                    <h4 className="font-bold mb-2 flex items-center gap-2">
-                                        {selectedInconsistency.firestore_exists ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                                        Firestore
-                                    </h4>
-                                    <p className="text-xs text-muted-foreground mb-2">Status no Banco de Dados App</p>
+                            </TabsContent>
+                            <TabsContent value="firestore">
+                                <div className="space-y-4 mt-4">
+                                    <div className={`p-4 rounded border ${selectedInconsistency.firestore_exists ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                                        <h4 className="font-bold mb-2 flex items-center gap-2">
+                                            {selectedInconsistency.firestore_exists ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                            Dados do Firestore
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground">Fonte: Banco de Dados da Aplicação (Tempo Real)</p>
+                                    </div>
+
+                                    {selectedInconsistency.firestore_data ? (
+                                        <div className="rounded-md border bg-muted/50 p-4 overflow-auto">
+                                            <pre className="text-xs font-mono whitespace-pre-wrap max-h-[400px]">
+                                                {JSON.stringify(selectedInconsistency.firestore_data, null, 2)}
+                                            </pre>
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center text-muted-foreground border rounded-md border-dashed">
+                                            Dados do Firestore não disponíveis.
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                            
-                            {selectedInconsistency.analise ? (
-                                <div className="rounded-md border bg-muted/50 p-4 overflow-auto">
-                                    <pre className="text-xs font-mono whitespace-pre-wrap max-h-[400px]">
-                                        {JSON.stringify(selectedInconsistency.analise, null, 2)}
-                                    </pre>
-                                </div>
-                            ) : (
-                                <div className="p-8 text-center text-muted-foreground border rounded-md border-dashed">
-                                    Dados brutos não disponíveis ou não encontrados.
-                                </div>
-                            )}
-                        </div>
+                            </TabsContent>
+                        </Tabs>
                     )}
                 </DialogContent>
             </Dialog>
