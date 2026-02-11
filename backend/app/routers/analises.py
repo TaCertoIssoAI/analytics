@@ -616,6 +616,109 @@ async def check_inconsistencies():
         )
 
 
+@router.delete(
+    "/admin/inconsistencies",
+    summary="Resolver inconsistências (Admin)",
+    description="Remove automaticamente todas as análises que não estão em ambos os bancos"
+)
+async def resolve_inconsistencies():
+    """
+    Endpoint administrativo para limpar inconsistências.
+    Apaga registros que existem em apenas um dos bancos.
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"🧹 [Admin] Resolvendo inconsistências...")
+        print(f"{'='*60}")
+
+        # Busca todos os IDs
+        bq_ids = set(bigquery_service.get_all_ids())
+        fs_ids = set(firestore_service.get_all_ids())
+
+        # Identifica inconsistências
+        missing_in_firestore = list(bq_ids - fs_ids) # Existem no BQ, mas não no FS -> Apagar do BQ
+        missing_in_bigquery = list(fs_ids - bq_ids)  # Existem no FS, mas não no BQ -> Apagar do FS
+
+        deleted_bq = 0
+        deleted_fs = 0
+
+        # Apaga do BigQuery (os que faltam no Firestore)
+        for doc_id in missing_in_firestore:
+           if bigquery_service.delete_analise(doc_id):
+               deleted_bq += 1
+
+        # Apaga do Firestore (os que faltam no BigQuery)
+        for doc_id in missing_in_bigquery:
+            if firestore_service.delete_analise(doc_id):
+                deleted_fs += 1
+
+        print(f"✅ Removidos do BigQuery: {deleted_bq}")
+        print(f"✅ Removidos do Firestore: {deleted_fs}")
+        print(f"{'='*60}\n")
+        
+        return {
+            "success": True,
+            "data": {
+                "deleted_from_bigquery": deleted_bq,
+                "deleted_from_firestore": deleted_fs,
+                "total_resolved": deleted_bq + deleted_fs
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ Erro ao resolver inconsistências: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
+@router.delete(
+    "/{document_id}",
+    summary="Deletar análise",
+    description="Remove uma análise do BigQuery e do Firestore"
+)
+async def delete_analise(document_id: str):
+    """
+    Endpoint para deletar uma análise.
+    Tenta remover de ambos os bancos.
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"🗑️ Deletando análise: {document_id}")
+        print(f"{'='*60}")
+
+        bq_success = bigquery_service.delete_analise(document_id)
+        fs_success = firestore_service.delete_analise(document_id)
+
+        if not bq_success and not fs_success:
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Análise {document_id} não encontrada ou erro ao deletar"
+            )
+
+        print(f"✅ Análise deletada (BQ: {bq_success}, FS: {fs_success})")
+        print(f"{'='*60}\n")
+
+        return {
+            "success": True,
+            "message": "Análise removida com sucesso",
+            "details": {
+                "bigquery_deleted": bq_success,
+                "firestore_deleted": fs_success
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao deletar análise: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
 @router.get(
     "/{document_id}/recommendations",
     summary="Buscar verificações similares",

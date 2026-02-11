@@ -193,6 +193,40 @@ class BigQueryService:
             print(f"❌ Erro ao verificar existência de {document_id}: {e}")
             return False
 
+    def delete_analise(self, document_id: str) -> bool:
+        """
+        Remove uma análise do BigQuery.
+        Necessário para resolver inconsistências ou limpeza.
+
+        Args:
+            document_id: ID do documento a ser removido
+
+        Returns:
+            True se sucesso, False se erro
+        """
+        try:
+            # BigQuery DELETE DML
+            query = f"""
+                DELETE FROM `{self.full_table_id}`
+                WHERE document_id = @document_id
+            """
+
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter("document_id", "STRING", document_id)
+                ]
+            )
+
+            query_job = self.client.query(query, job_config=job_config)
+            query_job.result() # Wait for job to complete
+
+            print(f"✅ Análise {document_id} removida do BigQuery com sucesso!")
+            return True
+
+        except Exception as e:
+            print(f"❌ Erro ao deletar do BigQuery: {e}")
+            return False
+
     def get_stats(self) -> Optional[Dict[str, Any]]:
         """
         Retorna estatísticas gerais das análises.

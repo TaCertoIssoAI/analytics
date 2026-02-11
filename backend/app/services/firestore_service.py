@@ -63,6 +63,26 @@ class FirestoreService:
             print(f"❌ Erro ao salvar no Firestore: {e}")
             return False
 
+    def delete_analise(self, document_id: str) -> bool:
+        """
+        Remove uma análise do Firestore.
+        
+        Args:
+            document_id: ID do documento a ser removido
+            
+        Returns:
+            True se sucesso, False se erro
+        """
+        if not self.client: return False
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            doc_ref.delete()
+            print(f"✅ Análise {document_id} removida do Firestore com sucesso!")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao deletar do Firestore: {e}")
+            return False
+
     def list_analises(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
         """
         Lista análises do Firestore com paginação e filtros básicos.

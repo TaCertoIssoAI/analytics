@@ -317,6 +317,62 @@ const Admin = () => {
     }
   };
 
+  const handleDeleteInconsistency = async (docId: string) => {
+      if (!confirm(`Tem certeza que deseja apagar a análise ${docId}? Me certifiquei que ela realmente é uma inconsistência.`)) return;
+
+      setIsDeleting(true);
+      try {
+          const token = await getToken();
+          if (!token) return;
+
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+          const response = await fetch(`${apiUrl}/analises/${docId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (response.ok) {
+              toast.success("Análise removida com sucesso");
+              // Refresh details
+              handleCheckInconsistencies();
+          } else {
+              throw new Error("Erro ao deletar");
+          }
+      } catch (e) {
+          toast.error("Erro ao deletar análise");
+      } finally {
+          setIsDeleting(false);
+      }
+  };
+
+  const handleResolveAllInconsistencies = async () => {
+      if (!confirm(`Tem certeza que deseja apagar TODAS as ${inconsistencyResult?.inconsistencies?.length} inconsistências? Isso removerá os registros excedentes de onde eles existirem.`)) return;
+
+      setIsDeleting(true);
+      try {
+          const token = await getToken();
+          if (!token) return;
+
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+          const response = await fetch(`${apiUrl}/analises/admin/inconsistencies`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (response.ok) {
+              const data = await response.json();
+              toast.success(`Resolvido! Removidos: ${data.data.total_resolved}`);
+              handleCheckInconsistencies();
+          } else {
+              throw new Error("Erro ao resolver inconsistências");
+          }
+      } catch (e) {
+          toast.error("Erro ao resolver inconsistências");
+      } finally {
+          setIsDeleting(false);
+      }
+  };
+
 
 
 
@@ -503,54 +559,80 @@ const Admin = () => {
                                 </div>
                             </div>
                             
-                            {inconsistencyResult.total_inconsistencies === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-8 text-green-600 dark:text-green-400">
-                                    <CheckCircle className="h-12 w-12 mb-4" />
-                                    <h3 className="text-lg font-semibold">Tudo Certo!</h3>
-                                    <p className="text-muted-foreground">Nenhuma inconsistência encontrada entre os bancos.</p>
-                                </div>
-                            ) : (
-                                <div>
-                                    <h3 className="text-md font-semibold mb-4 flex items-center gap-2 text-destructive">
-                                        <XCircle className="h-5 w-5" />
-                                        {inconsistencyResult.total_inconsistencies} Inconsistências Encontradas
-                                    </h3>
-                                    <div className="rounded-md border">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Document ID</TableHead>
-                                                    <TableHead>Problema</TableHead>
-                                                    <TableHead>Origem Existente</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {inconsistencyResult.inconsistencies.map((item: any) => (
-                                                    <TableRow key={item.document_id}>
-                                                        <TableCell className="font-mono text-xs">{item.document_id}</TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                                                                {item.issue === 'Missing in Firestore' ? 'Falta no Firestore' : 'Falta no BigQuery'}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>{item.source}</TableCell>
-                                                        <TableCell>
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm"
-                                                                onClick={() => handleShowDetails(item.document_id, item.source)}
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                                <span className="sr-only">Ver Detalhes</span>
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                </div>
-                            )}
+                    {inconsistencyResult.total_inconsistencies === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-green-600 dark:text-green-400">
+                            <CheckCircle className="h-12 w-12 mb-4" />
+                            <h3 className="text-lg font-semibold">Tudo Certo!</h3>
+                            <p className="text-muted-foreground">Nenhuma inconsistência encontrada entre os bancos.</p>
+                        </div>
+                    ) : (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-md font-semibold flex items-center gap-2 text-destructive">
+                                    <XCircle className="h-5 w-5" />
+                                    {inconsistencyResult.total_inconsistencies} Inconsistências Encontradas
+                                </h3>
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm" 
+                                    onClick={handleResolveAllInconsistencies}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                    Resolver Todas
+                                </Button>
+                            </div>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Document ID</TableHead>
+                                            <TableHead>Problema</TableHead>
+                                            <TableHead>Origem Existente</TableHead>
+                                            <TableHead className="text-right">Ações</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {inconsistencyResult.inconsistencies.map((item: any) => (
+                                            <TableRow key={item.document_id}>
+                                                <TableCell className="font-mono text-xs">{item.document_id}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                                                        {item.issue === 'Missing in Firestore' ? 'Falta no Firestore' : 'Falta no BigQuery'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>{item.source}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex justify-end gap-1">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm"
+                                                            onClick={() => handleShowDetails(item.document_id, item.source)}
+                                                            title="Ver Detalhes"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                            <span className="sr-only">Ver Detalhes</span>
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm"
+                                                            onClick={() => handleDeleteInconsistency(item.document_id)}
+                                                            disabled={isDeleting}
+                                                            title="Apagar Inconsistência"
+                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                            <span className="sr-only">Apagar</span>
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    )}
                         </div>
                     ) : null}
                 </DialogContent>
