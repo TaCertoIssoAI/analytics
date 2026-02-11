@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Input } from "@/components/ui/input";
 import {
@@ -74,7 +74,16 @@ const Admin = () => {
   // Image Cropper State
   const [showCropper, setShowCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Admin Search State
+  const [adminSearchTerm, setAdminSearchTerm] = useState("");
+  const [adminSearchResult, setAdminSearchResult] = useState<any>(null);
+  const [adminSearchLoading, setAdminSearchLoading] = useState(false);
+  const [adminSearchError, setAdminSearchError] = useState("");
+
+
 
   useEffect(() => {
     fetchUsers();
@@ -185,6 +194,47 @@ const Admin = () => {
     }
   };
 
+  const handleAdminSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminSearchTerm.trim()) return;
+
+    setAdminSearchLoading(true);
+    setAdminSearchResult(null);
+    setAdminSearchError("");
+
+    try {
+        const token = await getToken();
+        if (!token) {
+            toast.error("Sessão expirada");
+            return;
+        }
+
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/analises/admin/search?document_id=${adminSearchTerm}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error("Erro ao buscar análise");
+
+        const data = await response.json();
+        if (data.success) {
+            setAdminSearchResult(data.data);
+            if (!data.data.bigquery_exists && !data.data.firestore_exists) {
+                setAdminSearchError("Análise não encontrada em nenhuma base.");
+            }
+        }
+    } catch (error) {
+        console.error("Error searching analysis:", error);
+        setAdminSearchError("Erro ao buscar análise. Verifique o ID.");
+    } finally {
+        setAdminSearchLoading(false);
+    }
+  };
+
+
+
 
 
 
@@ -234,6 +284,93 @@ const Admin = () => {
             Total de usuários: {users.length}
           </div>
         </div>
+
+        <Card className="mb-8">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Buscar Análise por ID
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleAdminSearch} className="flex gap-4 mb-4">
+                    <Input 
+                        placeholder="Cole o ID do documento aqui (ex: 556fb9c4-645d-4f81-a75d-357422dc081e)"
+                        value={adminSearchTerm}
+                        onChange={(e) => setAdminSearchTerm(e.target.value)}
+                        className="max-w-xl"
+                    />
+                    <Button type="submit" disabled={adminSearchLoading}>
+                        {adminSearchLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                        Buscar
+                    </Button>
+                </form>
+
+                {adminSearchError && (
+                    <div className="p-4 bg-destructive/10 text-destructive rounded-md mb-4 flex items-center gap-2">
+                        <XCircle className="h-5 w-5" />
+                        {adminSearchError}
+                    </div>
+                )}
+
+                {adminSearchResult && (
+                    <div className="border rounded-md p-4 bg-card">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Document ID</h3>
+                                    <p className="font-mono text-lg">{adminSearchResult.document_id}</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className={`flex items-center gap-2 p-3 rounded-md border ${adminSearchResult.bigquery_exists ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400' : 'bg-destructive/10 border-destructive/20 text-destructive'}`}>
+                                        {adminSearchResult.bigquery_exists ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                                        <div className="flex flex-col">
+                                            <span className="font-bold">BigQuery</span>
+                                            <span className="text-xs">Analytics & Histórico</span>
+                                        </div>
+                                    </div>
+                                    <div className={`flex items-center gap-2 p-3 rounded-md border ${adminSearchResult.firestore_exists ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400' : 'bg-destructive/10 border-destructive/20 text-destructive'}`}>
+                                        {adminSearchResult.firestore_exists ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                                        <div className="flex flex-col">
+                                            <span className="font-bold">Firestore</span>
+                                            <span className="text-xs">App & Tempo Real</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {adminSearchResult.analise && (
+                                <div className="space-y-2 border-l pl-6">
+                                    <h3 className="font-semibold flex items-center gap-2 mb-4">
+                                        <FileText className="h-4 w-4" />
+                                        Dados da Análise
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="text-muted-foreground">Data:</span>
+                                            <p>{adminSearchResult.analise.processed_at ? format(new Date(adminSearchResult.analise.processed_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-'}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground">Veredito:</span>
+                                            <p className="font-bold">{adminSearchResult.analise.overall_verdict}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <span className="text-muted-foreground">Título/Resumo:</span>
+                                            <p className="line-clamp-2">{adminSearchResult.analise.analysis_title || adminSearchResult.analise.user_message_text}</p>
+                                        </div>
+                                    </div>
+                                    <Button variant="outline" size="sm" className="mt-4" asChild>
+                                        <a href={`/verificacao/${adminSearchResult.document_id}`} target="_blank" rel="noopener noreferrer">
+                                            Ver Página Pública
+                                        </a>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

@@ -506,6 +506,49 @@ async def get_analise(document_id: str) -> AnaliseGetResponse:
 
 
 @router.get(
+    "/admin/search",
+    summary="Buscar análise (Admin)",
+    description="Busca análise por ID no BigQuery e Firestore para validação cruzada"
+)
+async def admin_search_analise(document_id: str = Query(..., description="ID do documento")):
+    """
+    Endpoint administrativo para buscar uma análise em ambas as fontes de dados.
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"🔍 [Admin] Buscando análise: {document_id}")
+        print(f"{'='*60}")
+
+        # Busca no BigQuery
+        bq_data = bigquery_service.get_analise(document_id)
+        bq_exists = bq_data is not None
+
+        # Busca no Firestore
+        fs_data = firestore_service.get_analise(document_id)
+        fs_exists = fs_data is not None
+
+        # Dados consolidados (prioriza BigQuery se existir, senão Firestore)
+        analise_data = bq_data if bq_exists else fs_data
+        
+        return {
+            "success": True,
+            "data": {
+                "document_id": document_id,
+                "bigquery_exists": bq_exists,
+                "firestore_exists": fs_exists,
+                "analise": analise_data
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ Erro na busca administrativa: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
+@router.get(
     "/{document_id}/recommendations",
     summary="Buscar verificações similares",
     description="""
