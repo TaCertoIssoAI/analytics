@@ -71,9 +71,10 @@ class BigQueryService:
                 row_data["processed_at"] = row_data["processed_at"].isoformat()
 
             final_message_text = row_data.get('full_combined_text')
-            if final_message_text is not None:
+            if final_message_text:
                 embeddings = self._embed_text(final_message_text)
-                row_data['embedding'] = embeddings
+                if embeddings:
+                    row_data['embedding'] = embeddings
 
             # Insere no BigQuery
             errors = self.client.insert_rows_json(
@@ -429,7 +430,7 @@ class BigQueryService:
                 query = f"""
                     SELECT base.*, distance
                     FROM VECTOR_SEARCH(
-                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL),
+                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL AND ARRAY_LENGTH(embedding) > 0),
                         'embedding',
                         (SELECT @query_emb AS prompt_embedding),
                         top_k => {top_k},
@@ -531,7 +532,10 @@ class BigQueryService:
             return response
 
         except Exception as e:
-            print(f"❌ Erro ao listar análises: {e}")
+            embedding_info = ""
+            if has_search:
+                embedding_info = f" | query_embedding_dim={len(query_embedding)}, expected_table_dim=3072"
+            print(f"❌ Erro ao listar análises: {type(e).__name__}: {e}{embedding_info}")
             return None
 
     def get_analytics_dashboard(self, filters: Dict[str, Any] = None, k_results:int = 200) -> Optional[Dict[str, Any]]:
@@ -554,7 +558,7 @@ class BigQueryService:
                     (
                         SELECT base.*
                         FROM VECTOR_SEARCH(
-                            (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL),
+                            (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL AND ARRAY_LENGTH(embedding) > 0),
                             'embedding',
                             (SELECT @query_emb AS prompt_embedding),
                             top_k => {k_results},
@@ -679,7 +683,10 @@ class BigQueryService:
             return dashboard_data
 
         except Exception as e:
-            print(f"❌ Erro ao gerar dashboard analytics: {e}")
+            embedding_info = ""
+            if has_search:
+                embedding_info = f" | query_embedding_dim={len(query_embedding)}, expected_table_dim=3072"
+            print(f"❌ Erro ao gerar dashboard analytics: {type(e).__name__}: {e}{embedding_info}")
             return None
 
     def list_sources(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
