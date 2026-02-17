@@ -21,7 +21,7 @@ class FirestoreService:
         # Se for o banco default, não precisa passar o argumento database.
         try:
             self.client = firestore.Client(project=settings.PROJECT_ID, database='tacertoissoai')
-            self.analises_collection = self.client.collection("analises")
+            self.analises_collection = self.client.collection(settings.FIRESTORE_ANALISES)
             self.users_collection = self.client.collection("users")
             print(f"🔥 Firestore client inicializado (database='tacertoissoai')")
         except Exception as e:

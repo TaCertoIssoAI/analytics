@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     PROJECT_ID: str = "sitegrupysanca"
     DATASET_ID: str = "analytics_whatsapp_br"
     TABLE_ID: str = os.getenv("BIGQUERY_TABLE")
+    FIRESTORE_ANALISES: str = os.getenv("FIRESTORE_ANALISES", "analises")
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
     # OpenAI

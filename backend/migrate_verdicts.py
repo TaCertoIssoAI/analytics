@@ -23,7 +23,7 @@ def migrate_verdicts():
     try:
         # Initialize Firestore client
         db = firestore.Client(project=project_id, database='tacertoissoai')
-        collection_ref = db.collection("analises")
+        collection_ref = db.collection(os.getenv("FIRESTORE_ANALISES", "analises"))
         
         # Get all documents
         docs = collection_ref.stream()
