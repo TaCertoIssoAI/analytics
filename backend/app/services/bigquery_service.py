@@ -714,7 +714,7 @@ class BigQueryService:
                 filtered_analyses_query = f"""
                     SELECT base.*
                     FROM VECTOR_SEARCH(
-                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL),
+                        (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL AND ARRAY_LENGTH(embedding) > 0),
                         'embedding',
                         (SELECT @query_emb AS prompt_embedding),
                         top_k => {top_k},
