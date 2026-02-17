@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from typing import Optional
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -9,7 +13,7 @@ class Settings(BaseSettings):
     # Google Cloud
     PROJECT_ID: str = "sitegrupysanca"
     DATASET_ID: str = "analytics_whatsapp_br"
-    TABLE_ID: str = "analises_complexas_br"
+    TABLE_ID: str = os.getenv("BIGQUERY_TABLE")
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
     # OpenAI

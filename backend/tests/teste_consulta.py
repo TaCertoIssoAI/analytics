@@ -10,7 +10,7 @@ load_dotenv()
 # Configurações
 PROJECT_ID = "sitegrupysanca"
 DATASET_ID = "analytics_whatsapp_br"
-TABLE_ID = "analises_complexas_br"
+TABLE_ID = os.getenv("BIGQUERY_TABLE")
 
 def json_serial(obj):
     """Função auxiliar para permitir que o JSON imprima datas (datetime)"""
