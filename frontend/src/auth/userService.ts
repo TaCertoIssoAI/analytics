@@ -100,6 +100,8 @@ export interface UserInteraction {
   processed_at: string;
   overall_verdict: string;
   user_interaction: 'like' | 'dislike';
+  user_observation?: string;
+  has_custom_observation?: boolean;
 }
 
 /**

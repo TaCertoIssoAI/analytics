@@ -414,9 +414,10 @@ class FirestoreService:
             print(f"❌ Erro ao atualizar role do usuário: {e}")
             return False
 
-    def update_analise_interaction(self, document_id: str, uid: str, action: str) -> bool:
+    def update_analise_interaction(self, document_id: str, uid: str, action: str, observation: dict = None) -> bool:
         """
-        Atualiza likes/dislikes de uma análise.
+        Atualiza likes/dislikes de uma análise com observação.
+        observation: { text: str, has_custom_observation: bool }
         action: 'like', 'dislike', 'remove_like', 'remove_dislike'
         """
         if not self.client: return False
@@ -425,24 +426,30 @@ class FirestoreService:
             doc_ref = self.analises_collection.document(document_id)
             
             if action == 'like':
-                # Adiciona like, remove dislike
-                doc_ref.update({
+                update_data = {
                     'liked_by': firestore.ArrayUnion([uid]),
                     'disliked_by': firestore.ArrayRemove([uid])
-                })
+                }
+                if observation is not None:
+                    update_data[f'observations.{uid}'] = observation
+                doc_ref.update(update_data)
             elif action == 'dislike':
-                # Adiciona dislike, remove like
-                doc_ref.update({
+                update_data = {
                     'disliked_by': firestore.ArrayUnion([uid]),
                     'liked_by': firestore.ArrayRemove([uid])
-                })
+                }
+                if observation is not None:
+                    update_data[f'observations.{uid}'] = observation
+                doc_ref.update(update_data)
             elif action == 'remove_like':
-                 doc_ref.update({
-                    'liked_by': firestore.ArrayRemove([uid])
+                doc_ref.update({
+                    'liked_by': firestore.ArrayRemove([uid]),
+                    f'observations.{uid}': firestore.DELETE_FIELD
                 })
             elif action == 'remove_dislike':
-                 doc_ref.update({
-                    'disliked_by': firestore.ArrayRemove([uid])
+                doc_ref.update({
+                    'disliked_by': firestore.ArrayRemove([uid]),
+                    f'observations.{uid}': firestore.DELETE_FIELD
                 })
             else:
                 return False
@@ -466,6 +473,16 @@ class FirestoreService:
             for doc in likes_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "like"
+                obs_raw = data.get("observations", {}).get(uid)
+                if isinstance(obs_raw, dict):
+                    data["user_observation"] = obs_raw.get("text", "Sem observações")
+                    data["has_custom_observation"] = obs_raw.get("has_custom_observation", False)
+                elif isinstance(obs_raw, str) and obs_raw:
+                    data["user_observation"] = obs_raw
+                    data["has_custom_observation"] = True
+                else:
+                    data["user_observation"] = "Sem observações"
+                    data["has_custom_observation"] = False
                 interactions.append(data)
                 
             # Busca dislikes
@@ -473,6 +490,16 @@ class FirestoreService:
             for doc in dislikes_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "dislike"
+                obs_raw = data.get("observations", {}).get(uid)
+                if isinstance(obs_raw, dict):
+                    data["user_observation"] = obs_raw.get("text", "Sem observações")
+                    data["has_custom_observation"] = obs_raw.get("has_custom_observation", False)
+                elif isinstance(obs_raw, str) and obs_raw:
+                    data["user_observation"] = obs_raw
+                    data["has_custom_observation"] = True
+                else:
+                    data["user_observation"] = "Sem observações"
+                    data["has_custom_observation"] = False
                 interactions.append(data)
                 
             # Ordena por data (mais recente primeiro) - processamento em memória

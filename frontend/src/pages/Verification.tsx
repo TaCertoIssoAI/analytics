@@ -9,11 +9,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText, Link as LinkIcon, Eye, ExternalLink } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, Tag, Share2, Download, Mic, Camera, Image as ImageIcon, FileText, Link as LinkIcon, Eye, ExternalLink, MessageSquare } from "lucide-react";
 import { Analysis, ScrapedLink } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
 import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
@@ -24,6 +25,8 @@ import { useAuth } from "@/auth/useAuth";
 import { toast } from "sonner";
 import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import ReactMarkdown from "react-markdown";
 import iptcMapping from "@/data/iptcMapping.json";
 import { translateContentTags } from "@/lib/translateContentTags";
@@ -87,8 +90,18 @@ const Verification = () => {
     occupation?: string;
     socials?: { linkedin?: string };
     action: 'like' | 'dislike';
+    observation?: string;
+    has_custom_observation?: boolean;
   }
   const [reviewers, setReviewers] = useState<InteractionUser[]>([]);
+
+  // Observation modal state
+  const [observationModalOpen, setObservationModalOpen] = useState(false);
+  const [observationText, setObservationText] = useState("");
+  const [pendingAction, setPendingAction] = useState<'like' | 'dislike' | null>(null);
+  const [submittingObservation, setSubmittingObservation] = useState(false);
+  // Modal for viewing a specific reviewer's observation
+  const [viewingObservation, setViewingObservation] = useState<{ name: string; text: string } | null>(null);
 
   const normalizeMarkdown = (text: string) =>
     text
@@ -190,43 +203,31 @@ const Verification = () => {
     }
     if (!analysis) return;
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    const uid = currentUser.uid;
-    const action = userLiked ? 'remove_like' : 'like';
-
-    try {
-      // Optimistic update
-      if (userLiked) {
+    // If already liked, remove like directly (no modal)
+    if (userLiked) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const uid = currentUser.uid;
+      try {
         setLikes(prev => prev - 1);
         setUserLiked(false);
         setLikedBy(prev => prev.filter(id => id !== uid));
-      } else {
-        setLikes(prev => prev + 1);
-        setUserLiked(true);
-        setLikedBy(prev => [...prev, uid]);
-        
-        if (userDisliked) {
-          setDislikes(prev => prev - 1);
-          setUserDisliked(false);
-          setDislikedBy(prev => prev.filter(id => id !== uid));
-        }
+        const response = await fetch(`${apiUrl}/analises/${analysis.document_id}/interaction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, action: 'remove_like' })
+        });
+        if (!response.ok) throw new Error("Failed to update interaction");
+      } catch (error) {
+        console.error("Error updating like:", error);
+        toast.error("Erro ao atualizar avaliação.");
       }
-
-      const response = await fetch(`${apiUrl}/analises/${analysis.document_id}/interaction`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, action })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update interaction");
-      }
-
-    } catch (error) {
-      console.error("Error updating like:", error);
-      toast.error("Erro ao atualizar avaliação.");
-      // TODO: Revert optimistic update on error
+      return;
     }
+
+    // Open observation modal for new like
+    setPendingAction('like');
+    setObservationText("");
+    setObservationModalOpen(true);
   };
 
   const handleDislike = async () => {
@@ -237,21 +238,57 @@ const Verification = () => {
     }
     if (!analysis) return;
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    const uid = currentUser.uid;
-    const action = userDisliked ? 'remove_dislike' : 'dislike';
-
-    try {
-      // Optimistic update
-      if (userDisliked) {
+    // If already disliked, remove dislike directly (no modal)
+    if (userDisliked) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const uid = currentUser.uid;
+      try {
         setDislikes(prev => prev - 1);
         setUserDisliked(false);
         setDislikedBy(prev => prev.filter(id => id !== uid));
+        const response = await fetch(`${apiUrl}/analises/${analysis.document_id}/interaction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, action: 'remove_dislike' })
+        });
+        if (!response.ok) throw new Error("Failed to update interaction");
+      } catch (error) {
+        console.error("Error updating dislike:", error);
+        toast.error("Erro ao atualizar avaliação.");
+      }
+      return;
+    }
+
+    // Open observation modal for new dislike
+    setPendingAction('dislike');
+    setObservationText("");
+    setObservationModalOpen(true);
+  };
+
+  const handleSubmitObservation = async () => {
+    if (!currentUser || !analysis || !pendingAction) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const uid = currentUser.uid;
+    const action = pendingAction;
+    const observation = observationText.trim() || null;  // Backend trata vazio como "Sem observações"
+
+    setSubmittingObservation(true);
+    try {
+      // Optimistic update
+      if (action === 'like') {
+        setLikes(prev => prev + 1);
+        setUserLiked(true);
+        setLikedBy(prev => [...prev, uid]);
+        if (userDisliked) {
+          setDislikes(prev => prev - 1);
+          setUserDisliked(false);
+          setDislikedBy(prev => prev.filter(id => id !== uid));
+        }
       } else {
         setDislikes(prev => prev + 1);
         setUserDisliked(true);
         setDislikedBy(prev => [...prev, uid]);
-
         if (userLiked) {
           setLikes(prev => prev - 1);
           setUserLiked(false);
@@ -262,17 +299,19 @@ const Verification = () => {
       const response = await fetch(`${apiUrl}/analises/${analysis.document_id}/interaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, action })
+        body: JSON.stringify({ uid, action, observation })
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update interaction");
-      }
+      if (!response.ok) throw new Error("Failed to update interaction");
 
+      setObservationModalOpen(false);
+      setPendingAction(null);
+      setObservationText("");
     } catch (error) {
-      console.error("Error updating dislike:", error);
+      console.error("Error submitting observation:", error);
       toast.error("Erro ao atualizar avaliação.");
-      // TODO: Revert optimistic update on error
+    } finally {
+      setSubmittingObservation(false);
     }
   };
 
@@ -476,47 +515,122 @@ const Verification = () => {
                     </DialogHeader>
                     <div className="space-y-2 mt-4 max-h-[60vh] overflow-y-auto pr-2">
                       {reviewers.map((reviewer) => (
-                        <Link 
-                          key={reviewer.uid} 
-                          to={`/perfil/${reviewer.uid}`}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <Avatar className="h-10 w-10 border flex-shrink-0">
-                              <AvatarImage src={getValidPhotoUrl(reviewer.photoURL)} alt={reviewer.displayName} />
-                              <AvatarFallback>{reviewer.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <div className="text-sm md:text-base font-medium group-hover:text-accent-foreground transition-colors flex items-center gap-2">
-                                <span className="truncate">{reviewer.displayName}</span>
-                                <BadgeCheck className="h-4 w-4 text-primary group-hover:text-accent-foreground flex-shrink-0 transition-colors" />
+                        <div key={reviewer.uid} className="rounded-lg border bg-card">
+                          <Link 
+                            to={`/perfil/${reviewer.uid}`}
+                            className="flex items-center justify-between p-3 hover:bg-accent transition-colors group rounded-lg"
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <Avatar className="h-10 w-10 border flex-shrink-0">
+                                <AvatarImage src={getValidPhotoUrl(reviewer.photoURL)} alt={reviewer.displayName} />
+                                <AvatarFallback>{reviewer.displayName.charAt(0).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <div className="text-sm md:text-base font-medium group-hover:text-accent-foreground transition-colors flex items-center gap-2">
+                                  <span className="truncate">{reviewer.displayName}</span>
+                                  <BadgeCheck className="h-4 w-4 text-primary group-hover:text-accent-foreground flex-shrink-0 transition-colors" />
+                                </div>
+                                {reviewer.occupation && (
+                                  <p className="text-xs text-muted-foreground group-hover:text-accent-foreground/80 truncate transition-colors">{reviewer.occupation}</p>
+                                )}
                               </div>
-                              {reviewer.occupation && (
-                                <p className="text-xs text-muted-foreground group-hover:text-accent-foreground/80 truncate transition-colors">{reviewer.occupation}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
+                              {reviewer.action === 'like' ? (
+                                <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span>Aprovou</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
+                                  <ThumbsDown className="h-3 w-3" />
+                                  <span>Reprovou</span>
+                                </div>
                               )}
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
-                            {reviewer.action === 'like' ? (
-                              <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
-                                <ThumbsUp className="h-3 w-3" />
-                                <span>Aprovou</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
-                                <ThumbsDown className="h-3 w-3" />
-                                <span>Reprovou</span>
-                              </div>
-                            )}
-                          </div>
-                        </Link>
+                          </Link>
+                          {reviewer.observation && (
+                            <div className="px-3 pb-3 pt-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingObservation({ name: reviewer.displayName, text: reviewer.observation! });
+                                }}
+                                className={`text-xs flex items-center gap-1 transition-colors ${reviewer.has_custom_observation ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-primary'}`}
+                              >
+                                <MessageSquare className="h-3 w-3" />
+                                {reviewer.has_custom_observation ? 'Ver observação' : 'Sem observações'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </DialogContent>
                 </Dialog>
               )}
             </div>
+
+            {/* Observation Input Modal */}
+            <Dialog open={observationModalOpen} onOpenChange={(open) => {
+              if (!open) {
+                setObservationModalOpen(false);
+                setPendingAction(null);
+                setObservationText("");
+              }
+            }}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>
+                    {pendingAction === 'like' ? 'Aprovar análise' : 'Reprovar análise'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Deseja adicionar uma observação à sua avaliação? (opcional)
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <Label htmlFor="observation">Observação</Label>
+                  <Textarea
+                    id="observation"
+                    placeholder="Escreva uma observação (opcional)..."
+                    value={observationText}
+                    onChange={(e) => setObservationText(e.target.value.slice(0, 144))}
+                    maxLength={144}
+                    rows={3}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{observationText.length}/144</p>
+                </div>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button variant="outline" onClick={() => { setObservationModalOpen(false); setPendingAction(null); }}>
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={handleSubmitObservation} 
+                    disabled={submittingObservation}
+                    variant={pendingAction === 'like' ? 'default' : 'destructive'}
+                  >
+                    {submittingObservation ? 'Enviando...' : (pendingAction === 'like' ? 'Aprovar' : 'Reprovar')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* View Observation Modal */}
+            <Dialog open={!!viewingObservation} onOpenChange={(open) => { if (!open) setViewingObservation(null); }}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Observação de {viewingObservation?.name}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-sm">{viewingObservation?.text}</p>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
             {/* Métricas de Veracidade */}
