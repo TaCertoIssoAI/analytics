@@ -43,6 +43,7 @@ const Profile = () => {
   const [linkedin, setLinkedin] = useState("");
   const [twitter, setTwitter] = useState("");
   const [instagram, setInstagram] = useState("");
+  const [socialErrors, setSocialErrors] = useState<{ linkedin?: string; twitter?: string; instagram?: string }>({});
   
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
@@ -145,9 +146,83 @@ const Profile = () => {
     toast.success("Imagem recortada com sucesso!");
   };
 
+  // --- Social link helpers ---
+  const normalizeSocialLink = (value: string, network: 'linkedin' | 'twitter' | 'instagram'): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+
+    // Already a full URL
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+    // Strip leading @ for twitter/instagram
+    const handle = trimmed.replace(/^@/, "");
+
+    const baseUrls: Record<string, string> = {
+      linkedin: "https://linkedin.com/in/",
+      twitter: "https://x.com/",
+      instagram: "https://instagram.com/",
+    };
+
+    // If it looks like just a username (no slashes, no dots from domains)
+    if (!/[\/\.]/.test(handle)) {
+      return `${baseUrls[network]}${handle}`;
+    }
+
+    // Has slashes/dots but no protocol — prepend https://
+    return `https://${trimmed.replace(/^\/+/, "")}`;
+  };
+
+  const validateSocialLink = (value: string, network: 'linkedin' | 'twitter' | 'instagram'): string | undefined => {
+    if (!value.trim()) return undefined; // empty is ok
+
+    const patterns: Record<string, RegExp> = {
+      linkedin: /^https?:\/\/(www\.)?linkedin\.com\//i,
+      twitter: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\//i,
+      instagram: /^https?:\/\/(www\.)?instagram\.com\//i,
+    };
+
+    if (!patterns[network].test(value)) {
+      const names: Record<string, string> = { linkedin: "LinkedIn", twitter: "Twitter / X", instagram: "Instagram" };
+      return `Este link não pertence ao ${names[network]}`;
+    }
+    return undefined;
+  };
+
+  const handleSocialBlur = (network: 'linkedin' | 'twitter' | 'instagram') => {
+    const setters: Record<string, (v: string) => void> = { linkedin: setLinkedin, twitter: setTwitter, instagram: setInstagram };
+    const getters: Record<string, string> = { linkedin, twitter, instagram };
+
+    const normalized = normalizeSocialLink(getters[network], network);
+    setters[network](normalized);
+
+    const error = validateSocialLink(normalized, network);
+    setSocialErrors(prev => ({ ...prev, [network]: error }));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+
+    // Normalize & validate socials before saving
+    const normalizedLinkedin = normalizeSocialLink(linkedin, 'linkedin');
+    const normalizedTwitter = normalizeSocialLink(twitter, 'twitter');
+    const normalizedInstagram = normalizeSocialLink(instagram, 'instagram');
+
+    const errs = {
+      linkedin: validateSocialLink(normalizedLinkedin, 'linkedin'),
+      twitter: validateSocialLink(normalizedTwitter, 'twitter'),
+      instagram: validateSocialLink(normalizedInstagram, 'instagram'),
+    };
+    setSocialErrors(errs);
+
+    if (errs.linkedin || errs.twitter || errs.instagram) {
+      toast.error("Corrija os links de redes sociais antes de salvar");
+      return;
+    }
+
+    setLinkedin(normalizedLinkedin);
+    setTwitter(normalizedTwitter);
+    setInstagram(normalizedInstagram);
     
     setIsSaving(true);
     
@@ -163,9 +238,9 @@ const Profile = () => {
         occupation,
         photoURL,
         socials: {
-          linkedin,
-          twitter,
-          instagram
+          linkedin: normalizedLinkedin,
+          twitter: normalizedTwitter,
+          instagram: normalizedInstagram
         }
       };
       
@@ -336,11 +411,9 @@ const Profile = () => {
                     )}
                   </div>
                   
-                  <div className="flex flex-col items-center gap-2 mt-4 justify-center">
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
-                      <BadgeCheck className="h-6 w-6 text-primary" />
-                    </div>
+                  <div className="flex flex-col items-center gap-1 mt-4 justify-center">
+                    <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
+                    <BadgeCheck className="h-5 w-5 text-primary" />
                     {isOwnProfile && isAdmin && (
                       <Link to="/admin">
                         <Badge variant="destructive" className="mt-1 hover:bg-destructive/80 cursor-pointer">
@@ -468,10 +541,46 @@ const Profile = () => {
 
                     <div className="space-y-2">
                       <Label>Redes Sociais</Label>
-                      <div className="space-y-2">
-                        <Input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="LinkedIn" />
-                        <Input value={twitter} onChange={(e) => setTwitter(e.target.value)} placeholder="Twitter" />
-                        <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Instagram" />
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Linkedin className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <Input
+                              value={linkedin}
+                              onChange={(e) => { setLinkedin(e.target.value); setSocialErrors(prev => ({ ...prev, linkedin: undefined })); }}
+                              onBlur={() => handleSocialBlur('linkedin')}
+                              placeholder="linkedin.com/in/usuario ou @usuario"
+                              className={socialErrors.linkedin ? 'border-destructive' : ''}
+                            />
+                          </div>
+                          {socialErrors.linkedin && <p className="text-xs text-destructive mt-1 ml-6">{socialErrors.linkedin}</p>}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Twitter className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <Input
+                              value={twitter}
+                              onChange={(e) => { setTwitter(e.target.value); setSocialErrors(prev => ({ ...prev, twitter: undefined })); }}
+                              onBlur={() => handleSocialBlur('twitter')}
+                              placeholder="x.com/usuario ou @usuario"
+                              className={socialErrors.twitter ? 'border-destructive' : ''}
+                            />
+                          </div>
+                          {socialErrors.twitter && <p className="text-xs text-destructive mt-1 ml-6">{socialErrors.twitter}</p>}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <Input
+                              value={instagram}
+                              onChange={(e) => { setInstagram(e.target.value); setSocialErrors(prev => ({ ...prev, instagram: undefined })); }}
+                              onBlur={() => handleSocialBlur('instagram')}
+                              placeholder="instagram.com/usuario ou @usuario"
+                              className={socialErrors.instagram ? 'border-destructive' : ''}
+                            />
+                          </div>
+                          {socialErrors.instagram && <p className="text-xs text-destructive mt-1 ml-6">{socialErrors.instagram}</p>}
+                        </div>
                       </div>
                     </div>
                     
