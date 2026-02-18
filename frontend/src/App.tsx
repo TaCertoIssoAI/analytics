@@ -18,6 +18,7 @@ import JoinReviewers from "./pages/JoinReviewers";
 import Methodology from "./pages/Methodology";
 import TermsAndPrivacy from "./pages/TermsAndPrivacy";
 import Admin from "./pages/Admin";
+import Community from "./pages/Community";
 import { AuthProvider } from "./auth";
 import { AdminRoute } from "./auth/AdminRoute";
 
@@ -52,6 +53,7 @@ const App = () => {
               <Route path="/verificacao-nao-encontrada/:id?" element={<NotFoundVerification />} />
               <Route path="/busca" element={<Busca />} />
               <Route path="/sobre" element={<About />} />
+              <Route path="/comunidade" element={<Community />} />
               <Route path="/seja-um-revisor" element={<JoinReviewers />} />
               <Route path="/metodologia" element={<Methodology />} />
               <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />

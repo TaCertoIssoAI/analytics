@@ -159,6 +159,28 @@ interface UsersListResponse {
 }
 
 /**
+ * Get community members (public, no auth required)
+ */
+export const getCommunityMembers = async (limit = 50, offset = 0, search = ""): Promise<UsersListResponse> => {
+  try {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (search) params.set("search", search);
+    
+    const response = await fetch(`${API_URL}/users/community?${params}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch community members: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data || { users: [], total: 0, limit, offset };
+  } catch (error) {
+    console.error("Error fetching community members:", error);
+    return { users: [], total: 0, limit, offset };
+  }
+};
+
+/**
  * Get all users (Admin only)
  */
 export const getAllUsers = async (token: string, limit = 50, offset = 0): Promise<UsersListResponse> => {

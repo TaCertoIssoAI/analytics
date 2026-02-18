@@ -293,3 +293,16 @@ All colors MUST be HSL.
 .dark .prose code {
   background-color: hsl(var(--muted));
 }
+
+/* Smooth skeleton loading animation */
+@keyframes skeleton {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
