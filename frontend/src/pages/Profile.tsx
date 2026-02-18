@@ -54,7 +54,7 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Observation modal state
-  const [viewingObservation, setViewingObservation] = useState<string | null>(null);
+  const [viewingObservation, setViewingObservation] = useState<UserInteraction | null>(null);
   
   const { updateUserProfile, updateUserPassword } = useAuth();
 
@@ -556,7 +556,7 @@ const Profile = () => {
                             {interaction.user_observation && (
                               <div className="mt-3 pt-3 border-t">
                                 <button
-                                  onClick={() => setViewingObservation(interaction.user_observation!)}
+                                  onClick={() => setViewingObservation(interaction)}
                                   className={`text-xs flex items-center gap-1 transition-colors ${interaction.has_custom_observation ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-primary'}`}
                                 >
                                   <MessageSquare className="h-3 w-3" />
@@ -613,12 +613,60 @@ const Profile = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
+              <MessageSquare className="h-5 w-5 text-primary" />
               Observação
             </DialogTitle>
           </DialogHeader>
-          <div className="p-4 rounded-lg bg-muted/50 border">
-            <p className="text-sm">{viewingObservation}</p>
+          <div className="space-y-4">
+            {/* User + Badge row */}
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border-2 border-muted">
+                <AvatarImage src={getValidPhotoUrl(profile?.photoURL)} />
+                <AvatarFallback>{profile?.displayName?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm truncate">{profile?.displayName || "Usuário"}</div>
+                <div className="text-xs text-muted-foreground truncate">{profile?.email}</div>
+              </div>
+              <div>
+                {viewingObservation?.user_interaction === "like" ? (
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
+                    <ThumbsUp className="h-3 w-3" /> Aprovou
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
+                    <ThumbsDown className="h-3 w-3" /> Reprovou
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Analysis info */}
+            <div className="rounded-lg border p-3 bg-muted/30">
+              <div className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                <span>Análise avaliada</span>
+                <span>{viewingObservation?.processed_at ? format(new Date(viewingObservation.processed_at), "dd 'de' MMM, yyyy", { locale: ptBR }) : ""}</span>
+              </div>
+              <p className="text-sm font-medium line-clamp-2">{viewingObservation?.analysis_title || "Sem título"}</p>
+              {viewingObservation?.overall_verdict && (
+                <p className="text-xs text-muted-foreground mt-1">{viewingObservation.overall_verdict}</p>
+              )}
+            </div>
+
+            {/* Observation text */}
+            <div className="bg-secondary/50 rounded-lg p-4 text-sm whitespace-pre-wrap break-words">
+              {viewingObservation?.user_observation || "Sem observação"}
+            </div>
+
+            {/* Action */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/verificacao/${viewingObservation?.document_id}`}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ver Análise
+                </Link>
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
