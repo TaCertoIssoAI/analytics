@@ -434,42 +434,65 @@ const Busca = () => {
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-                  <MetricsCard
-                    title="Total de Mensagens"
-                    value={dashboardData?.total_messages || 0}
-                    icon={MessageSquare}
-                  />
-                  <MetricsCard
-                    title="Total de Afirmações"
-                    value={dashboardData?.total_claims || 0}
-                    icon={FileText}
-                  />
-                  <MetricsCard
-                    title="Total Fora de Contexto"
-                    value={dashboardData?.total_out_of_context_claims || 0}
-                    icon={HelpCircle}
-                    className="text-status-unverifiable"
-                  />
-                  <MetricsCard
-                    title="Total Verdadeiras"
-                    value={totals.true}
-                    icon={CheckCircle}
-                    className="text-status-true"
-                  />
-                  <MetricsCard
-                    title="Total Falsas"
-                    value={totals.fake}
-                    icon={XCircle}
-                    className="text-status-false"
-                  />
-                  <MetricsCard
-                    title="Total Fontes Insuficientes"
-                    value={totals.unknown}
-                    icon={HelpCircle}
-                    className="text-status-unverifiable"
-                  />
-                </div>
+                {loading ? (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <div
+                            className="h-4 w-24 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                          />
+                          <div
+                            className="h-5 w-5 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                            style={{ animationDelay: `${i * 0.1 + 0.05}s` }}
+                          />
+                        </div>
+                        <div
+                          className="h-8 w-16 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                          style={{ animationDelay: `${i * 0.1 + 0.1}s` }}
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+                    <MetricsCard
+                      title="Total de Mensagens"
+                      value={dashboardData?.total_messages || 0}
+                      icon={MessageSquare}
+                    />
+                    <MetricsCard
+                      title="Total de Afirmações"
+                      value={dashboardData?.total_claims || 0}
+                      icon={FileText}
+                    />
+                    <MetricsCard
+                      title="Total Fora de Contexto"
+                      value={dashboardData?.total_out_of_context_claims || 0}
+                      icon={HelpCircle}
+                      className="text-status-unverifiable"
+                    />
+                    <MetricsCard
+                      title="Total Verdadeiras"
+                      value={totals.true}
+                      icon={CheckCircle}
+                      className="text-status-true"
+                    />
+                    <MetricsCard
+                      title="Total Falsas"
+                      value={totals.fake}
+                      icon={XCircle}
+                      className="text-status-false"
+                    />
+                    <MetricsCard
+                      title="Total Fontes Insuficientes"
+                      value={totals.unknown}
+                      icon={HelpCircle}
+                      className="text-status-unverifiable"
+                    />
+                  </div>
+                )}
 
                 {/* Gráficos */}
                 <div className="grid gap-6 grid-cols-1">
@@ -483,8 +506,19 @@ const Busca = () => {
                     </CardHeader>
                     <CardContent>
                       {loading ? (
-                         <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                           Carregando...
+                         <div className="h-[250px] flex flex-col justify-center gap-3 px-4">
+                           {Array.from({ length: 4 }).map((_, i) => (
+                             <div key={i} className="flex items-center gap-3">
+                               <div
+                                 className="h-4 w-14 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                                 style={{ animationDelay: `${i * 0.15}s` }}
+                               />
+                               <div
+                                 className="h-6 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                                 style={{ animationDelay: `${i * 0.15 + 0.05}s`, width: `${60 - i * 12}%` }}
+                               />
+                             </div>
+                           ))}
                          </div>
                       ) : modalitiesChartData.length > 0 ? (
                         <ChartContainer config={modalitiesChartConfig} className="h-[250px] w-full">
@@ -543,11 +577,36 @@ const Busca = () => {
                   </TableHeader>
                   <TableBody>
                     {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
-                          Carregando mensagens...
-                        </TableCell>
-                      </TableRow>
+                      <>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              <div className="h-4 w-20 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12}s` }} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-16 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.03}s` }} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-40 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.06}s` }} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-8 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.09}s` }} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <div className="h-3 w-3 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.12}s` }} />
+                                <div className="h-3 w-3 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.14}s` }} />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <div className="h-5 w-14 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.16}s` }} />
+                                <div className="h-5 w-14 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.12 + 0.18}s` }} />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </>
                     ) : analyses.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8">
@@ -677,8 +736,25 @@ const Busca = () => {
               {/* Aba Fontes */}
               <TabsContent value="sources" className="space-y-6">
                 {loading ? (
-                   <div className="text-center py-12 text-muted-foreground">
-                     Carregando fontes...
+                   <div className="space-y-3 py-4">
+                     {Array.from({ length: 6 }).map((_, i) => (
+                       <div key={i} className="flex items-center justify-between py-3 px-4 border-b border-border">
+                         <div className="flex items-center gap-2">
+                           <div
+                             className="h-4 w-4 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                             style={{ animationDelay: `${i * 0.1}s` }}
+                           />
+                           <div
+                             className="h-4 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                             style={{ animationDelay: `${i * 0.1 + 0.05}s`, width: `${200 + Math.random() * 150}px` }}
+                           />
+                         </div>
+                         <div
+                           className="h-5 w-8 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]"
+                           style={{ animationDelay: `${i * 0.1 + 0.1}s` }}
+                         />
+                       </div>
+                     ))}
                    </div>
                 ) : !sources || sources.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
