@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
 import copy
+import os
 import google.auth
 from googleapiclient.discovery import build
+from dotenv import load_dotenv
+
+load_dotenv()
 
 PROJECT_ID = "sitegrupysanca"
 DATASET_ID = "analytics_whatsapp_br"
-TABLE_ID = "analises_complexas_br"
+TABLE_ID = os.getenv("BIGQUERY_TABLE")
 
 # RECORD field that holds the nested columns
 PARENT_FIELD_NAME = "media_info"

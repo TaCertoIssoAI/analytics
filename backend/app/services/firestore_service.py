@@ -21,7 +21,7 @@ class FirestoreService:
         # Se for o banco default, não precisa passar o argumento database.
         try:
             self.client = firestore.Client(project=settings.PROJECT_ID, database='tacertoissoai')
-            self.analises_collection = self.client.collection("analises")
+            self.analises_collection = self.client.collection(settings.FIRESTORE_ANALISES)
             self.users_collection = self.client.collection("users")
             print(f"🔥 Firestore client inicializado (database='tacertoissoai')")
         except Exception as e:
@@ -385,6 +385,20 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao listar usuários: {e}")
             return {"users": [], "total": 0}
+
+    def update_user_profile_fields(self, uid: str, fields: Dict[str, Any]) -> bool:
+        """
+        Atualiza campos específicos do perfil de um usuário (merge).
+        """
+        if not self.client: return False
+        try:
+            doc_ref = self.users_collection.document(uid)
+            doc_ref.set(fields, merge=True)
+            print(f"✅ Perfil do usuário {uid} atualizado com campos: {list(fields.keys())}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao atualizar perfil do usuário: {e}")
+            return False
 
     def update_user_role(self, uid: str, role: str) -> bool:
         """
