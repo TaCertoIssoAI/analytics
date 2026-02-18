@@ -14,6 +14,8 @@ import {
   onAuthStateChanged,
   updateProfile,
   updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, googleProvider } from './firebaseConfig';
@@ -30,7 +32,7 @@ export interface AuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   updateUserProfile: (name: string) => Promise<void>;
-  updateUserPassword: (password: string) => Promise<void>;
+  updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
@@ -150,17 +152,22 @@ const AuthContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   /**
-   * Update user password
+   * Update user password (re-authenticates first to satisfy Firebase)
    */
-  const updateUserPassword = async (password: string): Promise<void> => {
+  const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<void> => {
     try {
-      if (auth && auth.currentUser) {
-        await updatePassword(auth.currentUser, password);
+      if (auth && auth.currentUser && auth.currentUser.email) {
+        const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+        await updatePassword(auth.currentUser, newPassword);
       } else {
         throw new Error('No user logged in');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Update password failed:', error);
+      if (error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential') {
+        throw new Error('Senha atual incorreta');
+      }
       throw error;
     }
   };
