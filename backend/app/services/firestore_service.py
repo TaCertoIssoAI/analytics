@@ -386,6 +386,20 @@ class FirestoreService:
             print(f"❌ Erro ao listar usuários: {e}")
             return {"users": [], "total": 0}
 
+    def update_user_profile_fields(self, uid: str, fields: Dict[str, Any]) -> bool:
+        """
+        Atualiza campos específicos do perfil de um usuário (merge).
+        """
+        if not self.client: return False
+        try:
+            doc_ref = self.users_collection.document(uid)
+            doc_ref.set(fields, merge=True)
+            print(f"✅ Perfil do usuário {uid} atualizado com campos: {list(fields.keys())}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao atualizar perfil do usuário: {e}")
+            return False
+
     def update_user_role(self, uid: str, role: str) -> bool:
         """
         Atualiza o papel (role) do usuário no Firestore.

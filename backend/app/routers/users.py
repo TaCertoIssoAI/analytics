@@ -25,6 +25,14 @@ class UserProfile(BaseModel):
 class UserRoleRequest(BaseModel):
     role: str
 
+class UpdateUserProfileRequest(BaseModel):
+    bio: Optional[str] = None
+    occupation: Optional[str] = None
+    socials: Optional[dict] = None  # { "linkedin": "...", "twitter": "...", "instagram": "..." }
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str
+
 class CreateUserRequest(BaseModel):
     email: str
     password: str
@@ -113,6 +121,85 @@ async def set_user_role(
         
     except Exception as e:
         print(f"❌ Error setting user role: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.put("/{uid}/profile")
+async def admin_update_user_profile(
+    uid: str,
+    update_request: UpdateUserProfileRequest,
+    admin_user: dict = Depends(verify_admin)
+):
+    """
+    Atualiza campos do perfil de um usuário (apenas admin).
+    Permite editar bio, occupation e socials.
+    """
+    try:
+        # Verifica se o usuário existe
+        existing = firestore_service.get_user_profile(uid)
+        if not existing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+
+        # Monta dict apenas com campos que foram enviados (não None)
+        fields_to_update = {}
+        if update_request.bio is not None:
+            fields_to_update["bio"] = update_request.bio
+        if update_request.occupation is not None:
+            fields_to_update["occupation"] = update_request.occupation
+        if update_request.socials is not None:
+            fields_to_update["socials"] = update_request.socials
+
+        if not fields_to_update:
+            return {"message": "Nenhum campo para atualizar"}
+
+        success = firestore_service.update_user_profile_fields(uid, fields_to_update)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao atualizar perfil no Firestore"
+            )
+
+        return {"message": f"Perfil do usuário {uid} atualizado com sucesso"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error updating user profile: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.post("/{uid}/password")
+async def admin_reset_user_password(
+    uid: str,
+    password_request: ResetPasswordRequest,
+    admin_user: dict = Depends(verify_admin)
+):
+    """
+    Reseta a senha de um usuário (apenas admin).
+    """
+    if len(password_request.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha deve ter no mínimo 6 caracteres"
+        )
+
+    try:
+        auth.update_user(uid, password=password_request.new_password)
+        return {"message": f"Senha do usuário {uid} atualizada com sucesso"}
+    except auth.UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado no Firebase Auth"
+        )
+    except Exception as e:
+        print(f"❌ Error resetting password: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)

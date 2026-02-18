@@ -286,3 +286,89 @@ export const deleteUser = async (token: string, uid: string): Promise<{ success:
     return { success: false, message: "Network error or server unreachable" };
   }
 };
+
+export interface UpdateUserProfileRequest {
+  bio?: string;
+  occupation?: string;
+  socials?: {
+    linkedin?: string;
+    twitter?: string;
+    instagram?: string;
+  };
+}
+
+/**
+ * Update a user's profile fields (Admin only)
+ */
+export const adminUpdateUserProfile = async (
+  token: string, 
+  uid: string, 
+  data: UpdateUserProfileRequest
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/users/${uid}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.status === 403) {
+      window.location.href = "/nao-autorizado";
+      return { success: false, message: "Acesso negado" };
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        message: errorData.detail || `Erro ao atualizar perfil: ${response.statusText}`
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    return { success: false, message: "Erro de rede ou servidor indisponível" };
+  }
+};
+
+/**
+ * Reset a user's password (Admin only)
+ */
+export const adminResetUserPassword = async (
+  token: string,
+  uid: string,
+  newPassword: string
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/users/${uid}/password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ new_password: newPassword })
+    });
+
+    if (response.status === 403) {
+      window.location.href = "/nao-autorizado";
+      return { success: false, message: "Acesso negado" };
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        message: errorData.detail || `Erro ao redefinir senha: ${response.statusText}`
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return { success: false, message: "Erro de rede ou servidor indisponível" };
+  }
+};

@@ -3,15 +3,16 @@ import { useAuth } from "@/auth/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAllUsers, setUserRole, createUser, deleteUser, UserProfile, CreateUserRequest } from "@/auth/userService";
+import { getAllUsers, setUserRole, createUser, deleteUser, adminUpdateUserProfile, adminResetUserPassword, UserProfile, CreateUserRequest, UpdateUserProfileRequest } from "@/auth/userService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle, Eye, Info } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle, Eye, EyeOff, Info, Pencil, KeyRound } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Dialog,
     DialogContent,
@@ -91,6 +92,23 @@ const Admin = () => {
   const [selectedInconsistency, setSelectedInconsistency] = useState<any>(null); // For detailed view
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showBufferInfoDialog, setShowBufferInfoDialog] = useState(false);
+
+  // Edit User State
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [editBio, setEditBio] = useState("");
+  const [editOccupation, setEditOccupation] = useState("");
+  const [editLinkedin, setEditLinkedin] = useState("");
+  const [editTwitter, setEditTwitter] = useState("");
+  const [editInstagram, setEditInstagram] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Reset Password State
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
 
 
@@ -381,6 +399,100 @@ const Admin = () => {
       } finally {
           setIsDeleting(false);
       }
+  };
+
+  const handleOpenEditUser = (user: UserProfile) => {
+    setEditingUser(user);
+    setEditBio(user.bio || "");
+    setEditOccupation(user.occupation || "");
+    setEditLinkedin(user.socials?.linkedin || "");
+    setEditTwitter(user.socials?.twitter || "");
+    setEditInstagram(user.socials?.instagram || "");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setIsEditUserOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editingUser) return;
+
+    setIsSavingProfile(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Sessão expirada");
+        return;
+      }
+
+      const updateData: UpdateUserProfileRequest = {
+        bio: editBio,
+        occupation: editOccupation,
+        socials: {
+          linkedin: editLinkedin,
+          twitter: editTwitter,
+          instagram: editInstagram,
+        },
+      };
+
+      const result = await adminUpdateUserProfile(token, editingUser.uid, updateData);
+
+      if (result.success) {
+        toast.success("Perfil atualizado com sucesso!");
+        // Update local state
+        setUsers(users.map(u =>
+          u.uid === editingUser.uid
+            ? { ...u, bio: editBio, occupation: editOccupation, socials: { linkedin: editLinkedin, twitter: editTwitter, instagram: editInstagram } }
+            : u
+        ));
+      } else {
+        toast.error(result.message || "Erro ao atualizar perfil");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Erro ao atualizar perfil");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!editingUser) return;
+
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Sessão expirada");
+        return;
+      }
+
+      const result = await adminResetUserPassword(token, editingUser.uid, newPassword);
+
+      if (result.success) {
+        toast.success("Senha redefinida com sucesso!");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        toast.error(result.message || "Erro ao redefinir senha");
+      }
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      toast.error("Erro ao redefinir senha");
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
 
@@ -913,7 +1025,14 @@ const Admin = () => {
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium">{user.displayName || "Sem nome"}</div>
+                                <a
+                                  href={`/perfil/${user.uid}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-primary hover:underline cursor-pointer"
+                                >
+                                  {user.displayName || "Sem nome"}
+                                </a>
                                 <div className="text-xs text-muted-foreground md:hidden">{user.email}</div>
                               </div>
                             </div>
@@ -932,6 +1051,16 @@ const Admin = () => {
                           <TableCell className="text-right">
                             {user.uid !== currentUser?.uid && (
                               <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9"
+                                    onClick={() => handleOpenEditUser(user)}
+                                    title="Editar Usuário"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  
                                   <Button
                                     variant={user.role === 'admin' ? "outline" : "default"}
                                     size="sm"
@@ -999,6 +1128,161 @@ const Admin = () => {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditUserOpen} onOpenChange={(open) => { if (!open) { setIsEditUserOpen(false); setEditingUser(null); } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Editar Usuário
+            </DialogTitle>
+            <DialogDescription>
+              {editingUser?.displayName} ({editingUser?.email})
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Profile Info Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Informações do Perfil</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-bio">Bio</Label>
+                <Textarea
+                  id="edit-bio"
+                  placeholder="Breve descrição sobre o usuário..."
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-occupation">Ocupação</Label>
+                <Input
+                  id="edit-occupation"
+                  placeholder="Ex: Jornalista, Pesquisador..."
+                  value={editOccupation}
+                  onChange={(e) => setEditOccupation(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Social Networks Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Redes Sociais</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-linkedin">LinkedIn</Label>
+                <Input
+                  id="edit-linkedin"
+                  placeholder="https://linkedin.com/in/..."
+                  value={editLinkedin}
+                  onChange={(e) => setEditLinkedin(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-twitter">Twitter / X</Label>
+                <Input
+                  id="edit-twitter"
+                  placeholder="https://twitter.com/..."
+                  value={editTwitter}
+                  onChange={(e) => setEditTwitter(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-instagram">Instagram</Label>
+                <Input
+                  id="edit-instagram"
+                  placeholder="https://instagram.com/..."
+                  value={editInstagram}
+                  onChange={(e) => setEditInstagram(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSaveProfile} disabled={isSavingProfile}>
+                {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Salvar Informações
+              </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t" />
+
+            {/* Password Reset Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <KeyRound className="h-4 w-4" />
+                Redefinir Senha
+              </h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Nova Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repita a nova senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-destructive">As senhas não coincidem</p>
+                )}
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  variant="secondary"
+                  onClick={handleResetPassword}
+                  disabled={isResettingPassword || !newPassword || newPassword !== confirmPassword}
+                >
+                  {isResettingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <KeyRound className="h-4 w-4 mr-2" />}
+                  Redefinir Senha
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
             <Dialog open={showBufferInfoDialog} onOpenChange={setShowBufferInfoDialog}>
                 <DialogContent>
