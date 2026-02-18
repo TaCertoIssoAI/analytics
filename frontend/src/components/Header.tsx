@@ -28,6 +28,8 @@ export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isOnProfilePage = location.pathname.startsWith("/perfil/");
+  const isOnAuthPage = location.pathname === "/entrar" || location.pathname === "/cadastro";
+  const isAvatarActive = isOnProfilePage || isOnAuthPage;
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [highContrast, setHighContrast] = useState(false);
@@ -190,7 +192,7 @@ export const Header = () => {
                 className="rounded-full transition-all hover:opacity-80"
                 aria-label="User profile"
               >
-                <Avatar className={`h-8 w-8 ${isOnProfilePage ? "border-2 border-primary" : ""}`}>
+                <Avatar className={`h-8 w-8 ${isAvatarActive ? "border-2 border-primary" : ""}`}>
                   {userPhotoURL ? (
                     <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
                   ) : null}
@@ -303,9 +305,9 @@ export const Header = () => {
                    
                    <button
                       onClick={handleUserClick}
-                      className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left ${isOnProfilePage ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
+                      className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left ${isAvatarActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
                    >
-                     <Avatar className={`h-7 w-7 ${isOnProfilePage ? "border-2 border-primary" : ""}`}>
+                     <Avatar className={`h-7 w-7 ${isAvatarActive ? "border-2 border-primary" : ""}`}>
                        {userPhotoURL ? (
                          <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
                        ) : null}
