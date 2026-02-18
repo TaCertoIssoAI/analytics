@@ -179,6 +179,14 @@ const Profile = () => {
       const success = await saveUserProfile(updatedProfile);
       
       if (success) {
+        // Update cached photo for Header avatar
+        if (photoURL) {
+          localStorage.setItem("userPhotoURL", photoURL);
+        } else {
+          localStorage.removeItem("userPhotoURL");
+        }
+        window.dispatchEvent(new Event("profile-photo-updated"));
+
         toast.success("Perfil atualizado com sucesso!");
         setIsEditing(false);
         setCurrentPassword("");
@@ -198,7 +206,12 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex justify-center p-8">Carregando...</div>
+      </div>
+    );
   }
 
   if (!profile) {

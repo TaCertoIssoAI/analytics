@@ -32,24 +32,44 @@ export const Header = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [highContrast, setHighContrast] = useState(false);
   const [vlibrasEnabled, setVlibrasEnabled] = useState(false);
-  const [userPhotoURL, setUserPhotoURL] = useState<string | undefined>(undefined);
+  const [userPhotoURL, setUserPhotoURL] = useState<string | undefined>(() => {
+    // Initialize from cache immediately
+    return localStorage.getItem("userPhotoURL") || undefined;
+  });
 
-  // Fetch the user's photo from Firestore profile (not Firebase Auth)
+  // Fetch the user's photo from Firestore profile, cache in localStorage
   useEffect(() => {
     if (currentUser?.uid) {
+      // Use cached value first
+      const cached = localStorage.getItem("userPhotoURL");
+      if (cached) setUserPhotoURL(cached);
+
       getUserProfile(currentUser.uid).then((profile) => {
-        if (profile?.photoURL) {
-          setUserPhotoURL(profile.photoURL);
+        const photo = profile?.photoURL || currentUser.photoURL || undefined;
+        setUserPhotoURL(photo);
+        if (photo) {
+          localStorage.setItem("userPhotoURL", photo);
         } else {
-          setUserPhotoURL(currentUser.photoURL || undefined);
+          localStorage.removeItem("userPhotoURL");
         }
       }).catch(() => {
-        setUserPhotoURL(currentUser.photoURL || undefined);
+        if (!cached) setUserPhotoURL(currentUser.photoURL || undefined);
       });
     } else {
       setUserPhotoURL(undefined);
+      localStorage.removeItem("userPhotoURL");
     }
   }, [currentUser]);
+
+  // Listen for profile photo updates from the Profile page
+  useEffect(() => {
+    const handlePhotoUpdate = () => {
+      const photo = localStorage.getItem("userPhotoURL") || undefined;
+      setUserPhotoURL(photo);
+    };
+    window.addEventListener("profile-photo-updated", handlePhotoUpdate);
+    return () => window.removeEventListener("profile-photo-updated", handlePhotoUpdate);
+  }, []);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -167,10 +187,10 @@ export const Header = () => {
             <TooltipTrigger asChild>
               <button
                 onClick={handleUserClick}
-                className={`rounded-full transition-all ${isOnProfilePage ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:opacity-80"}`}
+                className="rounded-full transition-all hover:opacity-80"
                 aria-label="User profile"
               >
-                <Avatar className="h-8 w-8">
+                <Avatar className={`h-8 w-8 ${isOnProfilePage ? "border-2 border-primary" : ""}`}>
                   {userPhotoURL ? (
                     <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
                   ) : null}
@@ -285,7 +305,7 @@ export const Header = () => {
                       onClick={handleUserClick}
                       className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left ${isOnProfilePage ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
                    >
-                     <Avatar className={`h-7 w-7 ${isOnProfilePage ? "ring-2 ring-primary" : ""}`}>
+                     <Avatar className={`h-7 w-7 ${isOnProfilePage ? "border-2 border-primary" : ""}`}>
                        {userPhotoURL ? (
                          <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
                        ) : null}
