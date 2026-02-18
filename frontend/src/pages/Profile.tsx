@@ -42,6 +42,7 @@ const Profile = () => {
   const [twitter, setTwitter] = useState("");
   const [instagram, setInstagram] = useState("");
   
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -154,7 +155,12 @@ const Profile = () => {
           setIsSaving(false);
           return;
         }
-        await updateUserPassword(password);
+        if (!currentPassword) {
+          toast.error("Informe sua senha atual para alterar a senha");
+          setIsSaving(false);
+          return;
+        }
+        await updateUserPassword(currentPassword, password);
       }
       
       const updatedProfile: UserProfile = {
@@ -175,6 +181,7 @@ const Profile = () => {
       if (success) {
         toast.success("Perfil atualizado com sucesso!");
         setIsEditing(false);
+        setCurrentPassword("");
         setPassword("");
         setConfirmPassword("");
         setProfile(updatedProfile);
@@ -391,10 +398,16 @@ const Profile = () => {
                     </div>
                     
                     {password && (
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                        <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-                      </div>
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="currentPassword">Senha Atual</Label>
+                          <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Digite sua senha atual" required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                          <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                        </div>
+                      </>
                     )}
                     
                     <div className="flex gap-2 pt-4">
