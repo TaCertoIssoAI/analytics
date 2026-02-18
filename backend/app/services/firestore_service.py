@@ -609,6 +609,106 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar top reviewers de todos os tempos: {e}")
             return []
+    def get_all_reviews(self) -> List[Dict[str, Any]]:
+        """
+        Retorna todas as reviews (interações like/dislike) de todas as análises,
+        enriquecidas com dados do usuário e da análise.
+        """
+        if not self.client: return []
+        
+        try:
+            # Busca apenas os campos necessários para economia de banda
+            docs = self.analises_collection.select([
+                "liked_by", "disliked_by", "observations",
+                "analysis_title", "overall_verdict", "processed_at", "document_id"
+            ]).stream()
+            
+            reviews = []
+            user_cache: Dict[str, Optional[Dict[str, Any]]] = {}
+            
+            for doc in docs:
+                data = doc.to_dict()
+                doc_id = doc.id
+                analysis_title = data.get("analysis_title", "Sem título")
+                overall_verdict = data.get("overall_verdict", "")
+                processed_at = data.get("processed_at", "")
+                observations = data.get("observations", {}) or {}
+                liked_by = data.get("liked_by", []) or []
+                disliked_by = data.get("disliked_by", []) or []
+                
+                # Processa likes
+                for uid in liked_by:
+                    obs_raw = observations.get(uid)
+                    if isinstance(obs_raw, dict):
+                        obs_text = obs_raw.get("text", "")
+                        has_custom = obs_raw.get("has_custom_observation", False)
+                    elif isinstance(obs_raw, str) and obs_raw:
+                        obs_text = obs_raw
+                        has_custom = True
+                    else:
+                        obs_text = ""
+                        has_custom = False
+                    
+                    # Cache de usuário
+                    if uid not in user_cache:
+                        user_cache[uid] = self.get_user_profile(uid)
+                    user_profile = user_cache[uid]
+                    
+                    reviews.append({
+                        "document_id": doc_id,
+                        "analysis_title": analysis_title,
+                        "overall_verdict": overall_verdict,
+                        "processed_at": processed_at,
+                        "uid": uid,
+                        "action": "like",
+                        "observation": obs_text,
+                        "has_custom_observation": has_custom,
+                        "user_name": user_profile.get("displayName", "Usuário desconhecido") if user_profile else "Usuário desconhecido",
+                        "user_email": user_profile.get("email", "") if user_profile else "",
+                        "user_photo": user_profile.get("photoURL", "") if user_profile else "",
+                    })
+                
+                # Processa dislikes
+                for uid in disliked_by:
+                    obs_raw = observations.get(uid)
+                    if isinstance(obs_raw, dict):
+                        obs_text = obs_raw.get("text", "")
+                        has_custom = obs_raw.get("has_custom_observation", False)
+                    elif isinstance(obs_raw, str) and obs_raw:
+                        obs_text = obs_raw
+                        has_custom = True
+                    else:
+                        obs_text = ""
+                        has_custom = False
+                    
+                    if uid not in user_cache:
+                        user_cache[uid] = self.get_user_profile(uid)
+                    user_profile = user_cache[uid]
+                    
+                    reviews.append({
+                        "document_id": doc_id,
+                        "analysis_title": analysis_title,
+                        "overall_verdict": overall_verdict,
+                        "processed_at": processed_at,
+                        "uid": uid,
+                        "action": "dislike",
+                        "observation": obs_text,
+                        "has_custom_observation": has_custom,
+                        "user_name": user_profile.get("displayName", "Usuário desconhecido") if user_profile else "Usuário desconhecido",
+                        "user_email": user_profile.get("email", "") if user_profile else "",
+                        "user_photo": user_profile.get("photoURL", "") if user_profile else "",
+                    })
+            
+            # Ordena por data da análise (mais recente primeiro)
+            reviews.sort(key=lambda x: x.get("processed_at", ""), reverse=True)
+            
+            print(f"✅ {len(reviews)} reviews encontradas no total")
+            return reviews
+            
+        except Exception as e:
+            print(f"❌ Erro ao buscar todas as reviews: {e}")
+            return []
+
     def get_all_ids(self) -> List[str]:
         """
         Retorna todos os document_ids da coleção analises.

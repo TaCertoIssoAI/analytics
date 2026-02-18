@@ -552,6 +552,69 @@ async def admin_search_analise(document_id: str = Query(..., description="ID do 
 
 
 @router.get(
+    "/admin/reviews",
+    summary="Listar todas as reviews (Admin)",
+    description="Retorna todas as reviews (likes/dislikes) de todos os usuários em todas as análises"
+)
+async def admin_list_reviews(
+    action: Optional[str] = Query(None, description="Filtrar por tipo: 'like' ou 'dislike'"),
+    has_observation: Optional[bool] = Query(None, description="Filtrar por presença de observação"),
+    search: Optional[str] = Query(None, description="Busca textual por nome de usuário, título ou observação"),
+    limit: int = Query(20, ge=1, le=100, description="Itens por página"),
+    offset: int = Query(0, ge=0, description="Offset para paginação"),
+):
+    """
+    Endpoint administrativo para listar todas as reviews feitas por todos os usuários.
+    Suporta filtros por tipo (positiva/negativa), presença de observação e busca textual.
+    Paginado no servidor.
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"📋 [Admin] Listando reviews (limit={limit}, offset={offset})...")
+        print(f"{'='*60}")
+
+        reviews = firestore_service.get_all_reviews()
+
+        # Aplicar filtros
+        if action:
+            reviews = [r for r in reviews if r["action"] == action]
+
+        if has_observation is not None:
+            if has_observation:
+                reviews = [r for r in reviews if r["has_custom_observation"] and r["observation"].strip()]
+            else:
+                reviews = [r for r in reviews if not r["has_custom_observation"] or not r["observation"].strip()]
+
+        if search:
+            term = search.lower()
+            reviews = [r for r in reviews if
+                       term in (r.get("user_name") or "").lower() or
+                       term in (r.get("analysis_title") or "").lower() or
+                       term in (r.get("observation") or "").lower()]
+
+        total = len(reviews)
+        paginated = reviews[offset:offset + limit]
+
+        print(f"✅ {total} reviews no total, retornando {len(paginated)} (offset={offset})")
+        return {
+            "success": True,
+            "data": {
+                "reviews": paginated,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ Erro ao listar reviews: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
+@router.get(
     "/admin/inconsistencies",
     summary="Verificar inconsistências (Admin)",
     description="Identifica análises que existem em apenas um dos bancos (BigQuery ou Firestore)"

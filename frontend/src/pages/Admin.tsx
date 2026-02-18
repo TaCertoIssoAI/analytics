@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle, Eye, EyeOff, Info, Pencil, KeyRound } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldMinus, Search, User as UserIcon, Plus, Trash2, X, Upload, Camera, Database, FileText, CheckCircle, XCircle, Eye, EyeOff, Info, Pencil, KeyRound, ThumbsUp, ThumbsDown, MessageSquare, Star, Filter, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,6 +109,18 @@ const Admin = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+
+  // Reviews State
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+  const [reviewFilterAction, setReviewFilterAction] = useState<string>("all");
+  const [reviewFilterObservation, setReviewFilterObservation] = useState<string>("all");
+  const [reviewSearchTerm, setReviewSearchTerm] = useState("");
+  const [selectedReview, setSelectedReview] = useState<any>(null);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewTotal, setReviewTotal] = useState(0);
+  const REVIEWS_PER_PAGE = 20;
 
 
 
@@ -495,6 +507,50 @@ const Admin = () => {
     }
   };
 
+  const fetchReviews = async (page: number = 1, overrides?: { action?: string; observation?: string }) => {
+    setReviewsLoading(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Sessão expirada");
+        return;
+      }
+
+      const actionFilter = overrides?.action ?? reviewFilterAction;
+      const obsFilter = overrides?.observation ?? reviewFilterObservation;
+
+      const offset = (page - 1) * REVIEWS_PER_PAGE;
+      const params = new URLSearchParams({
+        limit: String(REVIEWS_PER_PAGE),
+        offset: String(offset),
+      });
+      if (actionFilter !== "all") params.set("action", actionFilter);
+      if (obsFilter === "with") params.set("has_observation", "true");
+      if (obsFilter === "without") params.set("has_observation", "false");
+      if (reviewSearchTerm.trim()) params.set("search", reviewSearchTerm.trim());
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/analises/admin/reviews?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error("Erro ao buscar reviews");
+
+      const data = await response.json();
+      if (data.success) {
+        setReviews(data.data.reviews);
+        setReviewTotal(data.data.total);
+        setReviewPage(page);
+        setReviewsLoaded(true);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      toast.error("Erro ao carregar reviews");
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
 
 
 
@@ -859,6 +915,282 @@ const Admin = () => {
                 </DialogContent>
             </Dialog>
         </div>
+
+        {/* Reviews Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5" />
+                Reviews dos Usuários
+              </CardTitle>
+              <Button onClick={() => fetchReviews(1)} disabled={reviewsLoading} variant={reviewsLoaded ? "outline" : "default"}>
+                {reviewsLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                {reviewsLoaded ? "Atualizar" : "Carregar Reviews"}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!reviewsLoaded && !reviewsLoading && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Star className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p>Clique em "Carregar Reviews" para visualizar todas as avaliações feitas pelos usuários.</p>
+              </div>
+            )}
+
+            {reviewsLoading && (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+
+            {reviewsLoaded && !reviewsLoading && (
+              <>
+                {/* Filters */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                  <form className="relative flex-1" onSubmit={(e) => { e.preventDefault(); fetchReviews(1); }}>
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por usuário ou título da análise..."
+                      value={reviewSearchTerm}
+                      onChange={(e) => setReviewSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </form>
+                  <Select value={reviewFilterAction} onValueChange={(val) => { setReviewFilterAction(val); fetchReviews(1, { action: val }); }}>
+                    <SelectTrigger className="w-full md:w-[200px]">
+                      <SelectValue placeholder="Tipo de review" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="like">Positivas (Like)</SelectItem>
+                      <SelectItem value="dislike">Negativas (Dislike)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={reviewFilterObservation} onValueChange={(val) => { setReviewFilterObservation(val); fetchReviews(1, { observation: val }); }}>
+                    <SelectTrigger className="w-full md:w-[220px]">
+                      <SelectValue placeholder="Observações" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="with">Com observação</SelectItem>
+                      <SelectItem value="without">Sem observação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Stats */}
+                {(() => {
+                  const totalLikes = reviews.filter(r => r.action === "like").length;
+                  const totalDislikes = reviews.filter(r => r.action === "dislike").length;
+                  const withObs = reviews.filter(r => r.has_custom_observation && r.observation?.trim()).length;
+                  const totalPages = Math.ceil(reviewTotal / REVIEWS_PER_PAGE);
+
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-secondary/50 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold">{reviewTotal}</div>
+                          <div className="text-xs text-muted-foreground">Total</div>
+                        </div>
+                        <div className="bg-green-500/10 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{totalLikes}</div>
+                          <div className="text-xs text-muted-foreground">Positivas (página)</div>
+                        </div>
+                        <div className="bg-red-500/10 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{totalDislikes}</div>
+                          <div className="text-xs text-muted-foreground">Negativas (página)</div>
+                        </div>
+                        <div className="bg-blue-500/10 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{withObs}</div>
+                          <div className="text-xs text-muted-foreground">Com observação (página)</div>
+                        </div>
+                      </div>
+
+                      {/* Reviews Table */}
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Usuário</TableHead>
+                              <TableHead>Análise</TableHead>
+                              <TableHead className="text-center">Tipo</TableHead>
+                              <TableHead>Observação</TableHead>
+                              <TableHead className="text-right">Ação</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {reviews.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                  Nenhuma review encontrada com os filtros selecionados
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              reviews.map((review, idx) => (
+                                <TableRow key={`${review.document_id}-${review.uid}-${idx}`}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-8 w-8">
+                                        <AvatarImage src={getValidPhotoUrl(review.user_photo)} />
+                                        <AvatarFallback className="text-xs">
+                                          {review.user_name?.charAt(0)?.toUpperCase() || "U"}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <div className="font-medium text-sm">{review.user_name}</div>
+                                        <div className="text-xs text-muted-foreground hidden md:block">{review.user_email}</div>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="max-w-[250px]">
+                                      <div className="text-sm font-medium truncate" title={review.analysis_title}>
+                                        {review.analysis_title || "Sem título"}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {review.overall_verdict}
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {review.action === "like" ? (
+                                      <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                                        <ThumbsUp className="h-3 w-3 mr-1" />
+                                        Positiva
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30">
+                                        <ThumbsDown className="h-3 w-3 mr-1" />
+                                        Negativa
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    {review.has_custom_observation && review.observation?.trim() ? (
+                                      <div className="flex items-center gap-1 max-w-[300px]">
+                                        <MessageSquare className="h-3 w-3 text-blue-500 shrink-0" />
+                                        <span className="text-sm truncate" title={review.observation}>
+                                          {review.observation}
+                                        </span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 shrink-0 ml-1"
+                                          onClick={() => setSelectedReview(review)}
+                                          title="Ver observação completa"
+                                        >
+                                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground italic">Sem observação</span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => window.open(`/verificacao/${review.document_id}`, '_blank')}
+                                      title="Ver análise"
+                                    >
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="text-sm text-muted-foreground">
+                            Mostrando {((reviewPage - 1) * REVIEWS_PER_PAGE) + 1}–{Math.min(reviewPage * REVIEWS_PER_PAGE, reviewTotal)} de {reviewTotal}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={reviewPage <= 1 || reviewsLoading}
+                              onClick={() => fetchReviews(reviewPage - 1)}
+                            >
+                              <ChevronLeft className="h-4 w-4 mr-1" />
+                              Anterior
+                            </Button>
+                            <span className="text-sm font-medium px-2">
+                              {reviewPage} / {totalPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={reviewPage >= totalPages || reviewsLoading}
+                              onClick={() => fetchReviews(reviewPage + 1)}
+                            >
+                              Próxima
+                              <ChevronRight className="h-4 w-4 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Observation Detail Dialog */}
+        <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-blue-500" />
+                Observação
+              </DialogTitle>
+              <DialogDescription>
+                Review de <strong>{selectedReview?.user_name}</strong> na análise <em>{selectedReview?.analysis_title}</em>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={getValidPhotoUrl(selectedReview?.user_photo)} />
+                  <AvatarFallback className="text-xs">{selectedReview?.user_name?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-medium text-sm">{selectedReview?.user_name}</div>
+                  <div className="text-xs text-muted-foreground">{selectedReview?.user_email}</div>
+                </div>
+                <div className="ml-auto">
+                  {selectedReview?.action === "like" ? (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                      <ThumbsUp className="h-3 w-3 mr-1" />
+                      Positiva
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30">
+                      <ThumbsDown className="h-3 w-3 mr-1" />
+                      Negativa
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div className="bg-secondary/50 rounded-lg p-4 text-sm whitespace-pre-wrap break-words">
+                {selectedReview?.observation || "Sem observação"}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => window.open(`/verificacao/${selectedReview?.document_id}`, '_blank')}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ver Análise
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader>
