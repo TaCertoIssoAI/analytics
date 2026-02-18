@@ -785,14 +785,21 @@ async def get_recommendations(
 class InteractionRequest(BaseModel):
     uid: str
     action: str
+    observation: Optional[str] = None  # Observação opcional, max 144 chars
 
 @router.post(
     "/{document_id}/interaction",
     summary="Interagir com análise",
-    description="Adiciona/Remove like ou dislike"
+    description="Adiciona/Remove like ou dislike com observação opcional"
 )
 async def interact_with_analise(document_id: str, request: InteractionRequest):
-    success = firestore_service.update_analise_interaction(document_id, request.uid, request.action)
+    # Monta observação: texto + flag de personalização
+    raw = (request.observation or "").strip()[:144]
+    if raw:
+        observation = {"text": raw, "has_custom_observation": True}
+    else:
+        observation = {"text": "Sem observações", "has_custom_observation": False}
+    success = firestore_service.update_analise_interaction(document_id, request.uid, request.action, observation)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -824,28 +831,44 @@ async def get_analise_interactions(document_id: str):
     # 3. Monta a resposta
     interactions = []
     
+    observations = analise_data.get("observations", {})
+    
+    def _normalize_obs(obs):
+        """Normaliza observação para formato { text, has_custom_observation }."""
+        if isinstance(obs, dict):
+            return obs
+        if isinstance(obs, str) and obs:
+            return {"text": obs, "has_custom_observation": True}
+        return {"text": "Sem observações", "has_custom_observation": False}
+    
     for uid in liked_by:
         user = users_map.get(uid)
         if user:
+            obs = _normalize_obs(observations.get(uid))
             interactions.append({
                 "uid": uid,
                 "displayName": user.get("displayName", "Usuário"),
                 "photoURL": user.get("photoURL"),
                 "occupation": user.get("occupation"),
                 "socials": user.get("socials"),
-                "action": "like"
+                "action": "like",
+                "observation": obs["text"],
+                "has_custom_observation": obs["has_custom_observation"]
             })
             
     for uid in disliked_by:
         user = users_map.get(uid)
         if user:
+            obs = _normalize_obs(observations.get(uid))
             interactions.append({
                 "uid": uid,
                 "displayName": user.get("displayName", "Usuário"),
                 "photoURL": user.get("photoURL"),
                 "occupation": user.get("occupation"),
                 "socials": user.get("socials"),
-                "action": "dislike"
+                "action": "dislike",
+                "observation": obs["text"],
+                "has_custom_observation": obs["has_custom_observation"]
             })
 
     return {"interactions": interactions}

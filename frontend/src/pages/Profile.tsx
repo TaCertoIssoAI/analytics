@@ -14,6 +14,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -45,6 +51,9 @@ const Profile = () => {
   const [tempImage, setTempImage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Observation modal state
+  const [viewingObservation, setViewingObservation] = useState<string | null>(null);
   
   const { updateUserProfile, updateUserPassword } = useAuth();
 
@@ -471,6 +480,17 @@ const Profile = () => {
                                 </Link>
                               </Button>
                             </div>
+                            {interaction.user_observation && (
+                              <div className="mt-3 pt-3 border-t">
+                                <button
+                                  onClick={() => setViewingObservation(interaction.user_observation!)}
+                                  className={`text-xs flex items-center gap-1 transition-colors ${interaction.has_custom_observation ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-primary'}`}
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                  {interaction.has_custom_observation ? 'Ver observação' : 'Sem observações'}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -514,6 +534,21 @@ const Profile = () => {
         onClose={() => setShowCropper(false)}
         onCropComplete={handleCropComplete}
       />
+
+      {/* View Observation Modal */}
+      <Dialog open={!!viewingObservation} onOpenChange={(open) => { if (!open) setViewingObservation(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Observação
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <p className="text-sm">{viewingObservation}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
