@@ -11,7 +11,7 @@ import { useEffect, useState, useRef } from "react";
 import { getUserProfile, createUserProfile, saveUserProfile, getUserInteractions, UserProfile, UserInteraction } from "@/auth/userService";
 import { User } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck, KeyRound, Eye, EyeOff, BookOpen } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -412,26 +412,24 @@ const Profile = () => {
                   </div>
                   
                   <div className="flex flex-col items-center gap-1 mt-4 justify-center">
-                    <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
-                    <BadgeCheck className="h-5 w-5 text-primary" />
                     {isOwnProfile && isAdmin && (
                       <Link to="/admin">
-                        <Badge variant="destructive" className="mt-1 hover:bg-destructive/80 cursor-pointer">
+                        <Badge variant="destructive" className="mb-1 hover:bg-destructive/80 cursor-pointer">
                           ADMIN
                         </Badge>
                       </Link>
                     )}
+                    <h1 className="text-xl font-bold text-center">{profile.displayName || "Usuário"}</h1>
+                    <BadgeCheck className="h-5 w-5 text-primary" />
                   </div>
                   
                   {profile.occupation && (
-                    <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                    <div className="flex flex-col items-center text-muted-foreground mt-3 gap-1">
+                      <span className="text-center">{profile.occupation}</span>
                       <Briefcase className="h-4 w-4" />
-                      <span>{profile.occupation}</span>
                     </div>
                   )}
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
-                    <Calendar className="h-3 w-3" />
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3">
                     <span>Membro desde {new Date(profile.createdAt).getFullYear()}</span>
                   </div>
                 </div>
@@ -621,20 +619,33 @@ const Profile = () => {
           {/* Main Content Area */}
           <div className="w-full md:w-2/3">
             <Tabs defaultValue="reviews" className="w-full">
-              <TabsList className="w-full justify-start h-12 bg-transparent border-b rounded-none p-0 gap-8">
-                <TabsTrigger 
-                  value="reviews" 
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 text-base"
-                >
-                  Avaliações ({interactions.length})
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="about" 
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 text-base"
-                >
-                  Sobre
-                </TabsTrigger>
-              </TabsList>
+              <div className="flex items-center justify-between">
+                <TabsList className="flex-1 justify-start h-12 bg-transparent border-b rounded-none p-0 gap-8">
+                  <TabsTrigger 
+                    value="reviews" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 text-base"
+                  >
+                    Avaliações ({interactions.length})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="about" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 text-base"
+                  >
+                    Sobre
+                  </TabsTrigger>
+                </TabsList>
+                {isOwnProfile && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 ml-4 shrink-0"
+                    onClick={() => window.open('/guia rapido do revisor - Ta Certo Isso AI.pdf', '_blank')}
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Guia do Revisor
+                  </Button>
+                )}
+              </div>
 
               <TabsContent value="reviews" className="mt-6 space-y-4">
                 {interactions.length === 0 ? (
