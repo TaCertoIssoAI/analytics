@@ -11,12 +11,14 @@ import { useEffect, useState, useRef } from "react";
 import { getUserProfile, createUserProfile, saveUserProfile, getUserInteractions, UserProfile, UserInteraction } from "@/auth/userService";
 import { User } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck } from "lucide-react";
+import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck, KeyRound, Eye, EyeOff } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -46,6 +48,11 @@ const Profile = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Image Cropper State
   const [showCropper, setShowCropper] = useState(false);
@@ -149,20 +156,6 @@ const Profile = () => {
         await updateUserProfile(name);
       }
       
-      if (password) {
-        if (password !== confirmPassword) {
-          toast.error("As senhas não coincidem");
-          setIsSaving(false);
-          return;
-        }
-        if (!currentPassword) {
-          toast.error("Informe sua senha atual para alterar a senha");
-          setIsSaving(false);
-          return;
-        }
-        await updateUserPassword(currentPassword, password);
-      }
-      
       const updatedProfile: UserProfile = {
         ...profile,
         displayName: name,
@@ -189,9 +182,6 @@ const Profile = () => {
 
         toast.success("Perfil atualizado com sucesso!");
         setIsEditing(false);
-        setCurrentPassword("");
-        setPassword("");
-        setConfirmPassword("");
         setProfile(updatedProfile);
       } else {
         toast.error("Erro ao salvar dados do perfil");
@@ -202,6 +192,39 @@ const Profile = () => {
       toast.error("Erro ao atualizar perfil");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!password || password.length < 6) {
+      toast.error("A nova senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+    if (!currentPassword) {
+      toast.error("Informe sua senha atual");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await updateUserPassword(currentPassword, password);
+      toast.success("Senha alterada com sucesso!");
+      setIsPasswordModalOpen(false);
+      setCurrentPassword("");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      if (error?.code === "auth/wrong-password") {
+        toast.error("Senha atual incorreta");
+      } else {
+        toast.error("Erro ao alterar senha. Verifique sua senha atual.");
+      }
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -452,23 +475,25 @@ const Profile = () => {
                       </div>
                     </div>
                     
-                    <div className="space-y-2 pt-2 border-t">
-                      <Label htmlFor="password">Nova Senha (opcional)</Label>
-                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <div className="pt-2 border-t">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setCurrentPassword("");
+                          setPassword("");
+                          setConfirmPassword("");
+                          setShowCurrentPassword(false);
+                          setShowNewPassword(false);
+                          setShowConfirmPassword(false);
+                          setIsPasswordModalOpen(true);
+                        }}
+                      >
+                        <KeyRound className="h-4 w-4 mr-2" />
+                        Alterar Senha
+                      </Button>
                     </div>
-                    
-                    {password && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="currentPassword">Senha Atual</Label>
-                          <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Digite sua senha atual" required />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                          <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-                        </div>
-                      </>
-                    )}
                     
                     <div className="flex gap-2 pt-4">
                       <Button type="submit" disabled={isSaving} className="flex-1">
@@ -607,6 +632,99 @@ const Profile = () => {
         onClose={() => setShowCropper(false)}
         onCropComplete={handleCropComplete}
       />
+
+      {/* Change Password Modal */}
+      <Dialog open={isPasswordModalOpen} onOpenChange={(open) => { if (!open) setIsPasswordModalOpen(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Alterar Senha
+            </DialogTitle>
+            <DialogDescription>
+              Informe sua senha atual e a nova senha desejada.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="modal-current-password">Senha Atual</Label>
+              <div className="relative">
+                <Input
+                  id="modal-current-password"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Digite sua senha atual"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modal-new-password">Nova Senha</Label>
+              <div className="relative">
+                <Input
+                  id="modal-new-password"
+                  type={showNewPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modal-confirm-password">Confirmar Nova Senha</Label>
+              <div className="relative">
+                <Input
+                  id="modal-confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repita a nova senha"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-xs text-destructive">As senhas não coincidem</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleChangePassword}
+              disabled={isChangingPassword || !currentPassword || !password || password !== confirmPassword}
+            >
+              {isChangingPassword ? "Alterando..." : "Alterar Senha"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* View Observation Modal */}
       <Dialog open={!!viewingObservation} onOpenChange={(open) => { if (!open) setViewingObservation(null); }}>
