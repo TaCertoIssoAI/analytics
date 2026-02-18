@@ -207,9 +207,56 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-12">
         <Header />
-        <div className="flex justify-center p-8">Carregando...</div>
+        
+        {/* Skeleton Cover */}
+        <div className="h-48 md:h-64 bg-gradient-to-r from-muted via-muted/60 to-muted w-full animate-[skeleton_1.8s_ease-in-out_infinite]" />
+
+        <div className="container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            
+            {/* Skeleton Sidebar */}
+            <div className="w-full md:w-1/3 flex flex-col gap-6">
+              <div className="bg-card rounded-xl shadow-lg p-6 pt-0 border">
+                <div className="flex flex-col items-center -mt-12 mb-4">
+                  <div className="h-32 w-32 rounded-full bg-muted border-4 border-background shadow-xl animate-[skeleton_1.8s_ease-in-out_infinite]" />
+                </div>
+                <div className="flex flex-col items-center gap-3 mt-2">
+                  <div className="h-6 w-40 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '100ms' }} />
+                  <div className="h-4 w-32 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '200ms' }} />
+                  <div className="h-3 w-28 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '300ms' }} />
+                </div>
+                <div className="mt-6 space-y-3">
+                  <div className="h-4 w-full rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '400ms' }} />
+                  <div className="h-4 w-3/4 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '500ms' }} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Skeleton Content */}
+            <div className="w-full md:w-2/3 flex flex-col gap-6">
+              <div className="bg-card rounded-xl shadow-lg p-6 border">
+                <div className="flex gap-4 mb-6">
+                  <div className="h-9 w-28 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '200ms' }} />
+                  <div className="h-9 w-20 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: '300ms' }} />
+                </div>
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-start gap-4 p-4 rounded-xl border">
+                      <div className="h-10 w-10 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite] flex-shrink-0" style={{ animationDelay: `${400 + i * 150}ms` }} />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-48 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${500 + i * 150}ms` }} />
+                        <div className="h-3 w-full rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${600 + i * 150}ms` }} />
+                        <div className="h-3 w-2/3 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${700 + i * 150}ms` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
