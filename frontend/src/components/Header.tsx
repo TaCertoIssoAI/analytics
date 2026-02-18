@@ -1,11 +1,14 @@
 import { User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/useAuth";
 import { ThemeToggle } from "./ThemeToggle";
 import { NavLink } from "./NavLink";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getValidPhotoUrl } from "@/lib/utils";
+import { getUserProfile } from "@/auth/userService";
 import {
   Sheet,
   SheetContent,
@@ -23,10 +26,30 @@ import {
 export const Header = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnProfilePage = location.pathname.startsWith("/perfil/");
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [highContrast, setHighContrast] = useState(false);
   const [vlibrasEnabled, setVlibrasEnabled] = useState(false);
+  const [userPhotoURL, setUserPhotoURL] = useState<string | undefined>(undefined);
+
+  // Fetch the user's photo from Firestore profile (not Firebase Auth)
+  useEffect(() => {
+    if (currentUser?.uid) {
+      getUserProfile(currentUser.uid).then((profile) => {
+        if (profile?.photoURL) {
+          setUserPhotoURL(profile.photoURL);
+        } else {
+          setUserPhotoURL(currentUser.photoURL || undefined);
+        }
+      }).catch(() => {
+        setUserPhotoURL(currentUser.photoURL || undefined);
+      });
+    } else {
+      setUserPhotoURL(undefined);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -89,10 +112,10 @@ export const Header = () => {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
           <nav className="flex items-center gap-6">
-            <NavLink to="/" end>Início</NavLink>
-            <NavLink to="/busca">Busca</NavLink>
-            <NavLink to="/sobre">Sobre</NavLink>
-            <NavLink to="/termos-e-privacidade">Termos</NavLink>
+            <NavLink to="/" end className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Início</NavLink>
+            <NavLink to="/busca" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Busca</NavLink>
+            <NavLink to="/sobre" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Sobre</NavLink>
+            <NavLink to="/termos-e-privacidade" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Termos</NavLink>
           </nav>
           <Button variant="outline" size="sm" className="gap-2" asChild>
             <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
@@ -142,15 +165,20 @@ export const Header = () => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={handleUserClick}
-                className="rounded-full"
+                className={`rounded-full transition-all ${isOnProfilePage ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:opacity-80"}`}
                 aria-label="User profile"
               >
-                <User className="h-5 w-5" />
-              </Button>
+                <Avatar className="h-8 w-8">
+                  {userPhotoURL ? (
+                    <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
+                  ) : null}
+                  <AvatarFallback className="text-xs">
+                    {currentUser?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
             </TooltipTrigger>
             <TooltipContent>
               <p>{currentUser ? "Ver Perfil" : "Entrar"}</p>
@@ -184,34 +212,39 @@ export const Header = () => {
               </SheetHeader>
               <div className="flex flex-col gap-6">
                 <nav className="flex flex-col gap-2">
-                  <Link 
+                  <NavLink 
                     to="/" 
+                    end
                     className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                   >
                     <Home className="h-5 w-5" />
                     Início
-                  </Link>
-                  <Link 
+                  </NavLink>
+                  <NavLink 
                     to="/busca" 
                     className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                   >
                     <Search className="h-5 w-5" />
                     Busca
-                  </Link>
-                  <Link 
+                  </NavLink>
+                  <NavLink 
                     to="/sobre" 
                     className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                   >
                     <Info className="h-5 w-5" />
                     Sobre
-                  </Link>
-                  <Link 
+                  </NavLink>
+                  <NavLink 
                     to="/termos-e-privacidade" 
                     className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                   >
                     <Info className="h-5 w-5" />
                     Termos e Privacidade
-                  </Link>
+                  </NavLink>
                 </nav>
                 
                 <div className="border-t pt-6 flex flex-col gap-2">
@@ -250,9 +283,16 @@ export const Header = () => {
                    
                    <button
                       onClick={handleUserClick}
-                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left"
+                      className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left ${isOnProfilePage ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
                    >
-                     <User className="h-5 w-5" />
+                     <Avatar className={`h-7 w-7 ${isOnProfilePage ? "ring-2 ring-primary" : ""}`}>
+                       {userPhotoURL ? (
+                         <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
+                       ) : null}
+                       <AvatarFallback className="text-xs">
+                         {currentUser?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                       </AvatarFallback>
+                     </Avatar>
                      <span>{currentUser ? "Meu Perfil" : "Entrar"}</span>
                    </button>
                 </div>
