@@ -1,4 +1,4 @@
-import { User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear } from "lucide-react";
+import { User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -136,6 +136,7 @@ export const Header = () => {
           <nav className="flex items-center gap-6">
             <NavLink to="/" end className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Início</NavLink>
             <NavLink to="/busca" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Busca</NavLink>
+            <NavLink to="/comunidade" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Comunidade</NavLink>
             <NavLink to="/sobre" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Sobre</NavLink>
             <NavLink to="/termos-e-privacidade" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Termos</NavLink>
           </nav>
@@ -250,6 +251,14 @@ export const Header = () => {
                   >
                     <Search className="h-5 w-5" />
                     Busca
+                  </NavLink>
+                  <NavLink 
+                    to="/comunidade" 
+                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
+                  >
+                    <Users className="h-5 w-5" />
+                    Comunidade
                   </NavLink>
                   <NavLink 
                     to="/sobre" 

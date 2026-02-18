@@ -69,6 +69,24 @@ async def get_top_reviewers():
     top_reviewers = firestore_service.get_top_reviewers()
     return {"success": True, "data": top_reviewers}
 
+@router.get("/community")
+async def get_community_members(limit: int = 50, offset: int = 0, search: str = ""):
+    """
+    Lista membros da comunidade (público, sem autenticação).
+    """
+    result = firestore_service.list_users(limit, offset)
+    
+    # Apply search filter if provided
+    if search:
+        search_lower = search.lower()
+        filtered = [u for u in result["users"] if 
+            (u.get("displayName") or "").lower().find(search_lower) >= 0 or
+            (u.get("occupation") or "").lower().find(search_lower) >= 0]
+        result["users"] = filtered
+        result["total"] = len(filtered)
+    
+    return {"success": True, "data": result}
+
 @router.get("/{uid}/interactions")
 async def get_user_interactions(uid: str):
     interactions = firestore_service.get_user_interactions(uid)
