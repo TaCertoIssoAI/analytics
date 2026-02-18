@@ -132,7 +132,7 @@ export const Header = () => {
         </Link>
         
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden nav:flex items-center gap-4">
           <nav className="flex items-center gap-6">
             <NavLink to="/" end className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Início</NavLink>
             <NavLink to="/busca" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Busca</NavLink>
@@ -210,7 +210,7 @@ export const Header = () => {
         </div>
 
         {/* Mobile Actions */}
-        <div className="flex md:hidden items-center gap-4">
+        <div className="flex nav:hidden items-center gap-4">
           <a 
             href="https://wa.me/553584248271" 
             target="_blank" 

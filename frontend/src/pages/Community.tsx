@@ -101,16 +101,21 @@ const Community = () => {
       <Header />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Page Header */}
-        <div className="flex flex-col gap-2 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Users className="h-6 w-6 text-primary" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold">Comunidade</h1>
             </div>
-            <h1 className="text-3xl font-bold">Comunidade</h1>
+            <p className="text-muted-foreground ml-[52px]">
+              Conheça os revisores que fazem parte da plataforma
+            </p>
           </div>
-          <p className="text-muted-foreground ml-[52px]">
-            Conheça os revisores que fazem parte da plataforma
-          </p>
+          <Button asChild>
+            <Link to="/seja-um-revisor">Como se tornar um revisor</Link>
+          </Button>
         </div>
 
         {/* Top Reviewers Section */}
