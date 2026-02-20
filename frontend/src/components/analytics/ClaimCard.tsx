@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -298,7 +299,7 @@ export const ClaimCard = ({ claim, suggestedSources = [], canSuggestSources = fa
                           {reviewer.displayName.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs font-medium">{reviewer.displayName}</span>
+                      <Link to={`/perfil/${reviewer.uid}`} className="text-xs font-medium hover:underline hover:text-primary transition-colors">{reviewer.displayName}</Link>
                       {currentUserUid && reviewer.uid === currentUserUid && onDeleteSuggestedSources && (
                         <Button
                           variant="ghost"
