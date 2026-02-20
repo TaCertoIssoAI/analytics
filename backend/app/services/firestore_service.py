@@ -527,11 +527,8 @@ class FirestoreService:
         
         interactions = []
         try:
-            # Busca likes
-            likes_query = self.analises_collection.where("liked_by", "array_contains", uid).stream()
-            for doc in likes_query:
-                data = doc.to_dict()
-                data["user_interaction"] = "like"
+            def _extract_user_fields(data: dict, uid: str) -> dict:
+                """Extrai observação e fontes sugeridas do usuário."""
                 obs_raw = data.get("observations", {}).get(uid)
                 if isinstance(obs_raw, dict):
                     data["user_observation"] = obs_raw.get("text", "Sem observações")
@@ -542,6 +539,22 @@ class FirestoreService:
                 else:
                     data["user_observation"] = "Sem observações"
                     data["has_custom_observation"] = False
+
+                # Extrai fontes sugeridas do usuário
+                user_sources = data.get("suggested_sources", {}).get(uid, {})
+                if user_sources:
+                    # user_sources é um dict { claim_id: { items: [...], observation: str } }
+                    data["user_suggested_sources"] = user_sources
+                else:
+                    data["user_suggested_sources"] = {}
+                return data
+
+            # Busca likes
+            likes_query = self.analises_collection.where("liked_by", "array_contains", uid).stream()
+            for doc in likes_query:
+                data = doc.to_dict()
+                data["user_interaction"] = "like"
+                data = _extract_user_fields(data, uid)
                 interactions.append(data)
                 
             # Busca dislikes
@@ -549,16 +562,7 @@ class FirestoreService:
             for doc in dislikes_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "dislike"
-                obs_raw = data.get("observations", {}).get(uid)
-                if isinstance(obs_raw, dict):
-                    data["user_observation"] = obs_raw.get("text", "Sem observações")
-                    data["has_custom_observation"] = obs_raw.get("has_custom_observation", False)
-                elif isinstance(obs_raw, str) and obs_raw:
-                    data["user_observation"] = obs_raw
-                    data["has_custom_observation"] = True
-                else:
-                    data["user_observation"] = "Sem observações"
-                    data["has_custom_observation"] = False
+                data = _extract_user_fields(data, uid)
                 interactions.append(data)
                 
             # Ordena por data (mais recente primeiro) - processamento em memória
