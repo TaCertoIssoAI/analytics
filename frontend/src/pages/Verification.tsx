@@ -37,7 +37,7 @@ import {
   ExternalLink,
   MessageSquare,
 } from "lucide-react";
-import { Analysis, ScrapedLink } from "@/types/analysis";
+import { Analysis, ScrapedLink, ClaimSuggestedSources, SuggestedSource } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
 import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
 import { RecommendationsSection } from "@/components/analytics/RecommendationsSection";
@@ -133,6 +133,9 @@ const Verification = () => {
     name: string;
     text: string;
   } | null>(null);
+
+  // Suggested sources state: { claim_id: ClaimSuggestedSources[] }
+  const [suggestedSourcesByClaim, setSuggestedSourcesByClaim] = useState<Record<string, ClaimSuggestedSources[]>>({});
 
   const normalizeMarkdown = (text: string) =>
     text
@@ -231,9 +234,60 @@ const Verification = () => {
       }
     };
 
+    const loadSuggestedSources = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const response = await fetch(`${apiUrl}/analises/${id}/suggested-sources`);
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedSourcesByClaim(data.suggested_sources || {});
+        }
+      } catch (error) {
+        console.error("Erro ao carregar fontes sugeridas:", error);
+      }
+    };
+
     loadAnalysis();
     loadInteractions();
+    loadSuggestedSources();
   }, [id, navigate, currentUser]);
+
+  const handleSuggestSources = async (claimId: string, sources: SuggestedSource[], observation: string) => {
+    if (!currentUser || !analysis) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const response = await fetch(
+      `${apiUrl}/analises/${analysis.document_id}/suggested-sources`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          claim_id: claimId,
+          sources,
+          observation: observation || null,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || "Erro ao enviar fontes sugeridas");
+    }
+
+    toast.success("Fontes sugeridas enviadas com sucesso!");
+
+    // Reload suggested sources
+    try {
+      const reloadResponse = await fetch(`${apiUrl}/analises/${analysis.document_id}/suggested-sources`);
+      if (reloadResponse.ok) {
+        const data = await reloadResponse.json();
+        setSuggestedSourcesByClaim(data.suggested_sources || {});
+      }
+    } catch {
+      // Silently fail reload
+    }
+  };
 
   const handleLike = async () => {
     if (!currentUser) {
@@ -977,7 +1031,13 @@ const Verification = () => {
             </h2>
             <div className="space-y-4">
               {analysis.claims.map((claim) => (
-                <ClaimCard key={claim.claim_id} claim={claim} />
+                <ClaimCard
+                  key={claim.claim_id}
+                  claim={claim}
+                  suggestedSources={suggestedSourcesByClaim[claim.claim_id] || []}
+                  canSuggestSources={!!(currentUser && (userLiked || userDisliked))}
+                  onSuggestSources={handleSuggestSources}
+                />
               ))}
             </div>
           </div>

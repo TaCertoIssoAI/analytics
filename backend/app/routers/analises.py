@@ -937,6 +937,101 @@ async def get_analise_interactions(document_id: str):
     return {"interactions": interactions}
 
 
+class SuggestedSourceItem(BaseModel):
+    url: str
+    title: str
+
+class SuggestedSourcesRequest(BaseModel):
+    uid: str
+    claim_id: str
+    sources: List[SuggestedSourceItem]  # Mínimo 1 fonte obrigatória
+    observation: str  # Observação obrigatória, max 300 chars
+
+@router.post(
+    "/{document_id}/suggested-sources",
+    summary="Sugerir fontes para uma claim",
+    description="Permite que um revisor que já avaliou a análise sugira fontes para uma claim específica"
+)
+async def add_suggested_sources(document_id: str, request: SuggestedSourcesRequest):
+    """
+    Adiciona fontes sugeridas por um revisor para uma claim específica.
+    O revisor precisa ter avaliado (like/dislike) a análise antes.
+    """
+    try:
+        if not request.sources:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Adicione pelo menos uma fonte."
+            )
+        obs = request.observation.strip()[:300]
+        if not obs:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A observação é obrigatória."
+            )
+        sources_dicts = [s.model_dump() for s in request.sources]
+        success = firestore_service.add_suggested_sources(
+            document_id, request.uid, request.claim_id, sources_dicts, obs
+        )
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Não foi possível adicionar fontes sugeridas. Verifique se você já avaliou esta análise."
+            )
+        return {"message": "Fontes sugeridas adicionadas com sucesso"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao adicionar fontes sugeridas: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+@router.get(
+    "/{document_id}/suggested-sources",
+    summary="Listar fontes sugeridas",
+    description="Retorna todas as fontes sugeridas por revisores para cada claim da análise"
+)
+async def get_suggested_sources(document_id: str):
+    """
+    Retorna fontes sugeridas agrupadas por claim e enriquecidas com dados do revisor.
+    """
+    try:
+        suggested = firestore_service.get_suggested_sources(document_id)
+        
+        # Enriquece com dados do usuário
+        all_uids = list(suggested.keys())
+        users = firestore_service.get_users_by_ids(all_uids)
+        users_map = {u["uid"]: u for u in users}
+        
+        # Reorganiza por claim_id para facilitar uso no frontend
+        # { claim_id: [ { uid, displayName, photoURL, sources: [{url, title}] } ] }
+        by_claim: Dict[str, list] = {}
+        
+        for uid, claims_data in suggested.items():
+            user = users_map.get(uid, {})
+            if isinstance(claims_data, dict):
+                for claim_id, sources in claims_data.items():
+                    if claim_id not in by_claim:
+                        by_claim[claim_id] = []
+                    by_claim[claim_id].append({
+                        "uid": uid,
+                        "displayName": user.get("displayName", "Usuário"),
+                        "photoURL": user.get("photoURL"),
+                        "sources": sources.get("items", []) if isinstance(sources, dict) else (sources if isinstance(sources, list) else []),
+                        "observation": sources.get("observation", "") if isinstance(sources, dict) else ""
+                    })
+        
+        return {"suggested_sources": by_claim}
+    except Exception as e:
+        print(f"❌ Erro ao buscar fontes sugeridas: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
+
 @router.get(
     "/export/dashboard",
     summary="Exportar dados do dashboard como CSV",

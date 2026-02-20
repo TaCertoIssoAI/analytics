@@ -27,6 +27,19 @@ export interface Source {
   citation_text: string | null;
 }
 
+export interface SuggestedSource {
+  url: string;
+  title: string;
+}
+
+export interface ClaimSuggestedSources {
+  uid: string;
+  displayName: string;
+  photoURL?: string;
+  sources: SuggestedSource[];
+  observation?: string;
+}
+
 export interface Claim {
   claim_id: string;
   text: string;

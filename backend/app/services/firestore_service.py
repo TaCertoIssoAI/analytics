@@ -444,12 +444,14 @@ class FirestoreService:
             elif action == 'remove_like':
                 doc_ref.update({
                     'liked_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD
+                    f'observations.{uid}': firestore.DELETE_FIELD,
+                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
                 })
             elif action == 'remove_dislike':
                 doc_ref.update({
                     'disliked_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD
+                    f'observations.{uid}': firestore.DELETE_FIELD,
+                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
                 })
             else:
                 return False
@@ -459,6 +461,63 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao atualizar interação: {e}")
             return False
+
+    def add_suggested_sources(self, document_id: str, uid: str, claim_id: str, sources: List[Dict[str, str]], observation: str = "") -> bool:
+        """
+        Adiciona fontes sugeridas por um revisor para uma claim específica.
+        Só permite se o usuário já avaliou (liked_by ou disliked_by).
+        sources: lista de { url: str, title: str }
+        observation: observação opcional do revisor
+        Armazena em suggested_sources.{uid}.{claim_id} = { items: [...], observation: str }
+        """
+        if not self.client: return False
+        
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            doc = doc_ref.get()
+            if not doc.exists:
+                print(f"⚠️  Análise {document_id} não encontrada para sugerir fontes")
+                return False
+            
+            data = doc.to_dict()
+            liked_by = data.get("liked_by", [])
+            disliked_by = data.get("disliked_by", [])
+            
+            if uid not in liked_by and uid not in disliked_by:
+                print(f"⚠️  Usuário {uid} não avaliou a análise {document_id}")
+                return False
+            
+            doc_ref.update({
+                f'suggested_sources.{uid}.{claim_id}': {
+                    'items': sources,
+                    'observation': observation
+                }
+            })
+            
+            print(f"✅ Fontes sugeridas adicionadas para claim {claim_id} por {uid} em {document_id}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao adicionar fontes sugeridas: {e}")
+            return False
+
+    def get_suggested_sources(self, document_id: str) -> Dict[str, Any]:
+        """
+        Retorna todas as fontes sugeridas de uma análise.
+        Retorna dict: { uid: { claim_id: [{url, title}, ...] } }
+        """
+        if not self.client: return {}
+        
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            doc = doc_ref.get()
+            if not doc.exists:
+                return {}
+            
+            data = doc.to_dict()
+            return data.get("suggested_sources", {})
+        except Exception as e:
+            print(f"❌ Erro ao buscar fontes sugeridas: {e}")
+            return {}
 
     def get_user_interactions(self, uid: str) -> List[Dict[str, Any]]:
         """
