@@ -11,7 +11,7 @@ import { useEffect, useState, useRef } from "react";
 import { getUserProfile, createUserProfile, saveUserProfile, getUserInteractions, UserProfile, UserInteraction } from "@/auth/userService";
 import { User } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck, KeyRound, Eye, EyeOff, BookOpen } from "lucide-react";
+import { Linkedin, Twitter, Instagram, Briefcase, Upload, Camera, MapPin, Calendar, ThumbsUp, ThumbsDown, MessageSquare, ExternalLink, BadgeCheck, KeyRound, Eye, EyeOff, BookOpen, Lightbulb } from "lucide-react";
 import ImageCropper from "@/components/ImageCropper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -666,7 +666,7 @@ const Profile = () => {
                     <Card key={interaction.document_id} className="overflow-hidden hover:shadow-md transition-shadow">
                       <CardContent className="p-0">
                         <div className="flex">
-                          <div className={`w-2 ${interaction.user_interaction === 'like' ? 'bg-primary' : 'bg-destructive'}`} />
+                          <div className={`w-2 ${interaction.user_interaction === 'like' ? 'bg-primary' : interaction.user_interaction === 'neutral' ? 'bg-muted-foreground' : 'bg-destructive'}`} />
                           <div className="p-5 flex-1">
                             <div className="flex items-start justify-between gap-4">
                               <div>
@@ -674,6 +674,10 @@ const Profile = () => {
                                   {interaction.user_interaction === 'like' ? (
                                     <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
                                       <ThumbsUp className="h-3 w-3" /> Aprovou
+                                    </Badge>
+                                  ) : interaction.user_interaction === 'neutral' ? (
+                                    <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 gap-1">
+                                      <Lightbulb className="h-3 w-3" /> Neutro
                                     </Badge>
                                   ) : (
                                     <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
@@ -880,6 +884,10 @@ const Profile = () => {
                 {viewingObservation?.user_interaction === "like" ? (
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
                     <ThumbsUp className="h-3 w-3" /> Aprovou
+                  </Badge>
+                ) : viewingObservation?.user_interaction === "neutral" ? (
+                  <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 gap-1">
+                    <Lightbulb className="h-3 w-3" /> Neutro
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">

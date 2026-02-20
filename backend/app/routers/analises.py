@@ -884,8 +884,9 @@ async def get_analise_interactions(document_id: str):
     
     liked_by = analise_data.get("liked_by", [])
     disliked_by = analise_data.get("disliked_by", [])
+    neutral_by = analise_data.get("neutral_by", [])
     
-    all_uids = list(set(liked_by + disliked_by))
+    all_uids = list(set(liked_by + disliked_by + neutral_by))
     
     # 2. Busca os perfis dos usuários
     users = firestore_service.get_users_by_ids(all_uids)
@@ -939,6 +940,23 @@ async def get_analise_interactions(document_id: str):
                 "suggested_sources": user_sources if user_sources else None
             })
 
+    for uid in neutral_by:
+        user = users_map.get(uid)
+        if user:
+            obs = _normalize_obs(observations.get(uid))
+            user_sources = all_suggested_sources.get(uid, {})
+            interactions.append({
+                "uid": uid,
+                "displayName": user.get("displayName", "Usuário"),
+                "photoURL": user.get("photoURL"),
+                "occupation": user.get("occupation"),
+                "socials": user.get("socials"),
+                "action": "neutral",
+                "observation": obs["text"],
+                "has_custom_observation": obs["has_custom_observation"],
+                "suggested_sources": user_sources if user_sources else None
+            })
+
     return {"interactions": interactions}
 
 
@@ -950,7 +968,7 @@ class SuggestedSourcesRequest(BaseModel):
     uid: str
     claim_id: str
     sources: List[SuggestedSourceItem]  # Mínimo 1 fonte obrigatória
-    observation: str  # Observação obrigatória, max 300 chars
+    observation: Optional[str] = None  # Observação obrigatória, max 300 chars
 
 @router.post(
     "/{document_id}/suggested-sources",
@@ -968,7 +986,7 @@ async def add_suggested_sources(document_id: str, request: SuggestedSourcesReque
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Adicione pelo menos uma fonte."
             )
-        obs = request.observation.strip()[:300]
+        obs = (request.observation or "").strip()[:300]
         if not obs:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -981,7 +999,7 @@ async def add_suggested_sources(document_id: str, request: SuggestedSourcesReque
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Não foi possível adicionar fontes sugeridas. Verifique se você já avaliou esta análise."
+                detail="Não foi possível adicionar fontes sugeridas. Verifique se a análise existe."
             )
         return {"message": "Fontes sugeridas adicionadas com sucesso"}
     except HTTPException:

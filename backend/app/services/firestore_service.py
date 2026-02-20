@@ -416,9 +416,9 @@ class FirestoreService:
 
     def update_analise_interaction(self, document_id: str, uid: str, action: str, observation: dict = None) -> bool:
         """
-        Atualiza likes/dislikes de uma análise com observação.
+        Atualiza likes/dislikes/neutral de uma análise com observação.
         observation: { text: str, has_custom_observation: bool }
-        action: 'like', 'dislike', 'remove_like', 'remove_dislike'
+        action: 'like', 'dislike', 'neutral', 'remove_like', 'remove_dislike', 'remove_neutral'
         """
         if not self.client: return False
         
@@ -428,7 +428,8 @@ class FirestoreService:
             if action == 'like':
                 update_data = {
                     'liked_by': firestore.ArrayUnion([uid]),
-                    'disliked_by': firestore.ArrayRemove([uid])
+                    'disliked_by': firestore.ArrayRemove([uid]),
+                    'neutral_by': firestore.ArrayRemove([uid])
                 }
                 if observation is not None:
                     update_data[f'observations.{uid}'] = observation
@@ -436,7 +437,17 @@ class FirestoreService:
             elif action == 'dislike':
                 update_data = {
                     'disliked_by': firestore.ArrayUnion([uid]),
-                    'liked_by': firestore.ArrayRemove([uid])
+                    'liked_by': firestore.ArrayRemove([uid]),
+                    'neutral_by': firestore.ArrayRemove([uid])
+                }
+                if observation is not None:
+                    update_data[f'observations.{uid}'] = observation
+                doc_ref.update(update_data)
+            elif action == 'neutral':
+                update_data = {
+                    'neutral_by': firestore.ArrayUnion([uid]),
+                    'liked_by': firestore.ArrayRemove([uid]),
+                    'disliked_by': firestore.ArrayRemove([uid])
                 }
                 if observation is not None:
                     update_data[f'observations.{uid}'] = observation
@@ -450,6 +461,12 @@ class FirestoreService:
             elif action == 'remove_dislike':
                 doc_ref.update({
                     'disliked_by': firestore.ArrayRemove([uid]),
+                    f'observations.{uid}': firestore.DELETE_FIELD,
+                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
+                })
+            elif action == 'remove_neutral':
+                doc_ref.update({
+                    'neutral_by': firestore.ArrayRemove([uid]),
                     f'observations.{uid}': firestore.DELETE_FIELD,
                     f'suggested_sources.{uid}': firestore.DELETE_FIELD
                 })
@@ -482,17 +499,26 @@ class FirestoreService:
             data = doc.to_dict()
             liked_by = data.get("liked_by", [])
             disliked_by = data.get("disliked_by", [])
+            neutral_by = data.get("neutral_by", [])
             
-            if uid not in liked_by and uid not in disliked_by:
-                print(f"⚠️  Usuário {uid} não avaliou a análise {document_id}")
-                return False
+            # Atualiza suggested_sources como nested dict (evita dot-notation com UIDs que têm hífens)
+            existing_sources = data.get("suggested_sources", {})
+            if uid not in existing_sources:
+                existing_sources[uid] = {}
+            existing_sources[uid][claim_id] = {
+                'items': sources,
+                'observation': observation
+            }
             
-            doc_ref.update({
-                f'suggested_sources.{uid}.{claim_id}': {
-                    'items': sources,
-                    'observation': observation
-                }
-            })
+            update_data = {
+                'suggested_sources': existing_sources
+            }
+            
+            if uid not in liked_by and uid not in disliked_by and uid not in neutral_by:
+                update_data['neutral_by'] = firestore.ArrayUnion([uid])
+                print(f"➕ Usuário {uid} adicionado automaticamente a neutral_by ao sugerir fontes")
+            
+            doc_ref.update(update_data)
             
             print(f"✅ Fontes sugeridas adicionadas para claim {claim_id} por {uid} em {document_id}")
             return True
@@ -565,6 +591,14 @@ class FirestoreService:
                 data = _extract_user_fields(data, uid)
                 interactions.append(data)
                 
+            # Busca neutrals
+            neutrals_query = self.analises_collection.where("neutral_by", "array_contains", uid).stream()
+            for doc in neutrals_query:
+                data = doc.to_dict()
+                data["user_interaction"] = "neutral"
+                data = _extract_user_fields(data, uid)
+                interactions.append(data)
+                
             # Ordena por data (mais recente primeiro) - processamento em memória
             interactions.sort(key=lambda x: x.get("processed_at", ""), reverse=True)
             
@@ -603,6 +637,10 @@ class FirestoreService:
                     
                 # Conta dislikes
                 for uid in data.get("disliked_by", []):
+                    user_counts[uid] = user_counts.get(uid, 0) + 1
+                    
+                # Conta neutrals
+                for uid in data.get("neutral_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
             
             # Se não houver revisores na semana, busca os top 5 de todos os tempos
@@ -652,6 +690,10 @@ class FirestoreService:
                 # Conta dislikes
                 for uid in data.get("disliked_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
+                    
+                # Conta neutrals
+                for uid in data.get("neutral_by", []):
+                    user_counts[uid] = user_counts.get(uid, 0) + 1
             
             # Ordena por contagem decrescente
             sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
@@ -682,7 +724,7 @@ class FirestoreService:
         try:
             # Busca apenas os campos necessários para economia de banda
             docs = self.analises_collection.select([
-                "liked_by", "disliked_by", "observations",
+                "liked_by", "disliked_by", "neutral_by", "observations",
                 "analysis_title", "overall_verdict", "processed_at", "document_id"
             ]).stream()
             
@@ -698,6 +740,7 @@ class FirestoreService:
                 observations = data.get("observations", {}) or {}
                 liked_by = data.get("liked_by", []) or []
                 disliked_by = data.get("disliked_by", []) or []
+                neutral_by = data.get("neutral_by", []) or []
                 
                 # Processa likes
                 for uid in liked_by:
@@ -755,6 +798,37 @@ class FirestoreService:
                         "processed_at": processed_at,
                         "uid": uid,
                         "action": "dislike",
+                        "observation": obs_text,
+                        "has_custom_observation": has_custom,
+                        "user_name": user_profile.get("displayName", "Usuário desconhecido") if user_profile else "Usuário desconhecido",
+                        "user_email": user_profile.get("email", "") if user_profile else "",
+                        "user_photo": user_profile.get("photoURL", "") if user_profile else "",
+                    })
+                
+                # Processa neutrals
+                for uid in neutral_by:
+                    obs_raw = observations.get(uid)
+                    if isinstance(obs_raw, dict):
+                        obs_text = obs_raw.get("text", "")
+                        has_custom = obs_raw.get("has_custom_observation", False)
+                    elif isinstance(obs_raw, str) and obs_raw:
+                        obs_text = obs_raw
+                        has_custom = True
+                    else:
+                        obs_text = ""
+                        has_custom = False
+                    
+                    if uid not in user_cache:
+                        user_cache[uid] = self.get_user_profile(uid)
+                    user_profile = user_cache[uid]
+                    
+                    reviews.append({
+                        "document_id": doc_id,
+                        "analysis_title": analysis_title,
+                        "overall_verdict": overall_verdict,
+                        "processed_at": processed_at,
+                        "uid": uid,
+                        "action": "neutral",
                         "observation": obs_text,
                         "has_custom_observation": has_custom,
                         "user_name": user_profile.get("displayName", "Usuário desconhecido") if user_profile else "Usuário desconhecido",

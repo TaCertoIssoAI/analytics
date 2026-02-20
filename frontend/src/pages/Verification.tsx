@@ -45,7 +45,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/auth/useAuth";
 import { toast } from "sonner";
-import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck, BookOpen } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck, BookOpen, Lightbulb, Search, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -106,6 +106,7 @@ const Verification = () => {
   const [dislikes, setDislikes] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
   const [userDisliked, setUserDisliked] = useState(false);
+  const [userNeutral, setUserNeutral] = useState(false);
   const [likedBy, setLikedBy] = useState<string[]>([]);
   const [dislikedBy, setDislikedBy] = useState<string[]>([]);
 
@@ -115,7 +116,7 @@ const Verification = () => {
     photoURL?: string;
     occupation?: string;
     socials?: { linkedin?: string };
-    action: "like" | "dislike";
+    action: "like" | "dislike" | "neutral";
     observation?: string;
     has_custom_observation?: boolean;
     suggested_sources?: Record<string, { items: { url: string; title?: string }[]; observation: string }>;
@@ -134,6 +135,9 @@ const Verification = () => {
 
   // Suggested sources state: { claim_id: ClaimSuggestedSources[] }
   const [suggestedSourcesByClaim, setSuggestedSourcesByClaim] = useState<Record<string, ClaimSuggestedSources[]>>({});
+
+  // Info modal for suggesting sources when all claims are unverified
+  const [suggestSourcesInfoOpen, setSuggestSourcesInfoOpen] = useState(false);
 
   const normalizeMarkdown = (text: string) =>
     text
@@ -207,6 +211,8 @@ const Verification = () => {
           if (currentUser) {
             setUserLiked(likedByList.includes(currentUser.uid));
             setUserDisliked(dislikedByList.includes(currentUser.uid));
+            const neutralByList = result.data.neutral_by || [];
+            setUserNeutral(neutralByList.includes(currentUser.uid));
           }
         } else {
           navigate(`/verificacao-nao-encontrada/${id}`);
@@ -263,7 +269,7 @@ const Verification = () => {
           uid: currentUser.uid,
           claim_id: claimId,
           sources,
-          observation: observation || null,
+          observation: observation || "",
         }),
       },
     );
@@ -273,6 +279,8 @@ const Verification = () => {
       throw new Error(err.detail || "Erro ao enviar fontes sugeridas");
     }
 
+    // Backend auto-adds user to neutral_by on first source submission
+    setUserNeutral(true);
     toast.success("Fontes sugeridas enviadas com sucesso!");
 
     // Reload suggested sources
@@ -455,6 +463,12 @@ const Verification = () => {
   const config = statusConfig[statusKey] || statusConfig["DESCONHECIDO"];
   const StatusIcon = config.icon;
 
+  // Check if all claims have unverifiable verdicts
+  const unverifiableVerdicts = new Set(["CHECK", "UNVERIFIED", "DESCONHECIDO", "FONTES INSUFICIENTES PARA VERIFICAR"]);
+  const allClaimsUnverified = analysis.claims.length > 0 && analysis.claims.every(
+    (claim) => unverifiableVerdicts.has(claim.verdict.toUpperCase())
+  );
+
   const modalityIcons = [];
   if (analysis.media_info.has_audio)
     modalityIcons.push({ icon: Mic, label: "Áudio" });
@@ -597,29 +611,49 @@ const Verification = () => {
               </Button>
 
               <div className="flex items-center gap-2 ml-auto">
-                <div className="flex flex-col items-center">
-                  <Button
-                    variant={userLiked ? "default" : "outline"}
-                    size="sm"
-                    className="gap-2"
-                    onClick={handleLike}
-                  >
-                    <ThumbsUp className="h-4 w-4" />
-                    {likes}
-                  </Button>
-                </div>
+                {allClaimsUnverified && currentUser ? (
+                  userNeutral ? (
+                    <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 gap-1 py-1.5 px-3">
+                      <Lightbulb className="h-3.5 w-3.5" /> Neutro — sugerindo fontes
+                    </Badge>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={() => setSuggestSourcesInfoOpen(true)}
+                    >
+                      <Lightbulb className="h-4 w-4" />
+                      Sugerir Fontes
+                    </Button>
+                  )
+                ) : (
+                  <>
+                    <div className="flex flex-col items-center">
+                      <Button
+                        variant={userLiked ? "default" : "outline"}
+                        size="sm"
+                        className="gap-2"
+                        onClick={handleLike}
+                      >
+                        <ThumbsUp className="h-4 w-4" />
+                        {likes}
+                      </Button>
+                    </div>
 
-                <div className="flex flex-col items-center">
-                  <Button
-                    variant={userDisliked ? "destructive" : "outline"}
-                    size="sm"
-                    className="gap-2"
-                    onClick={handleDislike}
-                  >
-                    <ThumbsDown className="h-4 w-4" />
-                    {dislikes}
-                  </Button>
-                </div>
+                    <div className="flex flex-col items-center">
+                      <Button
+                        variant={userDisliked ? "destructive" : "outline"}
+                        size="sm"
+                        className="gap-2"
+                        onClick={handleDislike}
+                      >
+                        <ThumbsDown className="h-4 w-4" />
+                        {dislikes}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Reviewers Modal */}
@@ -682,6 +716,11 @@ const Verification = () => {
                                 <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
                                   <ThumbsUp className="h-3 w-3" />
                                   <span>Aprovou</span>
+                                </div>
+                              ) : reviewer.action === "neutral" ? (
+                                <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
+                                  <Lightbulb className="h-3 w-3" />
+                                  <span>Neutro</span>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 group-hover:text-accent-foreground group-hover:bg-white/20 px-2 py-1 rounded-full transition-colors">
@@ -828,6 +867,10 @@ const Verification = () => {
                         <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
                           <ThumbsUp className="h-3 w-3" /> Aprovou
                         </Badge>
+                      ) : viewingObservation?.action === "neutral" ? (
+                        <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 gap-1">
+                          <Lightbulb className="h-3 w-3" /> Neutro
+                        </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
                           <ThumbsDown className="h-3 w-3" /> Reprovou
@@ -892,6 +935,89 @@ const Verification = () => {
                     </div>
                   )}
                 </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Suggest Sources Info Modal */}
+            <Dialog
+              open={suggestSourcesInfoOpen}
+              onOpenChange={setSuggestSourcesInfoOpen}
+            >
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-lg">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Lightbulb className="h-5 w-5 text-primary" />
+                    </div>
+                    Ajude a verificar esta análise!
+                  </DialogTitle>
+                  <DialogDescription>
+                    Todas as afirmações desta análise possuem fontes insuficientes para verificação. Você pode contribuir sugerindo fontes confiáveis.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent p-4 space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Siga os passos abaixo para sugerir fontes:
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">1</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Encontre a afirmação</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Role para baixo e veja as afirmações analisadas pelo bot nesta verificação.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">2</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Clique em "Sugerir Fontes"</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Dentro de cada afirmação, clique no botão <span className="inline-flex items-center gap-1 text-primary font-medium"><BookOpen className="h-3 w-3" />Sugerir Fontes</span> para abrir o formulário.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">3</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Adicione URLs e uma observação</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Insira links de fontes confiáveis e explique por que são relevantes para a verificação da afirmação.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg bg-muted/50 border border-dashed p-3 flex items-start gap-3">
+                    <Search className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Dica:</span> Procure por fontes de veículos de imprensa, órgãos oficiais, ou bases de dados reconhecidas. Quanto mais confiável a fonte, maior o impacto da sua contribuição.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={() => {
+                      setUserNeutral(true);
+                      setSuggestSourcesInfoOpen(false);
+                      toast.success("Agora você pode sugerir fontes nas afirmações abaixo. Sua contribuição será registrada ao enviar a primeira fonte.");
+                    }}
+                    className="gap-2 w-full sm:w-auto"
+                    disabled={userNeutral}
+                  >
+                    {userNeutral ? "Já contribuindo" : "Entendi, vou contribuir"}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
@@ -1124,7 +1250,7 @@ const Verification = () => {
                   key={claim.claim_id}
                   claim={claim}
                   suggestedSources={suggestedSourcesByClaim[claim.claim_id] || []}
-                  canSuggestSources={!!(currentUser && (userLiked || userDisliked))}
+                  canSuggestSources={!!(currentUser && (userLiked || userDisliked || userNeutral))}
                   onSuggestSources={handleSuggestSources}
                 />
               ))}

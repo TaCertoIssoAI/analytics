@@ -71,6 +71,7 @@ export interface Analysis {
   scraped_links: ScrapedLink[];
   liked_by?: string[];
   disliked_by?: string[];
+  neutral_by?: string[];
   overall_verdict: string;
   final_comment: string;
   media_info: MediaInfo;
