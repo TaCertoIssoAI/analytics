@@ -895,6 +895,7 @@ async def get_analise_interactions(document_id: str):
     interactions = []
     
     observations = analise_data.get("observations", {})
+    all_suggested_sources = analise_data.get("suggested_sources", {})
     
     def _normalize_obs(obs):
         """Normaliza observação para formato { text, has_custom_observation }."""
@@ -908,6 +909,7 @@ async def get_analise_interactions(document_id: str):
         user = users_map.get(uid)
         if user:
             obs = _normalize_obs(observations.get(uid))
+            user_sources = all_suggested_sources.get(uid, {})
             interactions.append({
                 "uid": uid,
                 "displayName": user.get("displayName", "Usuário"),
@@ -916,13 +918,15 @@ async def get_analise_interactions(document_id: str):
                 "socials": user.get("socials"),
                 "action": "like",
                 "observation": obs["text"],
-                "has_custom_observation": obs["has_custom_observation"]
+                "has_custom_observation": obs["has_custom_observation"],
+                "suggested_sources": user_sources if user_sources else None
             })
             
     for uid in disliked_by:
         user = users_map.get(uid)
         if user:
             obs = _normalize_obs(observations.get(uid))
+            user_sources = all_suggested_sources.get(uid, {})
             interactions.append({
                 "uid": uid,
                 "displayName": user.get("displayName", "Usuário"),
@@ -931,7 +935,8 @@ async def get_analise_interactions(document_id: str):
                 "socials": user.get("socials"),
                 "action": "dislike",
                 "observation": obs["text"],
-                "has_custom_observation": obs["has_custom_observation"]
+                "has_custom_observation": obs["has_custom_observation"],
+                "suggested_sources": user_sources if user_sources else None
             })
 
     return {"interactions": interactions}
