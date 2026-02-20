@@ -863,6 +863,7 @@ const Profile = () => {
               <MessageSquare className="h-5 w-5 text-primary" />
               Observação
             </DialogTitle>
+            <DialogDescription className="sr-only">Detalhes da observação do revisor</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {/* User + Badge row */}
