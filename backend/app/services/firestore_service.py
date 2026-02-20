@@ -526,6 +526,50 @@ class FirestoreService:
             print(f"❌ Erro ao adicionar fontes sugeridas: {e}")
             return False
 
+    def delete_suggested_sources(self, document_id: str, uid: str, claim_id: str) -> bool:
+        """
+        Remove as fontes sugeridas por um usuário para uma claim específica.
+        Se o usuário não tiver mais sugestões, remove-o de neutral_by (caso esteja lá apenas como neutro).
+        """
+        if not self.client: return False
+        
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            doc = doc_ref.get()
+            if not doc.exists:
+                return False
+            
+            data = doc.to_dict()
+            existing_sources = data.get("suggested_sources", {})
+            
+            # Verifica se o usuário tem sugestões para essa claim
+            if uid not in existing_sources or claim_id not in existing_sources.get(uid, {}):
+                return False
+            
+            # Remove a claim específica
+            del existing_sources[uid][claim_id]
+            
+            # Se o usuário não tem mais nenhuma sugestão, remove o uid inteiro
+            update_data = {}
+            if not existing_sources[uid]:
+                del existing_sources[uid]
+                # Se o usuário está em neutral_by (e não em liked/disliked), remove de neutral_by
+                liked_by = data.get("liked_by", [])
+                disliked_by = data.get("disliked_by", [])
+                neutral_by = data.get("neutral_by", [])
+                if uid in neutral_by and uid not in liked_by and uid not in disliked_by:
+                    update_data['neutral_by'] = firestore.ArrayRemove([uid])
+                    print(f"➖ Usuário {uid} removido de neutral_by (sem mais sugestões)")
+            
+            update_data['suggested_sources'] = existing_sources
+            doc_ref.update(update_data)
+            
+            print(f"🗑️ Sugestão de fontes removida: claim {claim_id} por {uid} em {document_id}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao remover fontes sugeridas: {e}")
+            return False
+
     def get_suggested_sources(self, document_id: str) -> Dict[str, Any]:
         """
         Retorna todas as fontes sugeridas de uma análise.

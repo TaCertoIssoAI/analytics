@@ -18,7 +18,9 @@ interface ClaimCardProps {
   claim: Claim;
   suggestedSources?: ClaimSuggestedSources[];
   canSuggestSources?: boolean;
+  currentUserUid?: string;
   onSuggestSources?: (claimId: string, sources: SuggestedSource[], observation: string) => Promise<void>;
+  onDeleteSuggestedSources?: (claimId: string, uid: string) => Promise<void>;
 }
 
 const resultConfig: Record<string, { label: string; icon: any; className: string }> = {
@@ -82,7 +84,7 @@ const getTopicDepth = (id: string): number => {
   return depth;
 };
 
-export const ClaimCard = ({ claim, suggestedSources = [], canSuggestSources = false, onSuggestSources }: ClaimCardProps) => {
+export const ClaimCard = ({ claim, suggestedSources = [], canSuggestSources = false, currentUserUid, onSuggestSources, onDeleteSuggestedSources }: ClaimCardProps) => {
   const config = resultConfig[claim.verdict.toUpperCase()] || resultConfig["CHECK"];
   const Icon = config.icon;
 
@@ -297,6 +299,22 @@ export const ClaimCard = ({ claim, suggestedSources = [], canSuggestSources = fa
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs font-medium">{reviewer.displayName}</span>
+                      {currentUserUid && reviewer.uid === currentUserUid && onDeleteSuggestedSources && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-auto h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={async () => {
+                            try {
+                              await onDeleteSuggestedSources(claim.claim_id, currentUserUid);
+                            } catch {
+                              toast.error("Erro ao remover fontes sugeridas.");
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                     {reviewer.observation && (
                       <p className="text-xs text-muted-foreground mb-2 italic">"{reviewer.observation}"</p>

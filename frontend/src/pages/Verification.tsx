@@ -295,6 +295,30 @@ const Verification = () => {
     }
   };
 
+  const handleDeleteSuggestedSources = async (claimId: string, uid: string) => {
+    if (!currentUser || !analysis) return;
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const response = await fetch(
+      `${apiUrl}/analises/${analysis.document_id}/suggested-sources?uid=${encodeURIComponent(uid)}&claim_id=${encodeURIComponent(claimId)}`,
+      { method: "DELETE" },
+    );
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || "Erro ao remover fontes sugeridas");
+    }
+    toast.success("Fontes sugeridas removidas.");
+    // Reload suggested sources
+    try {
+      const reloadResponse = await fetch(`${apiUrl}/analises/${analysis.document_id}/suggested-sources`);
+      if (reloadResponse.ok) {
+        const data = await reloadResponse.json();
+        setSuggestedSourcesByClaim(data.suggested_sources || {});
+      }
+    } catch {
+      // Silently fail reload
+    }
+  };
+
   const handleLike = async () => {
     if (!currentUser) {
       toast.error("Você precisa estar logado para avaliar.");
@@ -1251,7 +1275,9 @@ const Verification = () => {
                   claim={claim}
                   suggestedSources={suggestedSourcesByClaim[claim.claim_id] || []}
                   canSuggestSources={!!(currentUser && (userLiked || userDisliked || userNeutral))}
+                  currentUserUid={currentUser?.uid}
                   onSuggestSources={handleSuggestSources}
+                  onDeleteSuggestedSources={handleDeleteSuggestedSources}
                 />
               ))}
             </div>

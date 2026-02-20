@@ -1011,6 +1011,32 @@ async def add_suggested_sources(document_id: str, request: SuggestedSourcesReque
             detail=f"Erro interno: {str(e)}"
         )
 
+@router.delete(
+    "/{document_id}/suggested-sources",
+    summary="Remover fontes sugeridas",
+    description="Permite que um usuário remova suas próprias fontes sugeridas de uma claim"
+)
+async def delete_suggested_sources(document_id: str, uid: str = Query(..., description="UID do usuário"), claim_id: str = Query(..., description="ID da claim")):
+    """
+    Remove as fontes sugeridas pelo usuário para uma claim específica.
+    """
+    try:
+        success = firestore_service.delete_suggested_sources(document_id, uid, claim_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sugestão de fontes não encontrada."
+            )
+        return {"message": "Fontes sugeridas removidas com sucesso"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao remover fontes sugeridas: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
+        )
+
 @router.get(
     "/{document_id}/suggested-sources",
     summary="Listar fontes sugeridas",
