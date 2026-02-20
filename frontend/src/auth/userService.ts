@@ -93,6 +93,16 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
   }
 };
 
+export interface UserSuggestedSourceItem {
+  url: string;
+  title?: string;
+}
+
+export interface UserSuggestedSourceEntry {
+  items: UserSuggestedSourceItem[];
+  observation: string;
+}
+
 export interface UserInteraction {
   document_id: string;
   analysis_title?: string;
@@ -102,6 +112,7 @@ export interface UserInteraction {
   user_interaction: 'like' | 'dislike';
   user_observation?: string;
   has_custom_observation?: boolean;
+  user_suggested_sources?: Record<string, UserSuggestedSourceEntry>;
 }
 
 /**

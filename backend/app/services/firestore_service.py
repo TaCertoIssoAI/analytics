@@ -444,12 +444,14 @@ class FirestoreService:
             elif action == 'remove_like':
                 doc_ref.update({
                     'liked_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD
+                    f'observations.{uid}': firestore.DELETE_FIELD,
+                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
                 })
             elif action == 'remove_dislike':
                 doc_ref.update({
                     'disliked_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD
+                    f'observations.{uid}': firestore.DELETE_FIELD,
+                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
                 })
             else:
                 return False
@@ -460,6 +462,63 @@ class FirestoreService:
             print(f"❌ Erro ao atualizar interação: {e}")
             return False
 
+    def add_suggested_sources(self, document_id: str, uid: str, claim_id: str, sources: List[Dict[str, str]], observation: str = "") -> bool:
+        """
+        Adiciona fontes sugeridas por um revisor para uma claim específica.
+        Só permite se o usuário já avaliou (liked_by ou disliked_by).
+        sources: lista de { url: str, title: str }
+        observation: observação opcional do revisor
+        Armazena em suggested_sources.{uid}.{claim_id} = { items: [...], observation: str }
+        """
+        if not self.client: return False
+        
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            doc = doc_ref.get()
+            if not doc.exists:
+                print(f"⚠️  Análise {document_id} não encontrada para sugerir fontes")
+                return False
+            
+            data = doc.to_dict()
+            liked_by = data.get("liked_by", [])
+            disliked_by = data.get("disliked_by", [])
+            
+            if uid not in liked_by and uid not in disliked_by:
+                print(f"⚠️  Usuário {uid} não avaliou a análise {document_id}")
+                return False
+            
+            doc_ref.update({
+                f'suggested_sources.{uid}.{claim_id}': {
+                    'items': sources,
+                    'observation': observation
+                }
+            })
+            
+            print(f"✅ Fontes sugeridas adicionadas para claim {claim_id} por {uid} em {document_id}")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao adicionar fontes sugeridas: {e}")
+            return False
+
+    def get_suggested_sources(self, document_id: str) -> Dict[str, Any]:
+        """
+        Retorna todas as fontes sugeridas de uma análise.
+        Retorna dict: { uid: { claim_id: [{url, title}, ...] } }
+        """
+        if not self.client: return {}
+        
+        try:
+            doc_ref = self.analises_collection.document(document_id)
+            doc = doc_ref.get()
+            if not doc.exists:
+                return {}
+            
+            data = doc.to_dict()
+            return data.get("suggested_sources", {})
+        except Exception as e:
+            print(f"❌ Erro ao buscar fontes sugeridas: {e}")
+            return {}
+
     def get_user_interactions(self, uid: str) -> List[Dict[str, Any]]:
         """
         Busca todas as análises que o usuário interagiu (like ou dislike).
@@ -468,11 +527,8 @@ class FirestoreService:
         
         interactions = []
         try:
-            # Busca likes
-            likes_query = self.analises_collection.where("liked_by", "array_contains", uid).stream()
-            for doc in likes_query:
-                data = doc.to_dict()
-                data["user_interaction"] = "like"
+            def _extract_user_fields(data: dict, uid: str) -> dict:
+                """Extrai observação e fontes sugeridas do usuário."""
                 obs_raw = data.get("observations", {}).get(uid)
                 if isinstance(obs_raw, dict):
                     data["user_observation"] = obs_raw.get("text", "Sem observações")
@@ -483,6 +539,22 @@ class FirestoreService:
                 else:
                     data["user_observation"] = "Sem observações"
                     data["has_custom_observation"] = False
+
+                # Extrai fontes sugeridas do usuário
+                user_sources = data.get("suggested_sources", {}).get(uid, {})
+                if user_sources:
+                    # user_sources é um dict { claim_id: { items: [...], observation: str } }
+                    data["user_suggested_sources"] = user_sources
+                else:
+                    data["user_suggested_sources"] = {}
+                return data
+
+            # Busca likes
+            likes_query = self.analises_collection.where("liked_by", "array_contains", uid).stream()
+            for doc in likes_query:
+                data = doc.to_dict()
+                data["user_interaction"] = "like"
+                data = _extract_user_fields(data, uid)
                 interactions.append(data)
                 
             # Busca dislikes
@@ -490,16 +562,7 @@ class FirestoreService:
             for doc in dislikes_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "dislike"
-                obs_raw = data.get("observations", {}).get(uid)
-                if isinstance(obs_raw, dict):
-                    data["user_observation"] = obs_raw.get("text", "Sem observações")
-                    data["has_custom_observation"] = obs_raw.get("has_custom_observation", False)
-                elif isinstance(obs_raw, str) and obs_raw:
-                    data["user_observation"] = obs_raw
-                    data["has_custom_observation"] = True
-                else:
-                    data["user_observation"] = "Sem observações"
-                    data["has_custom_observation"] = False
+                data = _extract_user_fields(data, uid)
                 interactions.append(data)
                 
             # Ordena por data (mais recente primeiro) - processamento em memória

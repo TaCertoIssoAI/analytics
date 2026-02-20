@@ -37,7 +37,7 @@ import {
   ExternalLink,
   MessageSquare,
 } from "lucide-react";
-import { Analysis, ScrapedLink } from "@/types/analysis";
+import { Analysis, ScrapedLink, ClaimSuggestedSources, SuggestedSource } from "@/types/analysis";
 import { ClaimCard } from "@/components/analytics/ClaimCard";
 import { ScrapedLinkModal } from "@/components/analytics/ScrapedLinkModal";
 import { RecommendationsSection } from "@/components/analytics/RecommendationsSection";
@@ -45,7 +45,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/auth/useAuth";
 import { toast } from "sonner";
-import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Linkedin, BadgeCheck, BookOpen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -118,6 +118,7 @@ const Verification = () => {
     action: "like" | "dislike";
     observation?: string;
     has_custom_observation?: boolean;
+    suggested_sources?: Record<string, { items: { url: string; title?: string }[]; observation: string }>;
   }
   const [reviewers, setReviewers] = useState<InteractionUser[]>([]);
 
@@ -129,10 +130,10 @@ const Verification = () => {
   );
   const [submittingObservation, setSubmittingObservation] = useState(false);
   // Modal for viewing a specific reviewer's observation
-  const [viewingObservation, setViewingObservation] = useState<{
-    name: string;
-    text: string;
-  } | null>(null);
+  const [viewingObservation, setViewingObservation] = useState<InteractionUser | null>(null);
+
+  // Suggested sources state: { claim_id: ClaimSuggestedSources[] }
+  const [suggestedSourcesByClaim, setSuggestedSourcesByClaim] = useState<Record<string, ClaimSuggestedSources[]>>({});
 
   const normalizeMarkdown = (text: string) =>
     text
@@ -231,9 +232,60 @@ const Verification = () => {
       }
     };
 
+    const loadSuggestedSources = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const response = await fetch(`${apiUrl}/analises/${id}/suggested-sources`);
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedSourcesByClaim(data.suggested_sources || {});
+        }
+      } catch (error) {
+        console.error("Erro ao carregar fontes sugeridas:", error);
+      }
+    };
+
     loadAnalysis();
     loadInteractions();
+    loadSuggestedSources();
   }, [id, navigate, currentUser]);
+
+  const handleSuggestSources = async (claimId: string, sources: SuggestedSource[], observation: string) => {
+    if (!currentUser || !analysis) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const response = await fetch(
+      `${apiUrl}/analises/${analysis.document_id}/suggested-sources`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          claim_id: claimId,
+          sources,
+          observation: observation || null,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || "Erro ao enviar fontes sugeridas");
+    }
+
+    toast.success("Fontes sugeridas enviadas com sucesso!");
+
+    // Reload suggested sources
+    try {
+      const reloadResponse = await fetch(`${apiUrl}/analises/${analysis.document_id}/suggested-sources`);
+      if (reloadResponse.ok) {
+        const data = await reloadResponse.json();
+        setSuggestedSourcesByClaim(data.suggested_sources || {});
+      }
+    } catch {
+      // Silently fail reload
+    }
+  };
 
   const handleLike = async () => {
     if (!currentUser) {
@@ -639,23 +691,32 @@ const Verification = () => {
                               )}
                             </div>
                           </Link>
-                          {reviewer.observation && (
-                            <div className="px-3 pb-3 pt-0">
+                          {(reviewer.observation || (reviewer.suggested_sources && Object.keys(reviewer.suggested_sources).length > 0)) && (
+                            <div className="px-3 pb-3 pt-0 flex items-center gap-3">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setViewingObservation({
-                                    name: reviewer.displayName,
-                                    text: reviewer.observation!,
-                                  });
+                                  setViewingObservation(reviewer);
                                 }}
-                                className={`text-xs flex items-center gap-1 transition-colors ${reviewer.has_custom_observation ? "text-primary hover:text-primary/80" : "text-muted-foreground hover:text-primary"}`}
+                                className={`text-xs flex items-center gap-1 transition-colors ${(reviewer.has_custom_observation || (reviewer.suggested_sources && Object.keys(reviewer.suggested_sources).length > 0)) ? "text-primary hover:text-primary/80" : "text-muted-foreground hover:text-primary"}`}
                               >
                                 <MessageSquare className="h-3 w-3" />
                                 {reviewer.has_custom_observation
                                   ? "Ver observação"
                                   : "Sem observações"}
                               </button>
+                              {reviewer.suggested_sources && Object.keys(reviewer.suggested_sources).length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewingObservation(reviewer);
+                                  }}
+                                  className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
+                                >
+                                  <BookOpen className="h-3 w-3" />
+                                  {Object.keys(reviewer.suggested_sources).length} fonte(s) sugerida(s)
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -739,15 +800,97 @@ const Verification = () => {
                 if (!open) setViewingObservation(null);
               }}
             >
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Observação de {viewingObservation?.name}
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    Observação
                   </DialogTitle>
+                  <DialogDescription className="sr-only">Detalhes da observação do revisor</DialogDescription>
                 </DialogHeader>
-                <div className="p-4 rounded-lg bg-muted/50 border">
-                  <p className="text-sm">{viewingObservation?.text}</p>
+                <div className="space-y-4">
+                  {/* User + Badge row */}
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-muted">
+                      <AvatarImage src={getValidPhotoUrl(viewingObservation?.photoURL)} />
+                      <AvatarFallback>{viewingObservation?.displayName?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/perfil/${viewingObservation?.uid}`} className="font-medium text-sm truncate hover:underline">
+                        {viewingObservation?.displayName || "Usuário"}
+                      </Link>
+                      {viewingObservation?.occupation && (
+                        <div className="text-xs text-muted-foreground truncate">{viewingObservation.occupation}</div>
+                      )}
+                    </div>
+                    <div>
+                      {viewingObservation?.action === "like" ? (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
+                          <ThumbsUp className="h-3 w-3" /> Aprovou
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
+                          <ThumbsDown className="h-3 w-3" /> Reprovou
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Analysis info */}
+                  <div className="rounded-lg border p-3 bg-muted/30">
+                    <div className="text-xs text-muted-foreground mb-1">Análise avaliada</div>
+                    <p className="text-sm font-medium line-clamp-2">{analysis?.analysis_title || "Sem título"}</p>
+                    {analysis?.overall_verdict && (
+                      <p className="text-xs text-muted-foreground mt-1">{analysis.overall_verdict}</p>
+                    )}
+                  </div>
+
+                  {/* Observation text */}
+                  <div className="bg-secondary/50 rounded-lg p-4 text-sm whitespace-pre-wrap break-words">
+                    {viewingObservation?.observation || "Sem observação"}
+                  </div>
+
+                  {/* Suggested Sources */}
+                  {viewingObservation?.suggested_sources && Object.keys(viewingObservation.suggested_sources).length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        Fontes Sugeridas
+                      </div>
+                      {Object.entries(viewingObservation.suggested_sources).map(([claimId, entry]) => {
+                        const claimText = analysis?.claims?.find((c) => c.claim_id === claimId)?.text;
+                        return (
+                          <div key={claimId} className="rounded-lg border p-3 space-y-2">
+                            {claimText && (
+                              <p className="text-xs text-muted-foreground italic line-clamp-2">
+                                "{claimText}"
+                              </p>
+                            )}
+                            {entry.observation && (
+                              <p className="text-xs text-muted-foreground">
+                                <span className="font-medium">Obs:</span> {entry.observation}
+                              </p>
+                            )}
+                            <div className="space-y-1">
+                              {entry.items?.map((source, idx) => (
+                                <div key={idx} className="flex items-center gap-2 text-xs">
+                                  <ExternalLink className="h-3 w-3 text-primary flex-shrink-0" />
+                                  <a
+                                    href={source.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline truncate"
+                                  >
+                                    {source.title || source.url}
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>
@@ -977,7 +1120,13 @@ const Verification = () => {
             </h2>
             <div className="space-y-4">
               {analysis.claims.map((claim) => (
-                <ClaimCard key={claim.claim_id} claim={claim} />
+                <ClaimCard
+                  key={claim.claim_id}
+                  claim={claim}
+                  suggestedSources={suggestedSourcesByClaim[claim.claim_id] || []}
+                  canSuggestSources={!!(currentUser && (userLiked || userDisliked))}
+                  onSuggestSources={handleSuggestSources}
+                />
               ))}
             </div>
           </div>

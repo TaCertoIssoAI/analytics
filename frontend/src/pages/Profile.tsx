@@ -701,15 +701,21 @@ const Profile = () => {
                                 </Link>
                               </Button>
                             </div>
-                            {interaction.user_observation && (
-                              <div className="mt-3 pt-3 border-t">
+                            {(interaction.user_observation || (interaction.user_suggested_sources && Object.keys(interaction.user_suggested_sources).length > 0)) && (
+                              <div className="mt-3 pt-3 border-t flex items-center gap-3">
                                 <button
                                   onClick={() => setViewingObservation(interaction)}
-                                  className={`text-xs flex items-center gap-1 transition-colors ${interaction.has_custom_observation ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-primary'}`}
+                                  className={`text-xs flex items-center gap-1 transition-colors ${(interaction.has_custom_observation || (interaction.user_suggested_sources && Object.keys(interaction.user_suggested_sources).length > 0)) ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-primary'}`}
                                 >
                                   <MessageSquare className="h-3 w-3" />
                                   {interaction.has_custom_observation ? 'Ver observação' : 'Sem observações'}
                                 </button>
+                                {interaction.user_suggested_sources && Object.keys(interaction.user_suggested_sources).length > 0 && (
+                                  <span className="text-xs flex items-center gap-1 text-primary">
+                                    <BookOpen className="h-3 w-3" />
+                                    {Object.keys(interaction.user_suggested_sources).length} fonte(s) sugerida(s)
+                                  </span>
+                                )}
                               </div>
                             )}
                           </div>
@@ -851,12 +857,13 @@ const Profile = () => {
 
       {/* View Observation Modal */}
       <Dialog open={!!viewingObservation} onOpenChange={(open) => { if (!open) setViewingObservation(null); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" />
               Observação
             </DialogTitle>
+            <DialogDescription className="sr-only">Detalhes da observação do revisor</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {/* User + Badge row */}
@@ -898,6 +905,48 @@ const Profile = () => {
             <div className="bg-secondary/50 rounded-lg p-4 text-sm whitespace-pre-wrap break-words">
               {viewingObservation?.user_observation || "Sem observação"}
             </div>
+
+            {/* Suggested Sources */}
+            {viewingObservation?.user_suggested_sources && Object.keys(viewingObservation.user_suggested_sources).length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  Fontes Sugeridas
+                </div>
+                {Object.entries(viewingObservation.user_suggested_sources).map(([claimId, entry]) => {
+                  const claimText = (viewingObservation as any)?.claims?.find((c: any) => c.claim_id === claimId)?.text;
+                  return (
+                    <div key={claimId} className="rounded-lg border p-3 space-y-2">
+                      {claimText && (
+                        <p className="text-xs text-muted-foreground italic line-clamp-2">
+                          "{claimText}"
+                        </p>
+                      )}
+                      {entry.observation && (
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium">Obs:</span> {entry.observation}
+                        </p>
+                      )}
+                      <div className="space-y-1">
+                        {entry.items?.map((source, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            <ExternalLink className="h-3 w-3 text-primary flex-shrink-0" />
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline truncate"
+                            >
+                              {source.title || source.url}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Action */}
             <div className="flex justify-end">
