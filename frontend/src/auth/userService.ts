@@ -109,7 +109,7 @@ export interface UserInteraction {
   user_message_text?: string;
   processed_at: string;
   overall_verdict: string;
-  user_interaction: 'like' | 'dislike';
+  user_interaction: 'like' | 'dislike' | 'neutral';
   user_observation?: string;
   has_custom_observation?: boolean;
   user_suggested_sources?: Record<string, UserSuggestedSourceEntry>;

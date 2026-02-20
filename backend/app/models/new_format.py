@@ -75,6 +75,7 @@ class AnaliseNewFormat(BaseModel):
 
     liked_by: List[str] = []
     disliked_by: List[str] = []
+    neutral_by: List[str] = []
 
     overall_verdict: str  # "FALSO", "VERDADEIRO", "ENGANOSO", "CHECK", "UNVERIFIED"
     final_comment: str  # Comentário final sobre a análise
