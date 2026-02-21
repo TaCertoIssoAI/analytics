@@ -1,11 +1,17 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 from app.services.firestore_service import firestore_service
 from app.utils.auth import verify_admin
 from firebase_admin import auth
 from fastapi import Depends
+
+_PRIVATE_FIELDS = {"email"}
+
+def _public_profile(profile: dict) -> dict:
+    """Strip private fields from a user profile for public consumption."""
+    return {k: v for k, v in profile.items() if k not in _PRIVATE_FIELDS}
 
 router = APIRouter(
     prefix="/users",
@@ -52,14 +58,25 @@ async def create_user_profile(profile: UserProfile):
     return {"message": "Perfil criado com sucesso"}
 
 @router.get("/profile/{uid}")
-async def get_user_profile(uid: str):
+async def get_user_profile(uid: str, request: Request):
     profile = firestore_service.get_user_profile(uid)
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Perfil não encontrado"
         )
-    return profile
+
+    # Check if requester is the profile owner
+    is_owner = False
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        try:
+            decoded = auth.verify_id_token(auth_header[7:])
+            is_owner = decoded.get("uid") == uid
+        except Exception:
+            pass
+
+    return profile if is_owner else _public_profile(profile)
 
 @router.get("/top-reviewers")
 async def get_top_reviewers():
@@ -67,6 +84,11 @@ async def get_top_reviewers():
     Retorna os top reviewers da semana.
     """
     top_reviewers = firestore_service.get_top_reviewers()
+    # Strip private fields from each reviewer's user profile
+    if "reviewers" in top_reviewers:
+        for entry in top_reviewers["reviewers"]:
+            if "user" in entry:
+                entry["user"] = _public_profile(entry["user"])
     return {"success": True, "data": top_reviewers}
 
 @router.get("/community")
@@ -75,16 +97,19 @@ async def get_community_members(limit: int = 50, offset: int = 0, search: str = 
     Lista membros da comunidade (público, sem autenticação).
     """
     result = firestore_service.list_users(limit, offset)
-    
+
     # Apply search filter if provided
     if search:
         search_lower = search.lower()
-        filtered = [u for u in result["users"] if 
+        filtered = [u for u in result["users"] if
             (u.get("displayName") or "").lower().find(search_lower) >= 0 or
             (u.get("occupation") or "").lower().find(search_lower) >= 0]
         result["users"] = filtered
         result["total"] = len(filtered)
-    
+
+    # Strip private fields from public community listing
+    result["users"] = [_public_profile(u) for u in result["users"]]
+
     return {"success": True, "data": result}
 
 @router.get("/{uid}/interactions")
@@ -280,6 +305,15 @@ async def create_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+@router.post("/admin/backfill-review-counts")
+async def backfill_review_counts(admin_user: dict = Depends(verify_admin)):
+    """
+    One-shot backfill: computes review_count for all users from analises collection.
+    Admin only.
+    """
+    counts = firestore_service.backfill_review_counts()
+    return {"success": True, "users_updated": len(counts), "counts": counts}
 
 @router.delete("/{uid}")
 async def delete_user(
