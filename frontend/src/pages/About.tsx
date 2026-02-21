@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Github, Linkedin } from "lucide-react";
+import { Github, Linkedin, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -33,14 +33,17 @@ const About = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="container py-12 max-w-4xl">
-        <div className="space-y-12">
+      <div className="container py-8">
+        <div className="space-y-10">
           {/* Hero Section */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Sobre o Projeto
-            </h1>
-            <p className="text-xl text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Info className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold">Sobre o Projeto</h1>
+            </div>
+            <p className="text-muted-foreground ml-[52px]">
               Combatendo desinformação com inteligência artificial
             </p>
             {/* Vídeo explicativo incorporado abaixo do subtítulo */}
@@ -56,7 +59,6 @@ const About = () => {
                 />
               </div>
             </div>
-
           </div>
 
           {/* Main Content */}

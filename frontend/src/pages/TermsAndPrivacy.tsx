@@ -1,19 +1,23 @@
 import { Header } from "@/components/Header";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Shield } from "lucide-react";
 
 const TermsAndPrivacy = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="container py-12 max-w-4xl">
+      <div className="container py-8">
         <div className="space-y-8">
           {/* Hero Section */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Termos de Uso e Política de Privacidade
-            </h1>
-            <p className="text-xl text-muted-foreground">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold">Termos de Uso e Política de Privacidade</h1>
+            </div>
+            <p className="text-muted-foreground ml-[52px]">
               Transparência sobre como processamos seus dados
             </p>
           </div>
