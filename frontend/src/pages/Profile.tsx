@@ -73,8 +73,9 @@ const Profile = () => {
       if (!id) return;
       setLoading(true);
       try {
-        // Fetch Profile
-        let userProfile = await getUserProfile(id);
+        // Fetch Profile — pass token when fetching own profile so backend returns private fields (e.g. email)
+        const token = isOwnProfile ? await currentUser?.getIdToken() : undefined;
+        let userProfile = await getUserProfile(id, token);
         
         // If profile doesn't exist in Firestore but it's the current user, create it
         if (!userProfile && isOwnProfile && currentUser) {
@@ -439,7 +440,7 @@ const Profile = () => {
                     {/* Stats */}
                     <div className=" gap-4 py-4 border-t border-b">
                       <div className="text-center">
-                        <div className="text-2xl font-bold">{interactions.length}</div>
+                        <div className="text-2xl font-bold">{profile?.review_count ?? interactions.length}</div>
                         <div className="text-xs text-muted-foreground uppercase tracking-wider">Avaliações</div>
                       </div>
                     </div>

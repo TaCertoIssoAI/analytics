@@ -16,6 +16,7 @@ export interface UserProfile {
     instagram?: string;
   };
   role?: 'admin' | 'user';
+  review_count?: number;
 }
 
 /**
@@ -71,16 +72,20 @@ export const saveUserProfile = async (profile: UserProfile) => {
 };
 
 /**
- * Get a user profile via Backend API
+ * Get a user profile via Backend API.
+ * Pass a token to receive private fields (e.g. email) when fetching own profile.
  */
-export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+export const getUserProfile = async (userId: string, token?: string): Promise<UserProfile | null> => {
   try {
-    const response = await fetch(`${API_URL}/users/profile/${userId}`);
-    
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_URL}/users/profile/${userId}`, { headers });
+
     if (response.status === 404) {
       return null;
     }
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch profile: ${response.statusText}`);
     }

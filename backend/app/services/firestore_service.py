@@ -592,160 +592,237 @@ class FirestoreService:
     def update_analise_interaction(self, document_id: str, uid: str, action: str, observation: dict = None) -> bool:
         """
         Atualiza likes/dislikes/neutral de uma análise com observação.
+        Uses a Firestore transaction to atomically update the user's review_count.
         observation: { text: str, has_custom_observation: bool }
         action: 'like', 'dislike', 'neutral', 'remove_like', 'remove_dislike', 'remove_neutral'
         """
         if not self.client: return False
-        
+        t0 = time.perf_counter()
+
         try:
-            doc_ref = self.analises_collection.document(document_id)
-            
-            if action == 'like':
-                update_data = {
-                    'liked_by': firestore.ArrayUnion([uid]),
-                    'disliked_by': firestore.ArrayRemove([uid]),
-                    'neutral_by': firestore.ArrayRemove([uid])
-                }
-                if observation is not None:
-                    update_data[f'observations.{uid}'] = observation
-                doc_ref.update(update_data)
-            elif action == 'dislike':
-                update_data = {
-                    'disliked_by': firestore.ArrayUnion([uid]),
-                    'liked_by': firestore.ArrayRemove([uid]),
-                    'neutral_by': firestore.ArrayRemove([uid])
-                }
-                if observation is not None:
-                    update_data[f'observations.{uid}'] = observation
-                doc_ref.update(update_data)
-            elif action == 'neutral':
-                update_data = {
-                    'neutral_by': firestore.ArrayUnion([uid]),
-                    'liked_by': firestore.ArrayRemove([uid]),
-                    'disliked_by': firestore.ArrayRemove([uid])
-                }
-                if observation is not None:
-                    update_data[f'observations.{uid}'] = observation
-                doc_ref.update(update_data)
-            elif action == 'remove_like':
-                doc_ref.update({
-                    'liked_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD,
-                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
-                })
-            elif action == 'remove_dislike':
-                doc_ref.update({
-                    'disliked_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD,
-                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
-                })
-            elif action == 'remove_neutral':
-                doc_ref.update({
-                    'neutral_by': firestore.ArrayRemove([uid]),
-                    f'observations.{uid}': firestore.DELETE_FIELD,
-                    f'suggested_sources.{uid}': firestore.DELETE_FIELD
-                })
-            else:
-                return False
-            
+            analise_ref = self.analises_collection.document(document_id)
+            user_ref = self.users_collection.document(uid)
+
+            @firestore.transactional
+            def _update_in_transaction(transaction):
+                analise_snap = analise_ref.get(transaction=transaction)
+                if not analise_snap.exists:
+                    return False
+
+                data = analise_snap.to_dict()
+                liked_by = set(data.get("liked_by") or [])
+                disliked_by = set(data.get("disliked_by") or [])
+                neutral_by = set(data.get("neutral_by") or [])
+                was_in_any = uid in liked_by or uid in disliked_by or uid in neutral_by
+
+                analise_update = {}
+                counter_delta = 0
+
+                if action == 'like':
+                    analise_update = {
+                        'liked_by': firestore.ArrayUnion([uid]),
+                        'disliked_by': firestore.ArrayRemove([uid]),
+                        'neutral_by': firestore.ArrayRemove([uid])
+                    }
+                    if observation is not None:
+                        analise_update[f'observations.{uid}'] = observation
+                    if not was_in_any:
+                        counter_delta = 1
+                elif action == 'dislike':
+                    analise_update = {
+                        'disliked_by': firestore.ArrayUnion([uid]),
+                        'liked_by': firestore.ArrayRemove([uid]),
+                        'neutral_by': firestore.ArrayRemove([uid])
+                    }
+                    if observation is not None:
+                        analise_update[f'observations.{uid}'] = observation
+                    if not was_in_any:
+                        counter_delta = 1
+                elif action == 'neutral':
+                    analise_update = {
+                        'neutral_by': firestore.ArrayUnion([uid]),
+                        'liked_by': firestore.ArrayRemove([uid]),
+                        'disliked_by': firestore.ArrayRemove([uid])
+                    }
+                    if observation is not None:
+                        analise_update[f'observations.{uid}'] = observation
+                    if not was_in_any:
+                        counter_delta = 1
+                elif action == 'remove_like':
+                    analise_update = {
+                        'liked_by': firestore.ArrayRemove([uid]),
+                        f'observations.{uid}': firestore.DELETE_FIELD,
+                        f'suggested_sources.{uid}': firestore.DELETE_FIELD
+                    }
+                    # After removing from liked_by, check if still in other arrays
+                    if uid in liked_by and uid not in disliked_by and uid not in neutral_by:
+                        counter_delta = -1
+                elif action == 'remove_dislike':
+                    analise_update = {
+                        'disliked_by': firestore.ArrayRemove([uid]),
+                        f'observations.{uid}': firestore.DELETE_FIELD,
+                        f'suggested_sources.{uid}': firestore.DELETE_FIELD
+                    }
+                    if uid in disliked_by and uid not in liked_by and uid not in neutral_by:
+                        counter_delta = -1
+                elif action == 'remove_neutral':
+                    analise_update = {
+                        'neutral_by': firestore.ArrayRemove([uid]),
+                        f'observations.{uid}': firestore.DELETE_FIELD,
+                        f'suggested_sources.{uid}': firestore.DELETE_FIELD
+                    }
+                    if uid in neutral_by and uid not in liked_by and uid not in disliked_by:
+                        counter_delta = -1
+                else:
+                    return False
+
+                transaction.update(analise_ref, analise_update)
+
+                if counter_delta != 0:
+                    transaction.update(user_ref, {"review_count": firestore.Increment(counter_delta)})
+                    print(f"📊 review_count delta={counter_delta:+d} for user {uid}")
+
+                return True
+
+            transaction = self.client.transaction()
+            result = _update_in_transaction(transaction)
+
             # Invalidate top_reviewers cache (interaction change affects reviewer counts)
             self._top_reviewers_cache = None
 
-            print(f"✅ Interação {action} atualizada para {document_id} por {uid}")
-            return True
+            elapsed = time.perf_counter() - t0
+            print(f"✅ Interação {action} atualizada para {document_id} por {uid} in {elapsed:.4f}s")
+            return result
         except Exception as e:
-            print(f"❌ Erro ao atualizar interação: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ Erro ao atualizar interação in {elapsed:.4f}s: {e}")
             return False
 
     def add_suggested_sources(self, document_id: str, uid: str, claim_id: str, sources: List[Dict[str, str]], observation: str = "") -> bool:
         """
         Adiciona fontes sugeridas por um revisor para uma claim específica.
-        Só permite se o usuário já avaliou (liked_by ou disliked_by).
+        Uses a transaction to atomically increment review_count if auto-adding to neutral_by.
         sources: lista de { url: str, title: str }
         observation: observação opcional do revisor
         Armazena em suggested_sources.{uid}.{claim_id} = { items: [...], observation: str }
         """
         if not self.client: return False
-        
+        t0 = time.perf_counter()
+
         try:
-            doc_ref = self.analises_collection.document(document_id)
-            doc = doc_ref.get()
-            if not doc.exists:
-                print(f"⚠️  Análise {document_id} não encontrada para sugerir fontes")
-                return False
-            
-            data = doc.to_dict()
-            liked_by = data.get("liked_by", [])
-            disliked_by = data.get("disliked_by", [])
-            neutral_by = data.get("neutral_by", [])
-            
-            # Atualiza suggested_sources como nested dict (evita dot-notation com UIDs que têm hífens)
-            existing_sources = data.get("suggested_sources", {})
-            if uid not in existing_sources:
-                existing_sources[uid] = {}
-            existing_sources[uid][claim_id] = {
-                'items': sources,
-                'observation': observation
-            }
-            
-            update_data = {
-                'suggested_sources': existing_sources
-            }
-            
-            if uid not in liked_by and uid not in disliked_by and uid not in neutral_by:
-                update_data['neutral_by'] = firestore.ArrayUnion([uid])
-                print(f"➕ Usuário {uid} adicionado automaticamente a neutral_by ao sugerir fontes")
-            
-            doc_ref.update(update_data)
-            
-            print(f"✅ Fontes sugeridas adicionadas para claim {claim_id} por {uid} em {document_id}")
-            return True
+            analise_ref = self.analises_collection.document(document_id)
+            user_ref = self.users_collection.document(uid)
+
+            @firestore.transactional
+            def _add_sources_in_transaction(transaction):
+                analise_snap = analise_ref.get(transaction=transaction)
+                if not analise_snap.exists:
+                    print(f"⚠️  Análise {document_id} não encontrada para sugerir fontes")
+                    return False
+
+                data = analise_snap.to_dict()
+                liked_by = data.get("liked_by", [])
+                disliked_by = data.get("disliked_by", [])
+                neutral_by = data.get("neutral_by", [])
+
+                # Atualiza suggested_sources como nested dict
+                existing_sources = data.get("suggested_sources", {})
+                if uid not in existing_sources:
+                    existing_sources[uid] = {}
+                existing_sources[uid][claim_id] = {
+                    'items': sources,
+                    'observation': observation
+                }
+
+                update_data = {
+                    'suggested_sources': existing_sources
+                }
+
+                counter_delta = 0
+                if uid not in liked_by and uid not in disliked_by and uid not in neutral_by:
+                    update_data['neutral_by'] = firestore.ArrayUnion([uid])
+                    counter_delta = 1
+                    print(f"➕ Usuário {uid} adicionado automaticamente a neutral_by ao sugerir fontes")
+
+                transaction.update(analise_ref, update_data)
+
+                if counter_delta != 0:
+                    transaction.update(user_ref, {"review_count": firestore.Increment(counter_delta)})
+                    print(f"📊 review_count delta={counter_delta:+d} for user {uid}")
+
+                return True
+
+            transaction = self.client.transaction()
+            result = _add_sources_in_transaction(transaction)
+
+            elapsed = time.perf_counter() - t0
+            print(f"✅ Fontes sugeridas adicionadas para claim {claim_id} por {uid} em {document_id} in {elapsed:.4f}s")
+            return result
         except Exception as e:
-            print(f"❌ Erro ao adicionar fontes sugeridas: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ Erro ao adicionar fontes sugeridas in {elapsed:.4f}s: {e}")
             return False
 
     def delete_suggested_sources(self, document_id: str, uid: str, claim_id: str) -> bool:
         """
         Remove as fontes sugeridas por um usuário para uma claim específica.
-        Se o usuário não tiver mais sugestões, remove-o de neutral_by (caso esteja lá apenas como neutro).
+        Uses a transaction to atomically decrement review_count if removing from neutral_by.
         """
         if not self.client: return False
-        
+        t0 = time.perf_counter()
+
         try:
-            doc_ref = self.analises_collection.document(document_id)
-            doc = doc_ref.get()
-            if not doc.exists:
-                return False
-            
-            data = doc.to_dict()
-            existing_sources = data.get("suggested_sources", {})
-            
-            # Verifica se o usuário tem sugestões para essa claim
-            if uid not in existing_sources or claim_id not in existing_sources.get(uid, {}):
-                return False
-            
-            # Remove a claim específica
-            del existing_sources[uid][claim_id]
-            
-            # Se o usuário não tem mais nenhuma sugestão, remove o uid inteiro
-            update_data = {}
-            if not existing_sources[uid]:
-                del existing_sources[uid]
-                # Se o usuário está em neutral_by (e não em liked/disliked), remove de neutral_by
-                liked_by = data.get("liked_by", [])
-                disliked_by = data.get("disliked_by", [])
-                neutral_by = data.get("neutral_by", [])
-                if uid in neutral_by and uid not in liked_by and uid not in disliked_by:
-                    update_data['neutral_by'] = firestore.ArrayRemove([uid])
-                    print(f"➖ Usuário {uid} removido de neutral_by (sem mais sugestões)")
-            
-            update_data['suggested_sources'] = existing_sources
-            doc_ref.update(update_data)
-            
-            print(f"🗑️ Sugestão de fontes removida: claim {claim_id} por {uid} em {document_id}")
-            return True
+            analise_ref = self.analises_collection.document(document_id)
+            user_ref = self.users_collection.document(uid)
+
+            @firestore.transactional
+            def _delete_sources_in_transaction(transaction):
+                analise_snap = analise_ref.get(transaction=transaction)
+                if not analise_snap.exists:
+                    return False
+
+                data = analise_snap.to_dict()
+                existing_sources = data.get("suggested_sources", {})
+
+                # Verifica se o usuário tem sugestões para essa claim
+                if uid not in existing_sources or claim_id not in existing_sources.get(uid, {}):
+                    return False
+
+                # Remove a claim específica
+                del existing_sources[uid][claim_id]
+
+                update_data = {}
+                counter_delta = 0
+
+                if not existing_sources[uid]:
+                    del existing_sources[uid]
+                    # Se o usuário está em neutral_by (e não em liked/disliked), remove de neutral_by
+                    liked_by = data.get("liked_by", [])
+                    disliked_by = data.get("disliked_by", [])
+                    neutral_by = data.get("neutral_by", [])
+                    if uid in neutral_by and uid not in liked_by and uid not in disliked_by:
+                        update_data['neutral_by'] = firestore.ArrayRemove([uid])
+                        counter_delta = -1
+                        print(f"➖ Usuário {uid} removido de neutral_by (sem mais sugestões)")
+
+                update_data['suggested_sources'] = existing_sources
+                transaction.update(analise_ref, update_data)
+
+                if counter_delta != 0:
+                    transaction.update(user_ref, {"review_count": firestore.Increment(counter_delta)})
+                    print(f"📊 review_count delta={counter_delta:+d} for user {uid}")
+
+                return True
+
+            transaction = self.client.transaction()
+            result = _delete_sources_in_transaction(transaction)
+
+            elapsed = time.perf_counter() - t0
+            print(f"🗑️ Sugestão de fontes removida: claim {claim_id} por {uid} em {document_id} in {elapsed:.4f}s")
+            return result
         except Exception as e:
-            print(f"❌ Erro ao remover fontes sugeridas: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ Erro ao remover fontes sugeridas in {elapsed:.4f}s: {e}")
             return False
 
     def get_suggested_sources(self, document_id: str) -> Dict[str, Any]:
@@ -767,12 +844,22 @@ class FirestoreService:
             print(f"❌ Erro ao buscar fontes sugeridas: {e}")
             return {}
 
+    # Fields needed by the Profile page interaction cards
+    _INTERACTION_PROJECTION_FIELDS = [
+        "document_id", "analysis_title", "user_message_text",
+        "processed_at", "overall_verdict",
+        "observations", "suggested_sources",
+    ]
+
     def get_user_interactions(self, uid: str) -> List[Dict[str, Any]]:
         """
-        Busca todas as análises que o usuário interagiu (like ou dislike).
+        Busca todas as análises que o usuário interagiu (like, dislike ou neutral).
+        Uses projection to return only fields needed by the frontend cards.
+        Each query is capped at 200 results for safety.
         """
         if not self.client: return []
-        
+        t0 = time.perf_counter()
+
         interactions = []
         try:
             def _extract_user_fields(data: dict, uid: str) -> dict:
@@ -791,42 +878,61 @@ class FirestoreService:
                 # Extrai fontes sugeridas do usuário
                 user_sources = data.get("suggested_sources", {}).get(uid, {})
                 if user_sources:
-                    # user_sources é um dict { claim_id: { items: [...], observation: str } }
                     data["user_suggested_sources"] = user_sources
                 else:
                     data["user_suggested_sources"] = {}
+
+                # Remove full observations/suggested_sources maps (only user's data needed)
+                data.pop("observations", None)
+                data.pop("suggested_sources", None)
                 return data
 
-            # Busca likes
-            likes_query = self.analises_collection.where("liked_by", "array_contains", uid).stream()
+            # Busca likes (with projection + safety cap)
+            likes_query = (self.analises_collection
+                          .where("liked_by", "array_contains", uid)
+                          .select(self._INTERACTION_PROJECTION_FIELDS)
+                          .limit(200)
+                          .stream())
             for doc in likes_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "like"
                 data = _extract_user_fields(data, uid)
                 interactions.append(data)
-                
-            # Busca dislikes
-            dislikes_query = self.analises_collection.where("disliked_by", "array_contains", uid).stream()
+
+            # Busca dislikes (with projection + safety cap)
+            dislikes_query = (self.analises_collection
+                             .where("disliked_by", "array_contains", uid)
+                             .select(self._INTERACTION_PROJECTION_FIELDS)
+                             .limit(200)
+                             .stream())
             for doc in dislikes_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "dislike"
                 data = _extract_user_fields(data, uid)
                 interactions.append(data)
-                
-            # Busca neutrals
-            neutrals_query = self.analises_collection.where("neutral_by", "array_contains", uid).stream()
+
+            # Busca neutrals (with projection + safety cap)
+            neutrals_query = (self.analises_collection
+                             .where("neutral_by", "array_contains", uid)
+                             .select(self._INTERACTION_PROJECTION_FIELDS)
+                             .limit(200)
+                             .stream())
             for doc in neutrals_query:
                 data = doc.to_dict()
                 data["user_interaction"] = "neutral"
                 data = _extract_user_fields(data, uid)
                 interactions.append(data)
-                
+
             # Ordena por data (mais recente primeiro) - processamento em memória
             interactions.sort(key=lambda x: x.get("processed_at", ""), reverse=True)
-            
+
+            elapsed = time.perf_counter() - t0
+            print(f"⚡ get_user_interactions({uid}) in {elapsed:.4f}s — {len(interactions)} interactions (projected, capped at 200/type)")
+
             return interactions
         except Exception as e:
-            print(f"❌ Erro ao buscar interações do usuário: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ get_user_interactions() failed in {elapsed:.4f}s: {e}")
             return []
     def get_top_reviewers(self, days: int = 7, limit: int = 5) -> Dict[str, Any]:
         """
@@ -1115,6 +1221,60 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao buscar todos os IDs no Firestore: {e}")
             return []
+
+    def backfill_review_counts(self) -> Dict[str, int]:
+        """
+        One-shot backfill: scan all analises to compute review_count per user,
+        then batch-update user documents.
+        Returns dict mapping uid -> count.
+        """
+        if not self.client: return {}
+        t0 = time.perf_counter()
+
+        try:
+            # Scan with projection — only need interaction arrays
+            docs = self.analises_collection.select(["liked_by", "disliked_by", "neutral_by"]).stream()
+
+            user_counts: Dict[str, set] = {}  # uid -> set of doc IDs (distinct analyses)
+
+            for doc in docs:
+                data = doc.to_dict()
+                doc_id = doc.id
+                for uid in data.get("liked_by", []):
+                    user_counts.setdefault(uid, set()).add(doc_id)
+                for uid in data.get("disliked_by", []):
+                    user_counts.setdefault(uid, set()).add(doc_id)
+                for uid in data.get("neutral_by", []):
+                    user_counts.setdefault(uid, set()).add(doc_id)
+
+            # Batch update user documents
+            final_counts = {}
+            batch = self.client.batch()
+            batch_count = 0
+
+            for uid, doc_ids in user_counts.items():
+                count = len(doc_ids)
+                final_counts[uid] = count
+                user_ref = self.users_collection.document(uid)
+                batch.update(user_ref, {"review_count": count})
+                batch_count += 1
+
+                if batch_count >= 500:
+                    batch.commit()
+                    batch = self.client.batch()
+                    batch_count = 0
+
+            if batch_count > 0:
+                batch.commit()
+
+            elapsed = time.perf_counter() - t0
+            print(f"✅ backfill_review_counts() completed in {elapsed:.4f}s — {len(final_counts)} users updated")
+            return final_counts
+
+        except Exception as e:
+            elapsed = time.perf_counter() - t0
+            print(f"❌ backfill_review_counts() failed in {elapsed:.4f}s: {e}")
+            return {}
 
 # Instância global
 firestore_service = FirestoreService()
