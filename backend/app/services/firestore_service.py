@@ -121,6 +121,57 @@ class FirestoreService:
                 return True
         return False
 
+    @staticmethod
+    def _classify_filters(filters: Optional[Dict[str, Any]]) -> str:
+        """
+        Classify the filter combination to decide the optimal query strategy.
+        Returns one of: 'none', 'date_only', 'source_type_only',
+                         'date_and_source_type', 'complex'
+        """
+        if not filters:
+            return "none"
+
+        has_search = bool(filters.get("search"))
+        has_start = bool(filters.get("start_date"))
+        has_end = bool(filters.get("end_date"))
+        has_date = has_start or has_end
+
+        # Determine single active source type (exactly one type disabled)
+        whatsapp = filters.get("message_type_whatsapp")
+        direct = filters.get("message_type_direct")
+        # single_source_type is the value to use in .where("source_type","==",...)
+        single_source_type = None
+        if whatsapp is False and direct is not False:
+            single_source_type = "FromDirectMessage"
+        elif direct is False and whatsapp is not False:
+            single_source_type = "FromWhatsappGroup"
+
+        # Check for any "complex" filter (modality, scores, search)
+        has_modality = any(
+            filters.get(k) is False
+            for k in ("modality_text", "modality_audio", "modality_video", "modality_image")
+        )
+        has_score = False
+        for prefix in ("truth", "fake", "unverified", "out_of_context"):
+            if filters.get(f"min_{prefix}_score", 0) > 0:
+                has_score = True
+                break
+            if filters.get(f"max_{prefix}_score", 100) < 100:
+                has_score = True
+                break
+
+        complex_present = has_search or has_modality or has_score
+
+        if complex_present:
+            return "complex"
+        if has_date and single_source_type:
+            return "date_and_source_type"
+        if has_date:
+            return "date_only"
+        if single_source_type:
+            return "source_type_only"
+        return "complex"  # fallback
+
     # Fields to select on the filtered path (excludes heavy fields: scraped_links, full_combined_text, final_comment)
     _LIST_PROJECTION_FIELDS = [
         "document_id", "processed_at", "source_type", "analysis_title",
@@ -140,6 +191,7 @@ class FirestoreService:
 
         try:
             has_filters = self._has_meaningful_filters(filters)
+            filter_class = self._classify_filters(filters) if has_filters else "none"
 
             # ---- FAST PATH: No filters (Home page) ----
             if not has_filters:
@@ -158,7 +210,7 @@ class FirestoreService:
                 items = [doc.to_dict() for doc in docs]
 
                 elapsed = time.perf_counter() - t0
-                print(f"⚡ list_analises() FAST PATH in {elapsed:.4f}s — {len(items)} items, total={total}")
+                print(f"⚡ list_analises() NO-FILTER FAST PATH in {elapsed:.4f}s — {len(items)} items, total={total}")
 
                 return {
                     "items": items,
@@ -167,7 +219,7 @@ class FirestoreService:
                     "offset": offset
                 }
 
-            # ---- FILTERED PATH: Scan with in-memory filtering ----
+            # ---- Helper ----
             def _parse_dt(value: Any) -> Optional[datetime]:
                 if value is None:
                     return None
@@ -180,10 +232,66 @@ class FirestoreService:
                         return None
                 return None
 
+            # ---- FAST PATH: date_only / source_type_only / date_and_source_type ----
+            if filter_class in ("date_only", "source_type_only", "date_and_source_type"):
+                start_dt = _parse_dt(filters.get("start_date")) if filters else None
+                end_dt = _parse_dt(filters.get("end_date")) if filters else None
+
+                # Determine single active source type for server-side filter
+                single_source_type = None
+                if filter_class in ("source_type_only", "date_and_source_type"):
+                    if filters.get("message_type_whatsapp") is False:
+                        single_source_type = "FromDirectMessage"
+                    elif filters.get("message_type_direct") is False:
+                        single_source_type = "FromWhatsappGroup"
+
+                # Build server-side query
+                q = self.analises_collection.select(self._LIST_PROJECTION_FIELDS)
+
+                if single_source_type:
+                    q = q.where("source_type", "==", single_source_type)
+
+                if start_dt:
+                    q = q.where("processed_at", ">=", start_dt.isoformat() if isinstance(start_dt, datetime) else start_dt)
+                if end_dt:
+                    q = q.where("processed_at", "<=", end_dt.isoformat() if isinstance(end_dt, datetime) else end_dt)
+
+                q = q.order_by("processed_at", direction=firestore.Query.DESCENDING)
+
+                # Count via Aggregation API with same filters
+                count_q = self.analises_collection
+                if single_source_type:
+                    count_q = count_q.where("source_type", "==", single_source_type)
+                if start_dt:
+                    count_q = count_q.where("processed_at", ">=", start_dt.isoformat() if isinstance(start_dt, datetime) else start_dt)
+                if end_dt:
+                    count_q = count_q.where("processed_at", "<=", end_dt.isoformat() if isinstance(end_dt, datetime) else end_dt)
+
+                count_agg = count_q.count(alias="total")
+                count_result = count_agg.get()
+                total = count_result[0][0].value
+
+                # Apply offset + limit server-side
+                q = q.offset(offset).limit(limit)
+                docs = list(q.stream())
+                items = [doc.to_dict() for doc in docs]
+
+                elapsed = time.perf_counter() - t0
+                label = filter_class.upper().replace("_", "-")
+                print(f"⚡ list_analises() {label} FAST PATH in {elapsed:.4f}s — {len(items)} items, total={total}")
+
+                return {
+                    "items": items,
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset
+                }
+
+            # ---- COMPLEX FILTERED PATH: Scan with in-memory filtering ----
             start_dt = _parse_dt(filters.get("start_date")) if filters else None
             end_dt = _parse_dt(filters.get("end_date")) if filters else None
 
-            # Step 2: Apply projection to exclude heavy fields on filtered path
+            # Apply projection to exclude heavy fields on filtered path
             query = (self.analises_collection
                      .select(self._LIST_PROJECTION_FIELDS)
                      .order_by("processed_at", direction=firestore.Query.DESCENDING))
@@ -296,7 +404,7 @@ class FirestoreService:
             paginated_items = items[offset : offset + limit]
 
             elapsed = time.perf_counter() - t0
-            print(f"⏱️ list_analises() FILTERED PATH in {elapsed:.4f}s — scanned={scanned}, matched={total_filtered}, returned={len(paginated_items)}")
+            print(f"⏱️ list_analises() COMPLEX FILTERED PATH in {elapsed:.4f}s — scanned={scanned}, matched={total_filtered}, returned={len(paginated_items)}")
 
             return {
                 "items": paginated_items,

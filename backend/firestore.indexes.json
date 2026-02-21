@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "analises",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "source_type", "order": "ASCENDING" },
+        { "fieldPath": "processed_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

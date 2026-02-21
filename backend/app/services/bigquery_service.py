@@ -1,6 +1,7 @@
 import os
+import json
 import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from google.cloud import bigquery
 from google.api_core import exceptions
 from datetime import datetime
@@ -48,6 +49,18 @@ class BigQueryService:
         self._stats_cache_time: float = 0.0
         self._stats_cache_ttl: float = 300.0  # 5 minutes
 
+        # Dashboard cache (TTL-based in-memory, keyed by filter hash)
+        self._dashboard_cache: Dict[str, Tuple[Dict, float]] = {}
+        self._dashboard_cache_order: List[str] = []
+        self._dashboard_cache_max: int = 50
+        self._dashboard_cache_ttl: float = 300.0  # 5 minutes
+
+        # Sources cache (TTL-based in-memory, keyed by filter+pagination hash)
+        self._sources_cache: Dict[str, Tuple[Dict, float]] = {}
+        self._sources_cache_order: List[str] = []
+        self._sources_cache_max: int = 50
+        self._sources_cache_ttl: float = 300.0  # 5 minutes
+
         print(f"📊 BigQuery client inicializado:")
         print(f"   Project: {settings.PROJECT_ID}")
         print(f"   Dataset: {settings.DATASET_ID}")
@@ -92,8 +105,12 @@ class BigQueryService:
                 print(f"❌ Erro ao inserir no BigQuery: {errors}")
                 return False
 
-            # Invalidate stats cache on new analysis
+            # Invalidate all caches on new analysis
             self._stats_cache = None
+            self._dashboard_cache.clear()
+            self._dashboard_cache_order.clear()
+            self._sources_cache.clear()
+            self._sources_cache_order.clear()
 
             print(f"✅ Análise {analise.document_id} inserida no BigQuery com sucesso!")
             return True
@@ -303,6 +320,19 @@ class BigQueryService:
             print(f"❌ get_stats() failed in {elapsed:.4f}s: {e}")
             return None
 
+    @staticmethod
+    def _cache_key(*args) -> str:
+        """Generate a deterministic cache key from arbitrary arguments."""
+        return json.dumps(args, sort_keys=True, default=str)
+
+    def _lru_put(self, cache: Dict, order: List[str], max_size: int, key: str, value: Any) -> None:
+        """Insert into an LRU cache dict, evicting oldest if over max_size."""
+        cache[key] = value
+        order.append(key)
+        while len(order) > max_size:
+            oldest = order.pop(0)
+            cache.pop(oldest, None)
+
     def _build_filter_clause(self, filters: Dict[str, Any]) -> str:
         """
         Constrói a cláusula WHERE baseada nos filtros.
@@ -421,10 +451,19 @@ class BigQueryService:
 
         return " AND ".join(clauses) if clauses else "1=1"
 
+    # Columns to project in list queries — excludes embedding (3072 floats),
+    # scraped_links (large arrays) and full_combined_text (long text).
+    _BQ_LIST_COLUMNS = (
+        "document_id, processed_at, source_type, analysis_title, "
+        "user_message_text, overall_verdict, media_info, analysis_metrics, "
+        "claims, final_comment"
+    )
+
     def list_analises(self, limit: int = 5, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
         """
         Lista análises com paginação e filtros.
         """
+        t0 = time.perf_counter()
         try:
             filters = filters or {}
 
@@ -451,7 +490,7 @@ class BigQueryService:
                 # OFFSET isn't supported; we fetch a sufficiently large TOP-K and paginate in memory.
                 # Safety cap avoids runaway queries.
                 query = f"""
-                    SELECT base.*, distance
+                    SELECT {', '.join(f'base.{c.strip()}' for c in self._BQ_LIST_COLUMNS.split(','))}, distance
                     FROM VECTOR_SEARCH(
                         (SELECT * FROM `{self.full_table_id}` WHERE {where_clause} AND embedding IS NOT NULL AND ARRAY_LENGTH(embedding) > 0),
                         'embedding',
@@ -482,20 +521,9 @@ class BigQueryService:
                 where_clause = self._build_filter_clause(filters)
                 print(f"🔍 WHERE clause: {where_clause}")
 
-                # Query para contar total com filtros
-                count_query = f"""
-                    SELECT COUNT(*) as total
-                    FROM `{self.full_table_id}`
-                    WHERE {where_clause}
-                """
-
-                count_job = self.client.query(count_query)
-                count_results = list(count_job.result())
-                total = count_results[0]["total"] if count_results else 0
-
-                # Query para buscar análises paginadas com filtros
+                # Single query: projected columns + COUNT(*) OVER() for total
                 query = f"""
-                    SELECT *
+                    SELECT {self._BQ_LIST_COLUMNS}, COUNT(*) OVER() AS _total_count
                     FROM `{self.full_table_id}`
                     WHERE {where_clause}
                     ORDER BY processed_at DESC
@@ -513,13 +541,20 @@ class BigQueryService:
                 query_job = self.client.query(query, job_config=job_config)
                 results = list(query_job.result())
 
+                # Extract total from the first row's window function
+                if results:
+                    total = results[0]["_total_count"]
+                else:
+                    total = 0
+
             # Converte resultados para lista de dicts
             items = []
             for row in results:
                 data = dict(row.items())
                 data = self._convert_datetimes_to_strings(data)
-                # VECTOR_SEARCH returns an extra column
+                # Remove internal/extra columns
                 data.pop("distance", None)
+                data.pop("_total_count", None)
 
                 metrics = data.get("analysis_metrics")
                 if isinstance(metrics, dict):
@@ -551,19 +586,35 @@ class BigQueryService:
                 "offset": offset
             }
 
-            print(f"📄 Listagem: {len(items)} análises (total filtrado: {total})")
+            elapsed = time.perf_counter() - t0
+            path_label = "VECTOR_SEARCH" if has_search else "WHERE (single query)"
+            print(f"⏱️ list_analises() {path_label} in {elapsed:.4f}s — {len(items)} items, total={total}")
             return response
 
         except Exception as e:
+            elapsed = time.perf_counter() - t0
             embedding_info = ""
             if has_search:
                 embedding_info = f" | query_embedding_dim={len(query_embedding)}, expected_table_dim=3072"
-            print(f"❌ Erro ao listar análises: {type(e).__name__}: {e}{embedding_info}")
+            print(f"❌ list_analises() failed in {elapsed:.4f}s: {type(e).__name__}: {e}{embedding_info}")
             return None
 
     def get_analytics_dashboard(self, filters: Dict[str, Any] = None, k_results:int = 200) -> Optional[Dict[str, Any]]:
+        t0 = time.perf_counter()
         try:
             filters = filters or {}
+
+            # Check dashboard cache
+            cache_key = self._cache_key("dashboard", filters, k_results)
+            cached = self._dashboard_cache.get(cache_key)
+            if cached is not None:
+                value, ts = cached
+                if (time.perf_counter() - ts) < self._dashboard_cache_ttl:
+                    elapsed = time.perf_counter() - t0
+                    print(f"⚡ get_analytics_dashboard() served from cache in {elapsed:.4f}s")
+                    return value
+                else:
+                    self._dashboard_cache.pop(cache_key, None)
 
             non_semantic_filters = {k: v for k, v in filters.items() if k != "search"}
             where_clause = self._build_filter_clause(non_semantic_filters)
@@ -702,23 +753,45 @@ class BigQueryService:
                 ],
             }
 
-            print("📊 Dashboard data calculated")
+            # Store in cache
+            self._lru_put(
+                self._dashboard_cache, self._dashboard_cache_order,
+                self._dashboard_cache_max, cache_key,
+                (dashboard_data, time.perf_counter()),
+            )
+
+            elapsed = time.perf_counter() - t0
+            print(f"📊 get_analytics_dashboard() completed in {elapsed:.4f}s (BigQuery query)")
             return dashboard_data
 
         except Exception as e:
+            elapsed = time.perf_counter() - t0
             embedding_info = ""
             if has_search:
                 embedding_info = f" | query_embedding_dim={len(query_embedding)}, expected_table_dim=3072"
-            print(f"❌ Erro ao gerar dashboard analytics: {type(e).__name__}: {e}{embedding_info}")
+            print(f"❌ get_analytics_dashboard() failed in {elapsed:.4f}s: {type(e).__name__}: {e}{embedding_info}")
             return None
 
     def list_sources(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
         """
         Lista fontes com paginação e filtros.
         """
+        t0 = time.perf_counter()
         try:
             filters = filters or {}
-            
+
+            # Check sources cache
+            cache_key = self._cache_key("sources", filters, limit, offset)
+            cached = self._sources_cache.get(cache_key)
+            if cached is not None:
+                value, ts = cached
+                if (time.perf_counter() - ts) < self._sources_cache_ttl:
+                    elapsed = time.perf_counter() - t0
+                    print(f"⚡ list_sources() served from cache in {elapsed:.4f}s")
+                    return value
+                else:
+                    self._sources_cache.pop(cache_key, None)
+
             has_search = bool(filters.get("search"))
 
             query_parameters = []
@@ -828,15 +901,27 @@ class BigQueryService:
                     "count": row["count"]
                 })
 
-            return {
+            result = {
                 "items": items,
                 "total": total,
                 "limit": limit,
                 "offset": offset
             }
 
+            # Store in cache
+            self._lru_put(
+                self._sources_cache, self._sources_cache_order,
+                self._sources_cache_max, cache_key,
+                (result, time.perf_counter()),
+            )
+
+            elapsed = time.perf_counter() - t0
+            print(f"⏱️ list_sources() completed in {elapsed:.4f}s (BigQuery query)")
+            return result
+
         except Exception as e:
-            print(f"❌ Erro ao listar fontes: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ list_sources() failed in {elapsed:.4f}s: {e}")
             return None
 
     def get_similar_analyses(self, document_id: str, limit: int = 8) -> Optional[List[Dict[str, Any]]]:
