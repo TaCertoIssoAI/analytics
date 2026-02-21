@@ -35,13 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getValidPhotoUrl } from "@/lib/utils";
@@ -141,7 +134,7 @@ const Profile = () => {
 
   // --- Computed stats ---
   const stats = useMemo(() => {
-    const total = profile?.review_count ?? interactions.length;
+    const total = interactions.length;
     const likes = interactions.filter(i => i.user_interaction === "like").length;
     const neutrals = interactions.filter(i => i.user_interaction === "neutral").length;
     const dislikes = interactions.filter(i => i.user_interaction === "dislike").length;
@@ -149,7 +142,7 @@ const Profile = () => {
       return acc + (i.user_suggested_sources ? Object.keys(i.user_suggested_sources).length : 0);
     }, 0);
     return { total, likes, neutrals, dislikes, sourcesCount };
-  }, [interactions, profile]);
+  }, [interactions]);
 
   // --- Filtered & sorted & paginated interactions ---
   const filteredInteractions = useMemo(() => {
@@ -477,25 +470,31 @@ const Profile = () => {
         {/* 1. PROFILE HEADER — Horizontal, Read-Only */}
         {/* ========================================= */}
         <Card className="overflow-hidden">
-          {/* Gradient banner */}
-          <div className="h-24 sm:h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-background relative">
+          {/* ── Gradient banner ── */}
+          <div className="h-28 md:h-36 bg-gradient-to-r from-primary/20 via-primary/10 to-background relative">
             <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
           </div>
 
-          <CardContent className="relative px-6 pb-6">
-            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12 sm:-mt-14">
-              {/* Avatar */}
-              <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg flex-shrink-0">
-                <AvatarImage src={getValidPhotoUrl(profile.photoURL)} alt={profile.displayName || "User"} className="object-cover" />
-                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
-                  {profile.displayName?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
+          <CardContent className="relative px-4 sm:px-6 pb-6">
 
-              {/* Info */}
-              <div className="flex-1 text-center sm:text-left min-w-0 pb-1">
-                <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <h1 className="text-xl sm:text-2xl font-bold truncate">{profile.displayName || "Usuário"}</h1>
+            {/* ── Avatar + Name/Occupation row ── */}
+            <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-16">
+
+              {/* Avatar — overlaps banner, dark border for clean cutout */}
+              <div className="flex justify-center md:justify-start flex-shrink-0">
+                <Avatar className="h-28 w-28 md:h-32 md:w-32 border-4 border-[#121212] shadow-xl">
+                  <AvatarImage src={getValidPhotoUrl(profile.photoURL)} alt={profile.displayName || "User"} className="object-cover" />
+                  <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+                    {profile.displayName?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Name + badges + occupation — aligned beside avatar */}
+              <div className="flex-1 text-center md:text-left pb-1 min-w-0">
+                {/* Name row */}
+                <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                  <h1 className="text-xl sm:text-2xl font-bold leading-tight">{profile.displayName || "Usuário"}</h1>
                   <BadgeCheck className="h-5 w-5 text-primary flex-shrink-0" />
                   {isOwnProfile && isAdmin && (
                     <Link to="/admin">
@@ -507,69 +506,73 @@ const Profile = () => {
                 </div>
 
                 {profile.occupation && (
-                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-sm text-muted-foreground mt-1">
-                    <Briefcase className="h-3.5 w-3.5" />
+                  <div className="flex items-center justify-center md:justify-start gap-1.5 text-sm text-muted-foreground mt-1">
+                    <Briefcase className="h-3.5 w-3.5 flex-shrink-0" />
                     <span>{profile.occupation}</span>
                   </div>
                 )}
+              </div>
+            </div>
 
-                {profile.bio && (
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">{profile.bio}</p>
+            {/* ── Bio — extra vertical spacing from avatar+name block ── */}
+            {profile.bio && (
+              <p className="text-sm text-muted-foreground mt-6 mb-2 leading-relaxed whitespace-normal break-words" style={{ overflowWrap: "anywhere" }}>
+                {profile.bio}
+              </p>
+            )}
+
+            {/* ── Footer row: Social links + member date (left) | Action buttons (right) ── */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4 pt-4 border-t border-border/50">
+              {/* Left group: socials + member date */}
+              <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-start w-full sm:w-auto">
+                {profile.socials?.linkedin && (
+                  <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors" title="LinkedIn">
+                    <Linkedin className="h-4 w-4" />
+                  </a>
                 )}
+                {profile.socials?.twitter && (
+                  <a href={profile.socials.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors" title="Twitter / X">
+                    <Twitter className="h-4 w-4" />
+                  </a>
+                )}
+                {profile.socials?.instagram && (
+                  <a href={profile.socials.instagram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors" title="Instagram">
+                    <Instagram className="h-4 w-4" />
+                  </a>
+                )}
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Membro desde {new Date(profile.createdAt).getFullYear()}
+                </span>
+              </div>
 
-                {/* Social links + member since */}
-                <div className="flex items-center justify-center sm:justify-start gap-3 mt-3 flex-wrap">
-                  {profile.socials?.linkedin && (
-                    <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors" title="LinkedIn">
-                      <Linkedin className="h-4 w-4" />
-                    </a>
-                  )}
-                  {profile.socials?.twitter && (
-                    <a href={profile.socials.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors" title="Twitter / X">
-                      <Twitter className="h-4 w-4" />
-                    </a>
-                  )}
-                  {profile.socials?.instagram && (
-                    <a href={profile.socials.instagram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors" title="Instagram">
-                      <Instagram className="h-4 w-4" />
-                    </a>
-                  )}
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 ml-1">
-                    <Calendar className="h-3 w-3" />
-                    Membro desde {new Date(profile.createdAt).getFullYear()}
-                  </span>
+              {/* Right group: action buttons */}
+              {isOwnProfile && (
+                <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={openEditModal}>
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar Perfil
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => window.open('/guia rapido do revisor - Ta Certo Isso AI.pdf', '_blank')}
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Guia do Revisor
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Sair
+                  </Button>
                 </div>
-              </div>
-
-              {/* Action buttons — top right area */}
-              <div className="flex items-center gap-2 flex-shrink-0 sm:self-start sm:mt-14">
-                {isOwnProfile && (
-                  <>
-                    <Button variant="outline" size="sm" className="gap-2" onClick={openEditModal}>
-                      <Pencil className="h-3.5 w-3.5" />
-                      Editar Perfil
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => window.open('/guia rapido do revisor - Ta Certo Isso AI.pdf', '_blank')}
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Guia do Revisor</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={handleLogout}
-                      title="Sair"
-                    >
-                      <LogOut className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -765,50 +768,54 @@ const Profile = () => {
         {/* 5. PAGINATION                               */}
         {/* =========================================== */}
         {totalPages > 1 && (
-          <Pagination className="mt-4">
-            <PaginationContent>
+          <div className="flex justify-center mt-6">
+            <nav className="flex items-center gap-1.5">
               {/* Previous */}
-              <PaginationItem>
-                <PaginationLink
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={`gap-1 pl-2.5 cursor-pointer select-none ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Anterior</span>
-                </PaginationLink>
-              </PaginationItem>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`gap-1.5 px-3 h-9 ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Anterior</span>
+              </Button>
 
               {/* Page numbers */}
-              {getPageNumbers().map((page, idx) =>
-                page === "ellipsis" ? (
-                  <PaginationItem key={`ellipsis-${idx}`}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                ) : (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      isActive={currentPage === page}
+              <div className="flex items-center gap-1">
+                {getPageNumbers().map((page, idx) =>
+                  page === "ellipsis" ? (
+                    <span key={`ellipsis-${idx}`} className="flex h-9 w-9 items-center justify-center text-muted-foreground">
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      className="h-9 w-9 p-0"
                       onClick={() => setCurrentPage(page as number)}
-                      className="cursor-pointer select-none"
                     >
                       {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
+                    </Button>
+                  )
+                )}
+              </div>
 
               {/* Next */}
-              <PaginationItem>
-                <PaginationLink
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={`gap-1 pr-2.5 cursor-pointer select-none ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
-                >
-                  <span className="hidden sm:inline">Próxima</span>
-                  <ChevronRight className="h-4 w-4" />
-                </PaginationLink>
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`gap-1.5 px-3 h-9 ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <span className="hidden sm:inline">Próxima</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </nav>
+          </div>
         )}
       </div>
 
