@@ -38,87 +38,91 @@ const statusConfig = {
   },
 };
 
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const VerificationCard = ({ id, title, status, date, tags, excerpt, analysis_metrics }: VerificationCardProps) => {
-  const navigate = useNavigate();
   const config = statusConfig[status];
   const StatusIcon = config.icon;
 
-  const handleCardClick = () => {
-    navigate(`/verificacao/${id}`);
+  const handleTagClick = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <Card 
-      className="h-full transition-all hover:shadow-md hover:border-primary/50 cursor-pointer"
-      onClick={handleCardClick}
+    <Link 
+      to={`/verificacao/${id}`}
+      className="block h-full no-underline"
     >
-      <CardHeader className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-lg line-clamp-2 leading-tight">{title}</h3>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {analysis_metrics ? (
-              <>
-                {analysis_metrics.true_count > 0 && (
-                  <div className="h-3 w-3 rounded-full bg-status-true" title="Contém informações verdadeiras" />
-                )}
-                {analysis_metrics.fake_count > 0 && (
-                  <div className="h-3 w-3 rounded-full bg-status-false" title="Contém informações falsas" />
-                )}
-                {(analysis_metrics.out_of_context_count || 0) > 0 && (
-                  <div className="h-3 w-3 rounded-full bg-yellow-500" title="Contém informações fora de contexto" />
-                )}
-                {analysis_metrics.unverified_count > 0 && (
-                  <div className="h-3 w-3 rounded-full bg-status-unverifiable" title="Contém informações não verificáveis" />
-                )}
-              </>
-            ) : (
-              <Badge variant="outline" className={config.className}>
-                <StatusIcon className="h-3 w-3 mr-1" />
-                {config.label}
-              </Badge>
-            )}
+      <Card 
+        className="h-full transition-all hover:shadow-md hover:border-primary/50"
+      >
+        <CardHeader className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-semibold text-lg line-clamp-2 leading-tight">{title}</h3>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {analysis_metrics ? (
+                <>
+                  {analysis_metrics.true_count > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-status-true" title="Contém informações verdadeiras" />
+                  )}
+                  {analysis_metrics.fake_count > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-status-false" title="Contém informações falsas" />
+                  )}
+                  {(analysis_metrics.out_of_context_count || 0) > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-yellow-500" title="Contém informações fora de contexto" />
+                  )}
+                  {analysis_metrics.unverified_count > 0 && (
+                    <div className="h-3 w-3 rounded-full bg-status-unverifiable" title="Contém informações não verificáveis" />
+                  )}
+                </>
+              ) : (
+                <Badge variant="outline" className={config.className}>
+                  <StatusIcon className="h-3 w-3 mr-1" />
+                  {config.label}
+                </Badge>
+              )}
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-3">{excerpt}</p>
-      </CardContent>
-
-      <CardFooter className="flex flex-col items-start gap-3 pt-4 border-t">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Calendar className="h-3 w-3" />
-          {date}
-        </div>
+        </CardHeader>
         
-        {tags.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-            <Tag className="h-3 w-3 text-muted-foreground" />
-            {tags.map((tag) => (
-              tag.id ? (
-                <a 
-                  key={tag.name} 
-                  href={`https://cv.iptc.org/newscodes/mediatopic/${tag.id}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="no-underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+        <CardContent>
+          <p className="text-sm text-muted-foreground line-clamp-3">{excerpt}</p>
+        </CardContent>
+
+        <CardFooter className="flex flex-col items-start gap-3 pt-4 border-t">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3" />
+            {date}
+          </div>
+          
+          {tags.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Tag className="h-3 w-3 text-muted-foreground" />
+              {tags.map((tag) => (
+                tag.id ? (
+                  <span 
+                    key={tag.name} 
+                    role="link"
+                    tabIndex={0}
+                    onClick={(e) => handleTagClick(e, `https://cv.iptc.org/newscodes/mediatopic/${tag.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+                      {tag.name}
+                    </Badge>
+                  </span>
+                ) : (
+                  <Badge key={tag.name} variant="secondary" className="text-xs">
                     {tag.name}
                   </Badge>
-                </a>
-              ) : (
-                <Badge key={tag.name} variant="secondary" className="text-xs">
-                  {tag.name}
-                </Badge>
-              )
-            ))}
-          </div>
-        )}
-      </CardFooter>
-    </Card>
+                )
+              ))}
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+    </Link>
   );
 };
