@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from google.cloud import firestore
@@ -23,6 +24,12 @@ class FirestoreService:
             self.client = firestore.Client(project=settings.PROJECT_ID, database='tacertoissoai')
             self.analises_collection = self.client.collection(settings.FIRESTORE_ANALISES)
             self.users_collection = self.client.collection("users")
+
+            # Top reviewers cache (TTL-based in-memory)
+            self._top_reviewers_cache: Optional[Dict[str, Any]] = None
+            self._top_reviewers_cache_time: float = 0.0
+            self._top_reviewers_cache_ttl: float = 300.0  # 5 minutes
+
             print(f"🔥 Firestore client inicializado (database='tacertoissoai')")
         except Exception as e:
             print(f"❌ Erro ao inicializar Firestore: {e}")
@@ -55,7 +62,10 @@ class FirestoreService:
             # Salva o documento usando document_id como chave
             doc_ref = self.analises_collection.document(analise.document_id)
             doc_ref.set(doc_data)
-            
+
+            # Invalidate top_reviewers cache (new analysis may affect counts)
+            self._top_reviewers_cache = None
+
             print(f"✅ Análise {analise.document_id} salva no Firestore!")
             return True
 
@@ -83,16 +93,81 @@ class FirestoreService:
             print(f"❌ Erro ao deletar do Firestore: {e}")
             return False
 
+    @staticmethod
+    def _has_meaningful_filters(filters: Optional[Dict[str, Any]]) -> bool:
+        """
+        Checks if the filters dict contains any restriction beyond the default values.
+        When all filters are at their defaults (all types included, all scores 0-100,
+        no search, no dates), there's no need to scan all docs.
+        """
+        if not filters:
+            return False
+        if filters.get("search"):
+            return True
+        if filters.get("start_date") or filters.get("end_date"):
+            return True
+        # Message type disabled?
+        if filters.get("message_type_whatsapp") is False or filters.get("message_type_direct") is False:
+            return True
+        # Any modality disabled?
+        for k in ("modality_text", "modality_audio", "modality_video", "modality_image"):
+            if filters.get(k) is False:
+                return True
+        # Score ranges narrowed?
+        for prefix in ("truth", "fake", "unverified", "out_of_context"):
+            if filters.get(f"min_{prefix}_score", 0) > 0:
+                return True
+            if filters.get(f"max_{prefix}_score", 100) < 100:
+                return True
+        return False
+
+    # Fields to select on the filtered path (excludes heavy fields: scraped_links, full_combined_text, final_comment)
+    _LIST_PROJECTION_FIELDS = [
+        "document_id", "processed_at", "source_type", "analysis_title",
+        "user_message_text", "liked_by", "disliked_by", "neutral_by",
+        "overall_verdict", "media_info", "analysis_metrics", "claims",
+    ]
+
     def list_analises(self, limit: int = 10, offset: int = 0, filters: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
         """
         Lista análises do Firestore com paginação e filtros básicos.
-        Nota: Firestore tem limitações de query. Filtros complexos podem precisar de processamento em memória
-        ou índices compostos.
+        Step 1: Fast path when no filters (Home page scenario).
+        Step 2: Projection to exclude heavy fields on filtered path.
         """
+        t0 = time.perf_counter()
         if not self.client:
             return None
 
         try:
+            has_filters = self._has_meaningful_filters(filters)
+
+            # ---- FAST PATH: No filters (Home page) ----
+            if not has_filters:
+                # Use Aggregation API for total count (avoids scanning all docs)
+                count_query = self.analises_collection.count(alias="total")
+                count_result = count_query.get()
+                total = count_result[0][0].value
+
+                # Direct query: order + offset + limit (no full scan)
+                fast_query = (self.analises_collection
+                              .order_by("processed_at", direction=firestore.Query.DESCENDING)
+                              .offset(offset)
+                              .limit(limit))
+
+                docs = list(fast_query.stream())
+                items = [doc.to_dict() for doc in docs]
+
+                elapsed = time.perf_counter() - t0
+                print(f"⚡ list_analises() FAST PATH in {elapsed:.4f}s — {len(items)} items, total={total}")
+
+                return {
+                    "items": items,
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset
+                }
+
+            # ---- FILTERED PATH: Scan with in-memory filtering ----
             def _parse_dt(value: Any) -> Optional[datetime]:
                 if value is None:
                     return None
@@ -108,20 +183,11 @@ class FirestoreService:
             start_dt = _parse_dt(filters.get("start_date")) if filters else None
             end_dt = _parse_dt(filters.get("end_date")) if filters else None
 
-            # Referência para a coleção
-            query = self.analises_collection
+            # Step 2: Apply projection to exclude heavy fields on filtered path
+            query = (self.analises_collection
+                     .select(self._LIST_PROJECTION_FIELDS)
+                     .order_by("processed_at", direction=firestore.Query.DESCENDING))
 
-            # Ordenação padrão por data (mais recente primeiro)
-            query = query.order_by("processed_at", direction=firestore.Query.DESCENDING)
-
-            # --- Aplicação de Filtros (Básico) ---
-            # Nota: Firestore exige índices compostos para filtros de igualdade + range + sort.
-            # Para evitar erros de índice agora, vamos fazer a filtragem EM MEMÓRIA para este MVP,
-            # exceto limit/offset que aplicamos no final.
-            # Se a coleção crescer muito, precisaremos criar índices no Firebase Console.
-            
-            # Varre documentos em lotes para permitir contagem total correta.
-            # Mantemos um limite de segurança para não estourar memória/tempo em coleções muito grandes.
             max_scan = 10000
             batch_size = 500
 
@@ -160,7 +226,6 @@ class FirestoreService:
                             continue
 
                         # Filtro de Modalidade (OR logic)
-                        # Mantém compatível com a lógica do BigQuery: incluir se tiver ao menos uma modalidade selecionada.
                         media_info = data.get("media_info") or {}
                         has_text = bool((data.get("user_message_text") or "").strip())
                         has_audio = bool(media_info.get("has_audio"))
@@ -172,7 +237,6 @@ class FirestoreService:
                         selected_video = bool(filters.get("modality_video"))
                         selected_image = bool(filters.get("modality_image"))
 
-                        # Se filtros de modalidade foram passados mas nenhum selecionado, não retorna nada
                         if any(k.startswith("modality_") for k in filters.keys()) and not any(
                             [selected_text, selected_audio, selected_video, selected_image]
                         ):
@@ -193,7 +257,6 @@ class FirestoreService:
                             truth = metrics.get("truth_score", 0)
                             fake = metrics.get("fake_score", 0)
                             unverified = metrics.get("unverified_score", 0)
-                            out_of_context_count = metrics.get("out_of_context_count", 0)
                             out_of_context_score = metrics.get("out_of_context_score", 0)
 
                             if truth < filters.get("min_truth_score", 0) or truth > filters.get("max_truth_score", 100):
@@ -232,6 +295,9 @@ class FirestoreService:
             total_filtered = len(items)
             paginated_items = items[offset : offset + limit]
 
+            elapsed = time.perf_counter() - t0
+            print(f"⏱️ list_analises() FILTERED PATH in {elapsed:.4f}s — scanned={scanned}, matched={total_filtered}, returned={len(paginated_items)}")
+
             return {
                 "items": paginated_items,
                 "total": total_filtered,
@@ -240,7 +306,8 @@ class FirestoreService:
             }
 
         except Exception as e:
-            print(f"❌ Erro ao listar do Firestore: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ list_analises() failed in {elapsed:.4f}s: {e}")
             return None
 
     def get_analise(self, document_id: str) -> Optional[Dict[str, Any]]:
@@ -473,6 +540,9 @@ class FirestoreService:
             else:
                 return False
             
+            # Invalidate top_reviewers cache (interaction change affects reviewer counts)
+            self._top_reviewers_cache = None
+
             print(f"✅ Interação {action} atualizada para {document_id} por {uid}")
             return True
         except Exception as e:
@@ -654,107 +724,138 @@ class FirestoreService:
         """
         Retorna os usuários com mais interações (likes/dislikes) nos últimos 'days' dias.
         Se não houver revisores na semana, retorna os top 5 revisores de todos os tempos.
-        
+        Utiliza cache in-memory com TTL de 5 minutos.
+
         Returns:
             Dict com 'reviewers' (lista) e 'period' ('week' ou 'all_time')
         """
+        t0 = time.perf_counter()
         if not self.client: return {"reviewers": [], "period": "week"}
-        
+
         try:
+            # Check cache
+            if self._top_reviewers_cache is not None and (time.perf_counter() - self._top_reviewers_cache_time) < self._top_reviewers_cache_ttl:
+                elapsed = time.perf_counter() - t0
+                print(f"⚡ get_top_reviewers() served from cache in {elapsed:.4f}s")
+                return self._top_reviewers_cache
+
             from datetime import datetime, timedelta
-            
+
             cutoff_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
-            
-            # Busca análises recentes
-            # Nota: Em produção com muitos dados, isso deve ser feito com uma Collection Group Query 
-            # ou um contador incrementado em cada usuário. Para este MVP, agregação em memória serve.
-            query = self.analises_collection.where("processed_at", ">=", cutoff_date).stream()
-            
+
+            # Step 4b: Apply projection - only fetch interaction arrays
+            query = (self.analises_collection
+                     .where("processed_at", ">=", cutoff_date)
+                     .select(["liked_by", "disliked_by", "neutral_by"])
+                     .stream())
+
             user_counts = {}
-            
+
             for doc in query:
                 data = doc.to_dict()
-                
-                # Conta likes
+
                 for uid in data.get("liked_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
-                    
-                # Conta dislikes
                 for uid in data.get("disliked_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
-                    
-                # Conta neutrals
                 for uid in data.get("neutral_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
-            
+
             # Se não houver revisores na semana, busca os top 5 de todos os tempos
             if not user_counts:
                 print("ℹ️  Nenhum revisor encontrado na semana. Buscando top revisores de todos os tempos...")
                 all_time_reviewers = self._get_all_time_top_reviewers(limit)
-                return {"reviewers": all_time_reviewers, "period": "all_time"}
-            
+                result = {"reviewers": all_time_reviewers, "period": "all_time"}
+                self._top_reviewers_cache = result
+                self._top_reviewers_cache_time = time.perf_counter()
+                elapsed = time.perf_counter() - t0
+                print(f"⏱️ get_top_reviewers() completed (all_time fallback) in {elapsed:.4f}s")
+                return result
+
             # Ordena por contagem decrescente
             sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
-            
-            # Busca dados dos usuários
+
+            # Step 4d: Batch user profile lookup using get_all()
+            uids_to_fetch = [uid for uid, _ in sorted_users]
+            doc_refs = [self.users_collection.document(uid) for uid in uids_to_fetch]
+            user_docs = self.client.get_all(doc_refs)
+            user_profiles = {}
+            for doc in user_docs:
+                if doc.exists:
+                    user_profiles[doc.id] = doc.to_dict()
+
             top_reviewers = []
             for uid, count in sorted_users:
-                user_profile = self.get_user_profile(uid)
-                if user_profile:
+                profile = user_profiles.get(uid)
+                if profile:
                     top_reviewers.append({
-                        "user": user_profile,
+                        "user": profile,
                         "count": count
                     })
-            
-            return {"reviewers": top_reviewers, "period": "week"}
-            
+
+            result = {"reviewers": top_reviewers, "period": "week"}
+
+            # Update cache
+            self._top_reviewers_cache = result
+            self._top_reviewers_cache_time = time.perf_counter()
+
+            elapsed = time.perf_counter() - t0
+            print(f"⏱️ get_top_reviewers() completed in {elapsed:.4f}s (Firestore query + batch lookup)")
+            return result
+
         except Exception as e:
-            print(f"❌ Erro ao buscar top reviewers: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ get_top_reviewers() failed in {elapsed:.4f}s: {e}")
             return {"reviewers": [], "period": "week"}
     
     def _get_all_time_top_reviewers(self, limit: int = 5) -> List[Dict[str, Any]]:
         """
         Retorna os top revisores de todos os tempos (sem filtro de data).
+        Step 4b: Uses projection to fetch only interaction arrays.
+        Step 4d: Uses batch lookup for user profiles.
         """
         if not self.client: return []
-        
+
         try:
-            # Busca TODAS as análises (sem filtro de data)
-            query = self.analises_collection.stream()
-            
+            # Step 4b: Apply projection - only fetch interaction arrays
+            query = self.analises_collection.select(["liked_by", "disliked_by", "neutral_by"]).stream()
+
             user_counts = {}
-            
+
             for doc in query:
                 data = doc.to_dict()
-                
-                # Conta likes
+
                 for uid in data.get("liked_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
-                    
-                # Conta dislikes
                 for uid in data.get("disliked_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
-                    
-                # Conta neutrals
                 for uid in data.get("neutral_by", []):
                     user_counts[uid] = user_counts.get(uid, 0) + 1
-            
+
             # Ordena por contagem decrescente
             sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
-            
-            # Busca dados dos usuários
+
+            # Step 4d: Batch user profile lookup using get_all()
+            uids_to_fetch = [uid for uid, _ in sorted_users]
+            doc_refs = [self.users_collection.document(uid) for uid in uids_to_fetch]
+            user_docs = self.client.get_all(doc_refs)
+            user_profiles = {}
+            for doc in user_docs:
+                if doc.exists:
+                    user_profiles[doc.id] = doc.to_dict()
+
             top_reviewers = []
             for uid, count in sorted_users:
-                user_profile = self.get_user_profile(uid)
-                if user_profile:
+                profile = user_profiles.get(uid)
+                if profile:
                     top_reviewers.append({
-                        "user": user_profile,
+                        "user": profile,
                         "count": count
                     })
-            
+
             print(f"✅ Top {len(top_reviewers)} revisores de todos os tempos encontrados")
             return top_reviewers
-            
+
         except Exception as e:
             print(f"❌ Erro ao buscar top reviewers de todos os tempos: {e}")
             return []

@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Optional, Dict, Any, List
 from google.cloud import bigquery
 from google.api_core import exceptions
@@ -41,6 +42,11 @@ class BigQueryService:
         self._embedding_cache: Dict[str, list[float]] = {}
         self._embedding_cache_order: list[str] = []
         self._embedding_cache_max = 128
+
+        # Stats cache (TTL-based in-memory)
+        self._stats_cache: Optional[Dict[str, Any]] = None
+        self._stats_cache_time: float = 0.0
+        self._stats_cache_ttl: float = 300.0  # 5 minutes
 
         print(f"📊 BigQuery client inicializado:")
         print(f"   Project: {settings.PROJECT_ID}")
@@ -85,6 +91,9 @@ class BigQueryService:
             if errors:
                 print(f"❌ Erro ao inserir no BigQuery: {errors}")
                 return False
+
+            # Invalidate stats cache on new analysis
+            self._stats_cache = None
 
             print(f"✅ Análise {analise.document_id} inserida no BigQuery com sucesso!")
             return True
@@ -231,6 +240,7 @@ class BigQueryService:
     def get_stats(self) -> Optional[Dict[str, Any]]:
         """
         Retorna estatísticas gerais das análises.
+        Utiliza cache in-memory com TTL de 5 minutos.
 
         Returns:
             Dict com:
@@ -238,7 +248,14 @@ class BigQueryService:
             - total_afirmacoes: número total de claims
             - percentual_falso: percentual de claims falsas
         """
+        t0 = time.perf_counter()
         try:
+            # Check cache
+            if self._stats_cache is not None and (time.perf_counter() - self._stats_cache_time) < self._stats_cache_ttl:
+                elapsed = time.perf_counter() - t0
+                print(f"⚡ get_stats() served from cache in {elapsed:.4f}s")
+                return self._stats_cache
+
             query = f"""
                 WITH claims_data AS (
                     SELECT
@@ -273,11 +290,17 @@ class BigQueryService:
                 "percentual_falso": round(percentual_falso, 1)
             }
 
-            print(f"📊 Estatísticas calculadas: {stats}")
+            # Update cache
+            self._stats_cache = stats
+            self._stats_cache_time = time.perf_counter()
+
+            elapsed = time.perf_counter() - t0
+            print(f"📊 get_stats() completed in {elapsed:.4f}s (BigQuery query): {stats}")
             return stats
 
         except Exception as e:
-            print(f"❌ Erro ao buscar estatísticas: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ get_stats() failed in {elapsed:.4f}s: {e}")
             return None
 
     def _build_filter_clause(self, filters: Dict[str, Any]) -> str:
