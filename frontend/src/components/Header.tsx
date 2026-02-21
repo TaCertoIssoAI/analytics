@@ -27,7 +27,7 @@ export const Header = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isOnProfilePage = location.pathname.startsWith("/perfil/");
+  const isOnProfilePage = currentUser ? location.pathname === `/perfil/${currentUser.uid}` : false;
   const isOnAuthPage = location.pathname === "/entrar" || location.pathname === "/cadastro";
   const isAvatarActive = isOnProfilePage || isOnAuthPage;
 
