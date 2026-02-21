@@ -688,7 +688,7 @@ const Verification = () => {
                       variant="link"
                       className="p-0 h-auto font-semibold text-primary hover:underline whitespace-normal text-left"
                     >
-                      Ver revisores que avaliaram
+                      Ver revisores que avaliaram ({reviewers.length})
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
