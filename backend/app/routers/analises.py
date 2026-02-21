@@ -480,6 +480,12 @@ async def get_analise(document_id: str) -> AnaliseGetResponse:
                 detail=f"Análise {document_id} não encontrada"
             )
 
+        # Strip heavy unused fields before sending to client
+        data.pop("full_combined_text", None)
+        data.pop("embedding", None)
+        for link in data.get("scraped_links", []):
+            link.pop("scraped_text", None)
+
         # Converte dict para AnaliseNewFormat
         analise = AnaliseNewFormat(**data)
 
@@ -502,6 +508,48 @@ async def get_analise(document_id: str) -> AnaliseGetResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro interno ao buscar análise: {str(e)}"
+        )
+
+
+@router.get(
+    "/{document_id}/scraped-text",
+    summary="Buscar textos raspados",
+    description="Retorna os textos raspados das URLs da análise sob demanda (lazy loading)"
+)
+async def get_scraped_text(document_id: str) -> Dict[str, Any]:
+    """
+    Endpoint lazy para buscar scraped_text dos links.
+    Chamado apenas quando o usuário clica em "Ver Scraped Text" no modal.
+    """
+    try:
+        data = firestore_service.get_analise(document_id)
+
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Análise {document_id} não encontrada"
+            )
+
+        scraped_links = []
+        for link in data.get("scraped_links", []):
+            scraped_links.append({
+                "url": link.get("url", ""),
+                "title": link.get("title", ""),
+                "scraped_text": link.get("scraped_text", ""),
+            })
+
+        return {
+            "success": True,
+            "data": {"scraped_links": scraped_links}
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao buscar scraped text: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno: {str(e)}"
         )
 
 

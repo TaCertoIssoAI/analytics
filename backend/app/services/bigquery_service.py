@@ -61,6 +61,12 @@ class BigQueryService:
         self._sources_cache_max: int = 50
         self._sources_cache_ttl: float = 300.0  # 5 minutes
 
+        # Recommendations cache (LRU + TTL) — IPTC topics are stable
+        self._recommendations_cache: Dict[str, Tuple[List, float]] = {}
+        self._recommendations_cache_order: List[str] = []
+        self._recommendations_cache_max: int = 50
+        self._recommendations_cache_ttl: float = 1800.0  # 30 minutes
+
         print(f"📊 BigQuery client inicializado:")
         print(f"   Project: {settings.PROJECT_ID}")
         print(f"   Dataset: {settings.DATASET_ID}")
@@ -111,6 +117,8 @@ class BigQueryService:
             self._dashboard_cache_order.clear()
             self._sources_cache.clear()
             self._sources_cache_order.clear()
+            self._recommendations_cache.clear()
+            self._recommendations_cache_order.clear()
 
             print(f"✅ Análise {analise.document_id} inserida no BigQuery com sucesso!")
             return True
@@ -937,6 +945,20 @@ class BigQueryService:
         Returns:
             Lista de análises similares ordenadas por relevância, ou None em caso de erro
         """
+        t0 = time.perf_counter()
+        cache_key = f"{document_id}:{limit}"
+
+        # Check cache
+        cached = self._recommendations_cache.get(cache_key)
+        if cached:
+            data, ts = cached
+            if (time.perf_counter() - ts) < self._recommendations_cache_ttl:
+                elapsed = time.perf_counter() - t0
+                print(f"⚡ get_similar_analyses({document_id}) cache HIT in {elapsed:.4f}s ({len(data)} results)")
+                return data
+            else:
+                self._recommendations_cache.pop(cache_key, None)
+
         try:
             # 1. Buscar a análise original e extrair seus tópicos IPTC
             original = self.get_analise(document_id)
@@ -1043,11 +1065,20 @@ class BigQueryService:
                 data = self._convert_datetimes_to_strings(data)
                 similar_analyses.append(data)
 
-            print(f"✅ Encontradas {len(similar_analyses)} análises similares para {document_id}")
+            # Store in cache
+            self._lru_put(
+                self._recommendations_cache, self._recommendations_cache_order,
+                self._recommendations_cache_max, cache_key,
+                (similar_analyses, time.perf_counter()),
+            )
+
+            elapsed = time.perf_counter() - t0
+            print(f"✅ get_similar_analyses({document_id}) cache MISS in {elapsed:.4f}s ({len(similar_analyses)} results)")
             return similar_analyses
 
         except Exception as e:
-            print(f"❌ Erro ao buscar análises similares: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ Erro ao buscar análises similares in {elapsed:.4f}s: {e}")
             import traceback
             traceback.print_exc()
             return None
