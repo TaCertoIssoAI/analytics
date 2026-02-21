@@ -30,6 +30,11 @@ class FirestoreService:
             self._top_reviewers_cache_time: float = 0.0
             self._top_reviewers_cache_ttl: float = 300.0  # 5 minutes
 
+            # Community members cache (TTL-based in-memory)
+            self._community_cache: Optional[List[Dict[str, Any]]] = None
+            self._community_cache_time: float = 0.0
+            self._community_cache_ttl: float = 300.0  # 5 minutes
+
             print(f"🔥 Firestore client inicializado (database='tacertoissoai')")
         except Exception as e:
             print(f"❌ Erro ao inicializar Firestore: {e}")
@@ -475,9 +480,10 @@ class FirestoreService:
         try:
             uid = user_data.get("uid")
             if not uid: return False
-            
+
             doc_ref = self.users_collection.document(uid)
             doc_ref.set(user_data, merge=True)
+            self._community_cache = None  # Invalidate community cache
             print(f"✅ Perfil de usuário {uid} salvo/atualizado.")
             return True
         except Exception as e:
@@ -505,6 +511,7 @@ class FirestoreService:
         try:
             doc_ref = self.users_collection.document(uid)
             doc_ref.delete()
+            self._community_cache = None  # Invalidate community cache
             print(f"✅ Perfil de usuário {uid} deletado.")
             return True
         except Exception as e:
@@ -528,29 +535,52 @@ class FirestoreService:
             print(f"❌ Erro ao buscar usuários em lote: {e}")
             return []
 
-    def list_users(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
+    # Fields needed by the community listing cards
+    _COMMUNITY_PROJECTION_FIELDS = [
+        "uid", "displayName", "photoURL", "occupation", "review_count",
+    ]
+
+    def _load_community_cache(self) -> List[Dict[str, Any]]:
+        """Loads or returns cached community members with projection."""
+        now = time.perf_counter()
+        if self._community_cache is not None and (now - self._community_cache_time) < self._community_cache_ttl:
+            return self._community_cache
+
+        t0 = time.perf_counter()
+        docs = self.users_collection.select(self._COMMUNITY_PROJECTION_FIELDS).stream()
+        users = [doc.to_dict() for doc in docs]
+        users.sort(key=lambda x: (x.get("displayName") or "").lower())
+
+        self._community_cache = users
+        self._community_cache_time = time.perf_counter()
+
+        elapsed = time.perf_counter() - t0
+        print(f"⚡ _load_community_cache() loaded {len(users)} users in {elapsed:.4f}s (projected)")
+        return users
+
+    def list_users(self, limit: int = 10, offset: int = 0, search: str = "") -> Dict[str, Any]:
         """
-        Lista usuários com paginação básica.
+        Lista usuários com cache, projeção, busca por substring e paginação em memória.
         """
-        if not self.client: return {"users": [], "total": 0}
-        
+        if not self.client: return {"users": [], "total": 0, "limit": limit, "offset": offset}
+        t0 = time.perf_counter()
+
         try:
-            # Nota: Offset em Firestore é caro (lê todos docs anteriores).
-            # Para produção, usar cursor (start_after).
-            # Para este MVP com poucos usuários, stream() e slice em memória é aceitável.
-            docs = list(self.users_collection.stream())
-            total = len(docs)
-            
-            # Ordena por nome
-            users = []
-            for doc in docs:
-                data = doc.to_dict()
-                users.append(data)
-                
-            users.sort(key=lambda x: (x.get("displayName") or "").lower())
-            
+            users = self._load_community_cache()
+
+            # Filter by search term (substring match on displayName or occupation)
+            if search:
+                search_lower = search.lower()
+                users = [u for u in users if
+                    search_lower in (u.get("displayName") or "").lower() or
+                    search_lower in (u.get("occupation") or "").lower()]
+
+            total = len(users)
             paginated_users = users[offset : offset + limit]
-            
+
+            elapsed = time.perf_counter() - t0
+            print(f"⚡ list_users(search='{search}', offset={offset}, limit={limit}) in {elapsed:.4f}s — {total} total, {len(paginated_users)} returned")
+
             return {
                 "users": paginated_users,
                 "total": total,
@@ -558,8 +588,33 @@ class FirestoreService:
                 "offset": offset
             }
         except Exception as e:
-            print(f"❌ Erro ao listar usuários: {e}")
-            return {"users": [], "total": 0}
+            elapsed = time.perf_counter() - t0
+            print(f"❌ list_users() failed in {elapsed:.4f}s: {e}")
+            return {"users": [], "total": 0, "limit": limit, "offset": offset}
+
+    def list_users_admin(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
+        """
+        Lista usuários para admin — sem projeção, retorna todos os campos.
+        Não utiliza o cache da comunidade (que é projetado).
+        """
+        if not self.client: return {"users": [], "total": 0, "limit": limit, "offset": offset}
+
+        try:
+            docs = list(self.users_collection.stream())
+            users = [doc.to_dict() for doc in docs]
+            users.sort(key=lambda x: (x.get("displayName") or "").lower())
+            total = len(users)
+            paginated_users = users[offset : offset + limit]
+
+            return {
+                "users": paginated_users,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        except Exception as e:
+            print(f"❌ Erro ao listar usuários (admin): {e}")
+            return {"users": [], "total": 0, "limit": limit, "offset": offset}
 
     def update_user_profile_fields(self, uid: str, fields: Dict[str, Any]) -> bool:
         """
@@ -569,6 +624,9 @@ class FirestoreService:
         try:
             doc_ref = self.users_collection.document(uid)
             doc_ref.set(fields, merge=True)
+            # Invalidate community cache if visible fields changed
+            if any(f in fields for f in ("displayName", "photoURL", "occupation")):
+                self._community_cache = None
             print(f"✅ Perfil do usuário {uid} atualizado com campos: {list(fields.keys())}")
             return True
         except Exception as e:
@@ -989,10 +1047,10 @@ class FirestoreService:
             # Ordena por contagem decrescente
             sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
 
-            # Step 4d: Batch user profile lookup using get_all()
+            # Batch user profile lookup using get_all() with projection
             uids_to_fetch = [uid for uid, _ in sorted_users]
             doc_refs = [self.users_collection.document(uid) for uid in uids_to_fetch]
-            user_docs = self.client.get_all(doc_refs)
+            user_docs = self.client.get_all(doc_refs, field_paths=self._COMMUNITY_PROJECTION_FIELDS)
             user_profiles = {}
             for doc in user_docs:
                 if doc.exists:
@@ -1024,54 +1082,35 @@ class FirestoreService:
     
     def _get_all_time_top_reviewers(self, limit: int = 5) -> List[Dict[str, Any]]:
         """
-        Retorna os top revisores de todos os tempos (sem filtro de data).
-        Step 4b: Uses projection to fetch only interaction arrays.
-        Step 4d: Uses batch lookup for user profiles.
+        Retorna os top revisores de todos os tempos usando o campo desnormalizado review_count.
+        Query direta na collection users ordenada por review_count desc — zero scans em analises.
         """
         if not self.client: return []
+        t0 = time.perf_counter()
 
         try:
-            # Step 4b: Apply projection - only fetch interaction arrays
-            query = self.analises_collection.select(["liked_by", "disliked_by", "neutral_by"]).stream()
-
-            user_counts = {}
-
-            for doc in query:
-                data = doc.to_dict()
-
-                for uid in data.get("liked_by", []):
-                    user_counts[uid] = user_counts.get(uid, 0) + 1
-                for uid in data.get("disliked_by", []):
-                    user_counts[uid] = user_counts.get(uid, 0) + 1
-                for uid in data.get("neutral_by", []):
-                    user_counts[uid] = user_counts.get(uid, 0) + 1
-
-            # Ordena por contagem decrescente
-            sorted_users = sorted(user_counts.items(), key=lambda item: item[1], reverse=True)[:limit]
-
-            # Step 4d: Batch user profile lookup using get_all()
-            uids_to_fetch = [uid for uid, _ in sorted_users]
-            doc_refs = [self.users_collection.document(uid) for uid in uids_to_fetch]
-            user_docs = self.client.get_all(doc_refs)
-            user_profiles = {}
-            for doc in user_docs:
-                if doc.exists:
-                    user_profiles[doc.id] = doc.to_dict()
+            query = (self.users_collection
+                     .where("review_count", ">", 0)
+                     .order_by("review_count", direction=firestore.Query.DESCENDING)
+                     .limit(limit)
+                     .select(self._COMMUNITY_PROJECTION_FIELDS)
+                     .stream())
 
             top_reviewers = []
-            for uid, count in sorted_users:
-                profile = user_profiles.get(uid)
-                if profile:
-                    top_reviewers.append({
-                        "user": profile,
-                        "count": count
-                    })
+            for doc in query:
+                profile = doc.to_dict()
+                top_reviewers.append({
+                    "user": profile,
+                    "count": profile.get("review_count", 0)
+                })
 
-            print(f"✅ Top {len(top_reviewers)} revisores de todos os tempos encontrados")
+            elapsed = time.perf_counter() - t0
+            print(f"✅ Top {len(top_reviewers)} revisores all-time via review_count in {elapsed:.4f}s")
             return top_reviewers
 
         except Exception as e:
-            print(f"❌ Erro ao buscar top reviewers de todos os tempos: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ _get_all_time_top_reviewers() failed in {elapsed:.4f}s: {e}")
             return []
     def get_all_reviews(self) -> List[Dict[str, Any]]:
         """

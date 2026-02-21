@@ -95,17 +95,9 @@ async def get_top_reviewers():
 async def get_community_members(limit: int = 50, offset: int = 0, search: str = ""):
     """
     Lista membros da comunidade (público, sem autenticação).
+    Search and pagination are handled server-side with in-memory cache.
     """
-    result = firestore_service.list_users(limit, offset)
-
-    # Apply search filter if provided
-    if search:
-        search_lower = search.lower()
-        filtered = [u for u in result["users"] if
-            (u.get("displayName") or "").lower().find(search_lower) >= 0 or
-            (u.get("occupation") or "").lower().find(search_lower) >= 0]
-        result["users"] = filtered
-        result["total"] = len(filtered)
+    result = firestore_service.list_users(limit, offset, search)
 
     # Strip private fields from public community listing
     result["users"] = [_public_profile(u) for u in result["users"]]
@@ -119,14 +111,15 @@ async def get_user_interactions(uid: str):
 
 @router.get("")
 async def list_users(
-    limit: int = 10, 
+    limit: int = 10,
     offset: int = 0,
     admin_user: dict = Depends(verify_admin)
 ):
     """
     Lista todos os usuários (apenas admin).
+    Returns full user data (no projection, no field stripping).
     """
-    return firestore_service.list_users(limit, offset)
+    return firestore_service.list_users_admin(limit, offset)
 
 @router.post("/{uid}/role")
 async def set_user_role(
