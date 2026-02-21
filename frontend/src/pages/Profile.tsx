@@ -580,7 +580,7 @@ const Profile = () => {
         {/* ===================================== */}
         {/* 2. STATS DASHBOARD — 4 Mini Cards     */}
         {/* ===================================== */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Card className="border shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -589,30 +589,6 @@ const Profile = () => {
               <div>
                 <div className="text-2xl font-bold leading-none">{stats.total}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">Avaliações</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-sm">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <XCircle className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold leading-none">{stats.dislikes}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Fake News Desmentidas</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-sm">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <Scale className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold leading-none">{stats.neutrals}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Análises Neutras</div>
               </div>
             </CardContent>
           </Card>
