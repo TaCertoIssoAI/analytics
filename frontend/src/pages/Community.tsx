@@ -1,11 +1,11 @@
 import { Header } from "@/components/Header";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Search, Users, BadgeCheck, Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trophy, Search, Users, BadgeCheck, Briefcase, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { getTopReviewers, getCommunityMembers, TopReviewersResponse, UserProfile } from "@/auth/userService";
 import { getValidPhotoUrl } from "@/lib/utils";
 import { useCachedData } from "@/hooks/useCachedData";
@@ -28,8 +28,31 @@ const Community = () => {
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const LIMIT = 12;
+
+  // ====== Sistema de Cache ======
+  const cacheRef = useRef(new Map<string, { data: any; ts: number }>());
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+  const getCache = useCallback((key: string) => {
+    const entry = cacheRef.current.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL) {
+      cacheRef.current.delete(key);
+      return null;
+    }
+    return entry.data;
+  }, []);
+
+  const putCache = useCallback((key: string, data: any) => {
+    cacheRef.current.set(key, { data, ts: Date.now() });
+    if (cacheRef.current.size > 200) {
+      const first = cacheRef.current.keys().next().value;
+      if (first !== undefined) cacheRef.current.delete(first);
+    }
+  }, []);
 
   // Top reviewers (cached)
   const fetchTopReviewers = useCallback(async () => {
@@ -42,20 +65,43 @@ const Community = () => {
     { reviewers: [], period: 'week' }
   );
 
-  // Fetch community members
-  const fetchMembers = useCallback(async (searchTerm: string, page: number) => {
-    setLoading(true);
+  // Fetch community members com cache
+  const fetchMembers = useCallback(async (searchTerm: string, page: number, forceRefresh = false) => {
+    const key = `community:${searchTerm}:${page}`;
+
+    if (!forceRefresh) {
+      const cached = getCache(key);
+      if (cached) {
+        setMembers(cached.users);
+        setTotal(cached.total);
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (!forceRefresh) setLoading(true);
     try {
       const offset = (page - 1) * LIMIT;
       const result = await getCommunityMembers(LIMIT, offset, searchTerm);
       setMembers(result.users);
       setTotal(result.total);
+      putCache(key, result);
     } catch (error) {
       console.error("Error fetching members:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getCache, putCache]);
+
+  // Força atualização ignorando o cache
+  const handleForceRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchMembers(searchQuery, currentPage, true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchMembers, searchQuery, currentPage]);
 
   // Reset to page 1 on search change
   useEffect(() => {
@@ -113,9 +159,21 @@ const Community = () => {
               Conheça os revisores que fazem parte da plataforma
             </p>
           </div>
-          <Button asChild>
-            <Link to="/seja-um-revisor">Como se tornar um revisor</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleForceRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? "Atualizando..." : "Atualizar"}
+            </Button>
+            <Button asChild>
+              <Link to="/seja-um-revisor">Como se tornar um revisor</Link>
+            </Button>
+          </div>
         </div>
 
         {/* Top Reviewers Section */}
