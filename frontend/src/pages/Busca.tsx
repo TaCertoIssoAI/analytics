@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Header } from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilterSection, type DateFilterValue } from "@/components/FilterSection";
@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, MessageSquare, ExternalLink, Download, CheckCircle, XCircle, HelpCircle, Search } from "lucide-react";
+import { FileText, MessageSquare, ExternalLink, Download, CheckCircle, XCircle, HelpCircle, Search, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Analysis } from "@/types/analysis";
@@ -51,7 +51,11 @@ interface DashboardData {
 const Busca = () => {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [sourcesLoading, setSourcesLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
@@ -106,6 +110,28 @@ const Busca = () => {
   });
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+  // ====== Sistema de Cache ======
+  const cacheRef = useRef(new Map<string, { data: any; ts: number }>());
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+  const getCache = useCallback((key: string) => {
+    const entry = cacheRef.current.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL) {
+      cacheRef.current.delete(key);
+      return null;
+    }
+    return entry.data;
+  }, []);
+
+  const putCache = useCallback((key: string, data: any) => {
+    cacheRef.current.set(key, { data, ts: Date.now() });
+    if (cacheRef.current.size > 200) {
+      const first = cacheRef.current.keys().next().value;
+      if (first !== undefined) cacheRef.current.delete(first);
+    }
+  }, []);
 
   const getDateRangeIso = useCallback((): { start?: string; end?: string } => {
     const now = new Date();
@@ -247,54 +273,117 @@ const Busca = () => {
     }
   };
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  // String de parâmetros memoizada para uso como chave de cache
+  const paramsString = useMemo(() => buildQueryParams().toString(), [buildQueryParams]);
+
+  // Busca dados do dashboard (aba Visão Geral)
+  const loadDashboard = useCallback(async (forceRefresh = false) => {
+    const key = `dash:${paramsString}`;
+
+    if (!forceRefresh) {
+      const cached = getCache(key);
+      if (cached) {
+        setDashboardData(cached);
+        setDashboardLoading(false);
+        return;
+      }
+    }
+
+    if (!forceRefresh) setDashboardLoading(true);
     try {
-      const params = buildQueryParams();
-      
-      // Fetch Dashboard Data (Stats only)
-      const dashboardRes = await fetch(`${apiUrl}/analises/dashboard?${params.toString()}`);
-      if (dashboardRes.ok) {
-        const result = await dashboardRes.json();
+      const res = await fetch(`${apiUrl}/analises/dashboard?${paramsString}`);
+      if (res.ok) {
+        const result = await res.json();
         if (result.success) {
           setDashboardData(result.data);
+          putCache(key, result.data);
         }
       }
+    } catch (e) {
+      console.error("Erro ao carregar dashboard:", e);
+    }
+    setDashboardLoading(false);
+  }, [apiUrl, paramsString, getCache, putCache]);
 
-      // Fetch List Data (Messages)
-      const messagesParams = new URLSearchParams(params);
-      messagesParams.append("limit", String(limit));
-      messagesParams.append("offset", String((page - 1) * limit));
+  // Busca dados de mensagens (aba Mensagens)
+  const loadMessages = useCallback(async (forceRefresh = false) => {
+    const key = `msg:${paramsString}:${page}`;
 
-      const listRes = await fetch(`${apiUrl}/analises?${messagesParams.toString()}`);
-      if (listRes.ok) {
-        const result = await listRes.json();
+    if (!forceRefresh) {
+      const cached = getCache(key);
+      if (cached) {
+        setAnalyses(cached.items);
+        setTotalMessages(cached.total);
+        setMessagesLoading(false);
+        return;
+      }
+    }
+
+    if (!forceRefresh) setMessagesLoading(true);
+    try {
+      const params = buildQueryParams();
+      params.append("limit", String(limit));
+      params.append("offset", String((page - 1) * limit));
+      const res = await fetch(`${apiUrl}/analises?${params.toString()}`);
+      if (res.ok) {
+        const result = await res.json();
         if (result.success) {
           setAnalyses(result.data.items);
           setTotalMessages(result.data.total);
+          putCache(key, result.data);
         }
       }
+    } catch (e) {
+      console.error("Erro ao carregar mensagens:", e);
+    }
+    setMessagesLoading(false);
+  }, [apiUrl, paramsString, page, limit, buildQueryParams, getCache, putCache]);
 
-      // Fetch Sources Data
-      const sourcesParams = new URLSearchParams(params);
-      sourcesParams.append("limit", String(sourcesLimit));
-      sourcesParams.append("offset", String((sourcesPage - 1) * sourcesLimit));
+  // Busca dados de fontes (aba Fontes)
+  const loadSources = useCallback(async (forceRefresh = false) => {
+    const key = `src:${paramsString}:${sourcesPage}`;
 
-      const sourcesRes = await fetch(`${apiUrl}/analises/sources?${sourcesParams.toString()}`);
-      if (sourcesRes.ok) {
-        const result = await sourcesRes.json();
+    if (!forceRefresh) {
+      const cached = getCache(key);
+      if (cached) {
+        setSources(cached.items);
+        setTotalSources(cached.total);
+        setSourcesLoading(false);
+        return;
+      }
+    }
+
+    if (!forceRefresh) setSourcesLoading(true);
+    try {
+      const params = buildQueryParams();
+      params.append("limit", String(sourcesLimit));
+      params.append("offset", String((sourcesPage - 1) * sourcesLimit));
+      const res = await fetch(`${apiUrl}/analises/sources?${params.toString()}`);
+      if (res.ok) {
+        const result = await res.json();
         if (result.success) {
           setSources(result.data.items);
           setTotalSources(result.data.total);
+          putCache(key, result.data);
         }
       }
-
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error("Erro ao carregar fontes:", e);
     }
-  }, [apiUrl, buildQueryParams, limit, page, sourcesLimit, sourcesPage]);
+    setSourcesLoading(false);
+  }, [apiUrl, paramsString, sourcesPage, sourcesLimit, buildQueryParams, getCache, putCache]);
+
+  // Força atualização ignorando o cache
+  const handleForceRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      if (activeTab === 'overview') await loadDashboard(true);
+      else if (activeTab === 'messages') await loadMessages(true);
+      else if (activeTab === 'sources') await loadSources(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [activeTab, loadDashboard, loadMessages, loadSources]);
 
   // Handler for manual search
   const handleSearch = useCallback(() => {
@@ -303,13 +392,15 @@ const Busca = () => {
     setSourcesPage(1);
   }, [searchTerm]);
 
-  // Fetch data when filters change or when activeSearchTerm changes
+  // Lazy loading: busca dados apenas da aba ativa
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (activeTab === 'overview') loadDashboard();
+    else if (activeTab === 'messages') loadMessages();
+    else if (activeTab === 'sources') loadSources();
+  }, [activeTab, loadDashboard, loadMessages, loadSources]);
 
+  // Reset de paginação ao mudar filtros
   useEffect(() => {
-    // Quando muda qualquer filtro (exceto searchTerm), volta pra primeira página
     setPage(1);
     setSourcesPage(1);
   }, [filters, activeSearchTerm, dateFilter.mode, dateFilter.startDate, dateFilter.endDate]);
@@ -394,11 +485,23 @@ const Busca = () => {
       <div className="container py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Search className="h-6 w-6 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Search className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold">Busca</h1>
             </div>
-            <h1 className="text-3xl font-bold">Busca</h1>
+            <Button
+              onClick={handleForceRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? "Atualizando..." : "Atualizar"}
+            </Button>
           </div>
           <p className="text-muted-foreground ml-[52px] mt-2">
             Explore e filtre as verificações realizadas pela plataforma
@@ -420,7 +523,7 @@ const Busca = () => {
 
         {/* Conteúdo Principal */}
         <div>
-            <Tabs defaultValue="overview" className="space-y-6">
+            <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="messages">Mensagens</TabsTrigger>
@@ -433,7 +536,7 @@ const Busca = () => {
                 <div className="flex justify-end">
                   <Button
                     onClick={handleExportDashboard}
-                    disabled={exportLoading.dashboard || loading}
+                    disabled={exportLoading.dashboard || dashboardLoading}
                     variant="outline"
                     size="sm"
                   >
@@ -442,7 +545,7 @@ const Busca = () => {
                   </Button>
                 </div>
 
-                {loading ? (
+                {dashboardLoading ? (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <Card key={i} className="p-6">
@@ -513,7 +616,7 @@ const Busca = () => {
                       <CardTitle>Análises por Modalidade</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {loading ? (
+                      {dashboardLoading ? (
                          <div className="h-[250px] flex flex-col justify-center gap-3 px-4">
                            {Array.from({ length: 4 }).map((_, i) => (
                              <div key={i} className="flex items-center gap-3">
@@ -563,7 +666,7 @@ const Busca = () => {
                   </div>
                   <Button
                     onClick={handleExportMessages}
-                    disabled={exportLoading.messages || loading || analyses.length === 0}
+                    disabled={exportLoading.messages || messagesLoading || analyses.length === 0}
                     variant="outline"
                     size="sm"
                   >
@@ -584,7 +687,7 @@ const Busca = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {loading ? (
+                    {messagesLoading ? (
                       <>
                         {Array.from({ length: 5 }).map((_, i) => (
                           <TableRow key={i}>
@@ -743,7 +846,7 @@ const Busca = () => {
 
               {/* Aba Fontes */}
               <TabsContent value="sources" className="space-y-6">
-                {loading ? (
+                {sourcesLoading ? (
                    <div className="space-y-3 py-4">
                      {Array.from({ length: 6 }).map((_, i) => (
                        <div key={i} className="flex items-center justify-between py-3 px-4 border-b border-border">
@@ -778,7 +881,7 @@ const Busca = () => {
                       </div>
                       <Button
                         onClick={handleExportSources}
-                        disabled={exportLoading.sources || loading}
+                        disabled={exportLoading.sources || sourcesLoading}
                         variant="outline"
                         size="sm"
                       >
