@@ -99,6 +99,7 @@ const Verification = () => {
   const [loading, setLoading] = useState(true);
   const [selectedLink, setSelectedLink] = useState<ScrapedLink | null>(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [scrapedTextsLoaded, setScrapedTextsLoaded] = useState(false);
   const [accordionValue, setAccordionValue] = useState<string>("");
 
   // Like/Dislike state
@@ -631,7 +632,7 @@ const Verification = () => {
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              {analysis.analysis_title || analysis.full_combined_text}
+              {analysis.analysis_title || analysis.full_combined_text || "Verificação"}
             </h1>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -1314,20 +1315,50 @@ const Verification = () => {
                             <LinkIcon className="h-3 w-3 flex-shrink-0" />
                             <span>{link.title || link.url}</span>
                           </a>
-                          {link.scraped_text && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              if (link.scraped_text) {
                                 setSelectedLink(link);
                                 setLinkModalOpen(true);
-                              }}
-                              className="gap-2 w-full sm:w-auto"
-                            >
-                              <Eye className="h-3 w-3" />
-                              Ver Scraped Text
-                            </Button>
-                          )}
+                              } else if (!scrapedTextsLoaded) {
+                                try {
+                                  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+                                  const res = await fetch(`${apiUrl}/analises/${id}/scraped-text`);
+                                  if (res.ok) {
+                                    const result = await res.json();
+                                    const scraped = result.data?.scraped_links || [];
+                                    // Update all links in the analysis with their scraped_text
+                                    if (analysis) {
+                                      const updated = { ...analysis };
+                                      updated.scraped_links = updated.scraped_links.map((l) => {
+                                        const match = scraped.find((s: ScrapedLink) => s.url === l.url);
+                                        return match ? { ...l, scraped_text: match.scraped_text } : l;
+                                      });
+                                      setAnalysis(updated);
+                                      setScrapedTextsLoaded(true);
+                                      const matchedLink = updated.scraped_links.find((l) => l.url === link.url);
+                                      if (matchedLink?.scraped_text) {
+                                        setSelectedLink(matchedLink);
+                                        setLinkModalOpen(true);
+                                      } else {
+                                        toast.info("Nenhum texto raspado disponível para este link.");
+                                      }
+                                    }
+                                  }
+                                } catch {
+                                  toast.error("Erro ao carregar texto raspado.");
+                                }
+                              } else {
+                                toast.info("Nenhum texto raspado disponível para este link.");
+                              }
+                            }}
+                            className="gap-2 w-full sm:w-auto"
+                          >
+                            <Eye className="h-3 w-3" />
+                            Ver Scraped Text
+                          </Button>
                         </div>
                       </div>
                     ))}

@@ -5,7 +5,7 @@ export type VerificationResult = "VERDADEIRO" | "FALSO" | "ENGANOSO" | "FORA_DE_
 export interface ScrapedLink {
   url: string;
   title: string;
-  scraped_text: string;
+  scraped_text?: string;
 }
 
 export interface MediaInfo {
@@ -67,7 +67,7 @@ export interface Analysis {
   source_type: MessageType;
   analysis_title?: string;
   user_message_text: string;
-  full_combined_text: string;
+  full_combined_text?: string;
   scraped_links: ScrapedLink[];
   liked_by?: string[];
   disliked_by?: string[];

@@ -35,6 +35,12 @@ class FirestoreService:
             self._community_cache_time: float = 0.0
             self._community_cache_ttl: float = 300.0  # 5 minutes
 
+            # Analise cache (LRU + TTL) — analyses are immutable after publication
+            self._analise_cache: Dict[str, tuple] = {}  # {doc_id: (timestamp, data)}
+            self._analise_cache_order: List[str] = []
+            self._analise_cache_ttl: float = 1800.0  # 30 minutes
+            self._analise_cache_max: int = 100
+
             print(f"🔥 Firestore client inicializado (database='tacertoissoai')")
         except Exception as e:
             print(f"❌ Erro ao inicializar Firestore: {e}")
@@ -92,6 +98,7 @@ class FirestoreService:
         try:
             doc_ref = self.analises_collection.document(document_id)
             doc_ref.delete()
+            self._analise_cache.pop(document_id, None)
             print(f"✅ Análise {document_id} removida do Firestore com sucesso!")
             return True
         except Exception as e:
@@ -423,19 +430,40 @@ class FirestoreService:
             print(f"❌ list_analises() failed in {elapsed:.4f}s: {e}")
             return None
 
+    def _analise_lru_put(self, key: str, data: Dict) -> None:
+        """Insert into the analise LRU cache, evicting oldest if over max size."""
+        self._analise_cache[key] = (time.perf_counter(), data)
+        self._analise_cache_order.append(key)
+        while len(self._analise_cache_order) > self._analise_cache_max:
+            oldest = self._analise_cache_order.pop(0)
+            self._analise_cache.pop(oldest, None)
+
     def get_analise(self, document_id: str) -> Optional[Dict[str, Any]]:
         """
         Busca uma análise no Firestore pelo document_id.
+        Uses LRU+TTL in-memory cache (analyses are immutable after publication).
         """
         if not self.client:
             return None
+
+        t0 = time.perf_counter()
+
+        # Check cache
+        cached = self._analise_cache.get(document_id)
+        if cached:
+            ts, data = cached
+            if (time.perf_counter() - ts) < self._analise_cache_ttl:
+                elapsed = time.perf_counter() - t0
+                print(f"⚡ get_analise({document_id}) cache HIT in {elapsed:.4f}s")
+                return data
+            else:
+                self._analise_cache.pop(document_id, None)
 
         try:
             doc_ref = self.analises_collection.document(document_id)
             doc = doc_ref.get()
 
             if doc.exists:
-                print(f"✅ Análise {document_id} encontrada no Firestore")
                 data = doc.to_dict() or {}
 
                 # Normaliza payloads antigos / registros incompletos
@@ -465,13 +493,20 @@ class FirestoreService:
 
                     data["user_message_text"] = (fallback or "").strip() if isinstance(fallback, str) else ""
 
+                # Store in cache
+                self._analise_lru_put(document_id, data)
+
+                elapsed = time.perf_counter() - t0
+                print(f"✅ get_analise({document_id}) cache MISS in {elapsed:.4f}s (Firestore read)")
                 return data
             else:
-                print(f"⚠️  Análise {document_id} não encontrada no Firestore")
+                elapsed = time.perf_counter() - t0
+                print(f"⚠️  Análise {document_id} não encontrada no Firestore ({elapsed:.4f}s)")
                 return None
 
         except Exception as e:
-            print(f"❌ Erro ao buscar no Firestore: {e}")
+            elapsed = time.perf_counter() - t0
+            print(f"❌ Erro ao buscar no Firestore ({elapsed:.4f}s): {e}")
             return None
 
     def create_user_profile(self, user_data: Dict[str, Any]) -> bool:
@@ -745,8 +780,9 @@ class FirestoreService:
             transaction = self.client.transaction()
             result = _update_in_transaction(transaction)
 
-            # Invalidate top_reviewers cache (interaction change affects reviewer counts)
+            # Invalidate caches
             self._top_reviewers_cache = None
+            self._analise_cache.pop(document_id, None)
 
             elapsed = time.perf_counter() - t0
             print(f"✅ Interação {action} atualizada para {document_id} por {uid} in {elapsed:.4f}s")
@@ -813,6 +849,8 @@ class FirestoreService:
             transaction = self.client.transaction()
             result = _add_sources_in_transaction(transaction)
 
+            self._analise_cache.pop(document_id, None)
+
             elapsed = time.perf_counter() - t0
             print(f"✅ Fontes sugeridas adicionadas para claim {claim_id} por {uid} em {document_id} in {elapsed:.4f}s")
             return result
@@ -874,6 +912,8 @@ class FirestoreService:
 
             transaction = self.client.transaction()
             result = _delete_sources_in_transaction(transaction)
+
+            self._analise_cache.pop(document_id, None)
 
             elapsed = time.perf_counter() - t0
             print(f"🗑️ Sugestão de fontes removida: claim {claim_id} por {uid} em {document_id} in {elapsed:.4f}s")
