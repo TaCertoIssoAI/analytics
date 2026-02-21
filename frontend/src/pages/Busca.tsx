@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, MessageSquare, ExternalLink, Download, CheckCircle, XCircle, HelpCircle } from "lucide-react";
+import { FileText, MessageSquare, ExternalLink, Download, CheckCircle, XCircle, HelpCircle, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Analysis } from "@/types/analysis";
@@ -394,7 +394,15 @@ const Busca = () => {
       <div className="container py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold">Busca</h1>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-full">
+              <Search className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold">Busca</h1>
+          </div>
+          <p className="text-muted-foreground ml-[52px] mt-2">
+            Explore e filtre as verificações realizadas pela plataforma
+          </p>
         </div>
 
         {/* Filtros */}

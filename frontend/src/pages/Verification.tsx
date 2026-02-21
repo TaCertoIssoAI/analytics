@@ -473,9 +473,83 @@ const Verification = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-12 text-center">
-          <p className="text-muted-foreground">Carregando análise...</p>
-        </div>
+        <article className="container py-12 max-w-7xl">
+          <div className="space-y-8">
+            {/* Header skeleton */}
+            <div className="space-y-4">
+              {/* Status dots */}
+              <div className="flex items-center gap-2 mb-2">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-4 w-4 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${i * 100}ms` }} />
+                ))}
+              </div>
+              {/* Title */}
+              <div className="space-y-2">
+                <div className="h-10 w-3/4 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "100ms" }} />
+                <div className="h-10 w-1/2 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "200ms" }} />
+              </div>
+              {/* Date and ID */}
+              <div className="flex flex-wrap gap-4">
+                <div className="h-4 w-48 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "300ms" }} />
+                <div className="h-4 w-32 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "400ms" }} />
+              </div>
+              {/* Modality badges */}
+              <div className="flex items-center gap-2">
+                {[0, 1].map((i) => (
+                  <div key={i} className="h-6 w-20 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${500 + i * 100}ms` }} />
+                ))}
+              </div>
+              {/* Topic badges */}
+              <div className="flex items-center gap-2">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-6 w-24 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${700 + i * 100}ms` }} />
+                ))}
+              </div>
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-4 pt-4">
+                <div className="h-10 w-36 rounded-md bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "1000ms" }} />
+                <div className="flex items-center gap-2 ml-auto">
+                  <div className="h-9 w-20 rounded-md bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "1100ms" }} />
+                  <div className="h-9 w-20 rounded-md bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "1200ms" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Claims skeleton */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2 space-y-6">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="rounded-xl border bg-card p-6 space-y-4" style={{ animationDelay: `${i * 200}ms` }}>
+                    <div className="flex items-center gap-3">
+                      <div className="h-6 w-6 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1300 + i * 200}ms` }} />
+                      <div className="h-5 w-24 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1400 + i * 200}ms` }} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-full rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1500 + i * 200}ms` }} />
+                      <div className="h-4 w-5/6 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1600 + i * 200}ms` }} />
+                      <div className="h-4 w-2/3 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1700 + i * 200}ms` }} />
+                    </div>
+                    <div className="h-3 w-40 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1800 + i * 200}ms` }} />
+                  </div>
+                ))}
+              </div>
+              {/* Sidebar skeleton */}
+              <div className="space-y-6">
+                <div className="rounded-xl border bg-card p-6 space-y-4">
+                  <div className="h-5 w-32 rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: "1300ms" }} />
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1400 + i * 100}ms` }} />
+                        <div className="h-4 w-full rounded bg-muted animate-[skeleton_1.8s_ease-in-out_infinite]" style={{ animationDelay: `${1500 + i * 100}ms` }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
     );
   }
@@ -688,7 +762,7 @@ const Verification = () => {
                       variant="link"
                       className="p-0 h-auto font-semibold text-primary hover:underline whitespace-normal text-left"
                     >
-                      Ver revisores que avaliaram
+                      Ver revisores que avaliaram ({reviewers.length})
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
