@@ -51,7 +51,7 @@ const About = () => {
               <div className="relative w-full max-w-2xl aspect-[16/9] overflow-hidden rounded-lg ">
                 <iframe
                   className="absolute inset-0 h-full w-full rounded-lg"
-                  src="https://www.youtube.com/embed/Tr7s_vxDnKk?cc_load_policy=1&cc_lang_pref=pt"
+                  src="https://www.youtube.com/embed/15tRUpSGfhI?cc_load_policy=1&cc_lang_pref=pt"
                   title="Demonstração Tá Certo Isso AI"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
