@@ -405,17 +405,22 @@ async def create_analise(analise_input: AnaliseInputFormat) -> AnaliseCreateResp
 
         # Salva no BigQuery
         print(f"💾 Salvando no BigQuery...")
-        success = bigquery_service.insert_analise(analise_new)
+        bq_success = bigquery_service.insert_analise(analise_new)
+        if not bq_success:
+            print(f"⚠️  Falha ao salvar no BigQuery para {document_id}")
 
-        if not success:
+        # Salva no Firestore (independente do resultado do BigQuery)
+        print(f"🔥 Salvando no Firestore...")
+        fs_success = firestore_service.save_analise(analise_new)
+        if not fs_success:
+            print(f"⚠️  Falha ao salvar no Firestore para {document_id}")
+
+        # Falha apenas se ambos falharem
+        if not bq_success and not fs_success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Erro ao salvar análise no BigQuery"
+                detail="Erro ao salvar análise no BigQuery e Firestore"
             )
-
-        # Salva no Firestore (Backup / Fast Retrieval)
-        print(f"🔥 Salvando no Firestore...")
-        firestore_service.save_analise(analise_new)
 
         # Monta URL de verificação
         verification_url = f"{settings.VERIFICATION_URL_BASE}/{document_id}"
