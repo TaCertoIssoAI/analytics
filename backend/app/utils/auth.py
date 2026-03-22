@@ -78,7 +78,7 @@ async def verify_admin(decoded_token: dict = Depends(verify_token)):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admin privileges revoked."
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -90,3 +90,19 @@ async def verify_admin(decoded_token: dict = Depends(verify_token)):
         )
 
     return decoded_token
+
+
+async def verify_bot_key(x_bot_api_key: str = Header(...)):
+    """
+    Verifica o header X-Bot-Api-Key para chamadas do bot.
+    """
+    if not settings.BOT_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Bot API key não configurada no servidor."
+        )
+    if x_bot_api_key != settings.BOT_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Bot API key inválida ou ausente."
+        )

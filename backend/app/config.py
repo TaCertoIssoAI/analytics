@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: Optional[str] = None
 
+    # Bot
+    BOT_API_KEY: Optional[str] = None
+
     # API
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000

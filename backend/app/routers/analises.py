@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends, Header
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
@@ -16,10 +16,7 @@ from app.models.responses import (
 from app.services.transformer import transformer
 from app.services.firestore_service import firestore_service
 from app.services.bigquery_service import bigquery_service
-
-# ... (imports)
-
-# ... (inside create_analise)
+from app.utils.auth import verify_token, verify_admin, verify_bot_key
 from app.config import settings
 
 router = APIRouter(prefix="/analises", tags=["Análises"])
@@ -365,7 +362,10 @@ async def list_sources(
     salva no BigQuery e retorna a URL de verificação.
     """
 )
-async def create_analise(analise_input: AnaliseInputFormat) -> AnaliseCreateResponse:
+async def create_analise(
+    analise_input: AnaliseInputFormat,
+    _: None = Depends(verify_bot_key)
+) -> AnaliseCreateResponse:
     """
     Endpoint para criar uma nova análise.
 
@@ -737,7 +737,9 @@ async def check_inconsistencies():
     summary="Resolver inconsistências (Admin)",
     description="Remove automaticamente todas as análises que não estão em ambos os bancos"
 )
-async def resolve_inconsistencies():
+async def resolve_inconsistencies(
+    _: dict = Depends(verify_admin)
+):
     """
     Endpoint administrativo para limpar inconsistências.
     Apaga registros que existem em apenas um dos bancos.
@@ -794,7 +796,10 @@ async def resolve_inconsistencies():
     summary="Deletar análise",
     description="Remove uma análise do BigQuery e do Firestore"
 )
-async def delete_analise(document_id: str):
+async def delete_analise(
+    document_id: str,
+    _: dict = Depends(verify_admin)
+):
     """
     Endpoint para deletar uma análise.
     Tenta remover de ambos os bancos.
@@ -899,7 +904,6 @@ async def get_recommendations(
 
 
 class InteractionRequest(BaseModel):
-    uid: str
     action: str
     observation: Optional[str] = None  # Observação opcional, max 144 chars
 
@@ -908,20 +912,24 @@ class InteractionRequest(BaseModel):
     summary="Interagir com análise",
     description="Adiciona/Remove like ou dislike com observação opcional"
 )
-async def interact_with_analise(document_id: str, request: InteractionRequest):
+async def interact_with_analise(
+    document_id: str,
+    request: InteractionRequest,
+    decoded_token: dict = Depends(verify_token)
+):
+    uid = decoded_token["uid"]  # uid vem do token verificado, não do body
     # Monta observação: texto + flag de personalização
     raw = (request.observation or "").strip()[:144]
     if raw:
         observation = {"text": raw, "has_custom_observation": True}
     else:
         observation = {"text": "Sem observações", "has_custom_observation": False}
-    success = firestore_service.update_analise_interaction(document_id, request.uid, request.action, observation)
+    success = firestore_service.update_analise_interaction(document_id, uid, request.action, observation)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao atualizar interação"
         )
-    return {"message": "Interação atualizada com sucesso"}
     return {"message": "Interação atualizada com sucesso"}
 
 @router.get(
@@ -1018,7 +1026,6 @@ class SuggestedSourceItem(BaseModel):
     title: str
 
 class SuggestedSourcesRequest(BaseModel):
-    uid: str
     claim_id: str
     sources: List[SuggestedSourceItem]  # Mínimo 1 fonte obrigatória
     observation: Optional[str] = None  # Observação obrigatória, max 300 chars
@@ -1028,11 +1035,16 @@ class SuggestedSourcesRequest(BaseModel):
     summary="Sugerir fontes para uma claim",
     description="Permite que um revisor que já avaliou a análise sugira fontes para uma claim específica"
 )
-async def add_suggested_sources(document_id: str, request: SuggestedSourcesRequest):
+async def add_suggested_sources(
+    document_id: str,
+    request: SuggestedSourcesRequest,
+    decoded_token: dict = Depends(verify_token)
+):
     """
     Adiciona fontes sugeridas por um revisor para uma claim específica.
     O revisor precisa ter avaliado (like/dislike) a análise antes.
     """
+    uid = decoded_token["uid"]  # uid vem do token verificado, não do body
     try:
         if not request.sources:
             raise HTTPException(
@@ -1047,7 +1059,7 @@ async def add_suggested_sources(document_id: str, request: SuggestedSourcesReque
             )
         sources_dicts = [s.model_dump() for s in request.sources]
         success = firestore_service.add_suggested_sources(
-            document_id, request.uid, request.claim_id, sources_dicts, obs
+            document_id, uid, request.claim_id, sources_dicts, obs
         )
         if not success:
             raise HTTPException(
@@ -1069,10 +1081,15 @@ async def add_suggested_sources(document_id: str, request: SuggestedSourcesReque
     summary="Remover fontes sugeridas",
     description="Permite que um usuário remova suas próprias fontes sugeridas de uma claim"
 )
-async def delete_suggested_sources(document_id: str, uid: str = Query(..., description="UID do usuário"), claim_id: str = Query(..., description="ID da claim")):
+async def delete_suggested_sources(
+    document_id: str,
+    claim_id: str = Query(..., description="ID da claim"),
+    decoded_token: dict = Depends(verify_token)
+):
     """
     Remove as fontes sugeridas pelo usuário para uma claim específica.
     """
+    uid = decoded_token["uid"]  # uid vem do token verificado, não do query param
     try:
         success = firestore_service.delete_suggested_sources(document_id, uid, claim_id)
         if not success:

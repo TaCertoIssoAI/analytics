@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, Dict, Any
 from app.services.firestore_service import firestore_service
-from app.utils.auth import verify_admin
+from app.utils.auth import verify_admin, verify_token
 from firebase_admin import auth
 from fastapi import Depends
 
@@ -48,7 +48,15 @@ class CreateUserRequest(BaseModel):
 
 
 @router.post("/profile")
-async def create_user_profile(profile: UserProfile):
+async def create_user_profile(
+    profile: UserProfile,
+    decoded_token: dict = Depends(verify_token)
+):
+    if decoded_token.get("uid") != profile.uid:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você só pode criar ou atualizar seu próprio perfil."
+        )
     success = firestore_service.create_user_profile(profile.model_dump())
     if not success:
         raise HTTPException(

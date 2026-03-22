@@ -1,4 +1,5 @@
 import { User } from "firebase/auth";
+import { fetchWithAuth } from "./httpClient";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -32,10 +33,12 @@ export const createUserProfile = async (user: User) => {
   };
 
   try {
+    const token = await user.getIdToken();
     const response = await fetch(`${API_URL}/users/profile`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(newProfile),
     });
@@ -53,11 +56,8 @@ export const createUserProfile = async (user: User) => {
  */
 export const saveUserProfile = async (profile: UserProfile) => {
   try {
-    const response = await fetch(`${API_URL}/users/profile`, {
+    const response = await fetchWithAuth(`${API_URL}/users/profile`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(profile),
     });
 

@@ -53,6 +53,7 @@ import ReactMarkdown from "react-markdown";
 import iptcMapping from "@/data/iptcMapping.json";
 import { translateContentTags } from "@/lib/translateContentTags";
 import { getValidPhotoUrl } from "@/lib/utils";
+import { fetchWithAuth } from "@/auth/httpClient";
 
 const statusConfig = {
   VERDADEIRO: {
@@ -261,13 +262,11 @@ const Verification = () => {
     if (!currentUser || !analysis) return;
 
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-    const response = await fetch(
+    const response = await fetchWithAuth(
       `${apiUrl}/analises/${analysis.document_id}/suggested-sources`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          uid: currentUser.uid,
           claim_id: claimId,
           sources,
           observation: observation || "",
@@ -299,8 +298,8 @@ const Verification = () => {
   const handleDeleteSuggestedSources = async (claimId: string, uid: string) => {
     if (!currentUser || !analysis) return;
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-    const response = await fetch(
-      `${apiUrl}/analises/${analysis.document_id}/suggested-sources?uid=${encodeURIComponent(uid)}&claim_id=${encodeURIComponent(claimId)}`,
+    const response = await fetchWithAuth(
+      `${apiUrl}/analises/${analysis.document_id}/suggested-sources?claim_id=${encodeURIComponent(claimId)}`,
       { method: "DELETE" },
     );
     if (!response.ok) {
@@ -336,12 +335,11 @@ const Verification = () => {
         setLikes((prev) => prev - 1);
         setUserLiked(false);
         setLikedBy((prev) => prev.filter((id) => id !== uid));
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `${apiUrl}/analises/${analysis.document_id}/interaction`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid, action: "remove_like" }),
+            body: JSON.stringify({ action: "remove_like" }),
           },
         );
         if (!response.ok) throw new Error("Failed to update interaction");
@@ -374,12 +372,11 @@ const Verification = () => {
         setDislikes((prev) => prev - 1);
         setUserDisliked(false);
         setDislikedBy((prev) => prev.filter((id) => id !== uid));
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `${apiUrl}/analises/${analysis.document_id}/interaction`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid, action: "remove_dislike" }),
+            body: JSON.stringify({ action: "remove_dislike" }),
           },
         );
         if (!response.ok) throw new Error("Failed to update interaction");
@@ -427,12 +424,11 @@ const Verification = () => {
         }
       }
 
-      const response = await fetch(
+      const response = await fetchWithAuth(
         `${apiUrl}/analises/${analysis.document_id}/interaction`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid, action, observation }),
+          body: JSON.stringify({ action, observation }),
         },
       );
 
