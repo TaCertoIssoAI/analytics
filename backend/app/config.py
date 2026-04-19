@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     FIRESTORE_ANALISES: str = os.getenv("FIRESTORE_ANALISES", "analises")
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
-    # OpenAI
-    OPENAI_API_KEY: Optional[str] = None
+    # Gemini
+    GEMINI_API_KEY: Optional[str] = None
 
     # Bot
     BOT_API_KEY: Optional[str] = None

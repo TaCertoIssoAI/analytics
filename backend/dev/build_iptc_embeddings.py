@@ -5,7 +5,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
-from openai import OpenAI
+from dotenv import load_dotenv
+from google import genai
+from google.genai.types import EmbedContentConfig
+
+load_dotenv()
 
 
 def load_concepts(json_path: Path) -> Dict[str, dict]:
@@ -61,20 +65,20 @@ def build_topic_text(concept: dict) -> str:
 
 def generate_embeddings_for_topics(
     concepts_by_qcode: Dict[str, dict],
-    model: str = "text-embedding-3-small",
-    batch_size: int = 256,
+    model: str = "gemini-embedding-001",
+    batch_size: int = 100,
 ) -> Tuple[List[str], np.ndarray]:
     """
-    gera embeddings de todos os topicos usando a api da openai
+    gera embeddings de todos os topicos usando a api do gemini
     retorna (lista_de_qcodes, matriz_de_embeddings)
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "defina a variavel de ambiente OPENAI_API_KEY com sua chave da openai"
+            "defina a variavel de ambiente GEMINI_API_KEY com sua chave do gemini"
         )
 
-    client = OpenAI(api_key=api_key)
+    client = genai.Client(api_key=api_key)
 
     # monta lista de qcodes e textos de forma deterministica
     qcodes_list: List[str] = sorted(concepts_by_qcode.keys())
@@ -90,14 +94,14 @@ def generate_embeddings_for_topics(
         batch_texts = texts[start:end]
         print(f"gerando embeddings para indices {start}..{end - 1}")
 
-        response = client.embeddings.create(
+        response = client.models.embed_content(
             model=model,
-            input=batch_texts,
+            contents=batch_texts,
+            config=EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
         )
 
-        # cada item em response.data corresponde a um texto do batch
-        for item in response.data:
-            embeddings.append(item.embedding)
+        for emb in response.embeddings:
+            embeddings.append(emb.values)
 
     emb_matrix = np.array(embeddings, dtype="float32")
     print(f"matriz de embeddings criada com shape {emb_matrix.shape}")
@@ -123,16 +127,32 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="text-embedding-3-small",
-        help="modelo de embedding da openai (padrao: text-embedding-3-small)",
+        default="gemini-embedding-001",
+        help="modelo de embedding do gemini (padrao: gemini-embedding-001)",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=256,
+        default=100,
         help="tamanho do batch para chamadas de embedding",
     )
+    parser.add_argument(
+        "--no-ssl-verify",
+        action="store_true",
+        help="desabilita verificacao SSL (para ambientes corporativos com proxy)",
+    )
     args = parser.parse_args()
+
+    if args.no_ssl_verify:
+        import httpx
+        _original_init = httpx.Client.__init__
+
+        def _patched_init(self, *a, **kw):
+            kw.setdefault("verify", False)
+            _original_init(self, *a, **kw)
+
+        httpx.Client.__init__ = _patched_init
+        print("⚠️  SSL verification desabilitada")
 
     json_path = Path(args.input_json)
     if not json_path.exists():

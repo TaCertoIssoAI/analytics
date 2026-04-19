@@ -49,7 +49,7 @@ def classificar_texto(texto_claim):
             max_depth=4,
             top_k_concepts=5,
             rerank_with_llm=True,
-            llm_model="gpt-4o-mini"
+            llm_model="gemini-2.5-flash-lite"
         )
         
         # Helper para formatar tópico

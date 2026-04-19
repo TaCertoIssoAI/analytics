@@ -14,7 +14,7 @@ services:
       - PORT=8000
       
       # AI Services (será sobrescrito por .env se existir)
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       
       # Web Scraping (Apify)
       - APIFY_TOKEN=${APIFY_TOKEN:-}

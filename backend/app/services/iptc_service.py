@@ -5,11 +5,8 @@ from typing import List
 # Adiciona o diretório raiz ao path para importar iptc_classifier
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-# Carrega settings ANTES de importar iptc_classifier (para garantir que OPENAI_API_KEY está disponível)
+# Carrega settings ANTES de importar iptc_classifier
 from app.config import settings
-
-# Configura OPENAI_API_KEY como variável de ambiente para o iptc_classifier
-os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
 
 from iptc_classifier import IptcEmbeddingTree
 
@@ -84,7 +81,7 @@ class IPTCService:
                 max_depth=max_depth,
                 top_k_concepts=top_k_concepts,
                 rerank_with_llm=use_llm_rerank,
-                llm_model="gpt-4o-mini"
+                llm_model="gemini-2.5-flash-lite"
             )
 
             # Helper para formatar tópico

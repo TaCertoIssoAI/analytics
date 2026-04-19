@@ -1,9 +1,28 @@
+import os
 import json
 from pathlib import Path
 from collections import deque
 
+import httpx
 import numpy as np
-from openai import OpenAI
+from google import genai
+from google.genai.types import EmbedContentConfig
+
+_ssl_patched = False
+
+
+def _patch_ssl_if_needed():
+    global _ssl_patched
+    if _ssl_patched or not os.getenv("DISABLE_SSL_VERIFY"):
+        return
+    _original = httpx.Client.__init__
+
+    def _patched(self, *a, **kw):
+        kw.setdefault("verify", False)
+        _original(self, *a, **kw)
+
+    httpx.Client.__init__ = _patched
+    _ssl_patched = True
 
 
 def load_taxonomy(json_path: Path):
@@ -79,7 +98,7 @@ class IptcEmbeddingTree:
         self,
         json_path: str,
         embeddings_path: str,
-        embedding_model: str = "text-embedding-3-small",
+        embedding_model: str = "gemini-embedding-001",
     ):
         # carrega taxonomia
         (
@@ -99,8 +118,10 @@ class IptcEmbeddingTree:
         # mapa qcode -> indice na matriz
         self.qcode_to_idx = {q: i for i, q in enumerate(self.qcodes)}
 
-        # cliente da openai para embedding + llm
-        self.client = OpenAI()
+        # cliente gemini para embedding + llm
+        _patch_ssl_if_needed()
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.client = genai.Client(api_key=api_key)
         self.embedding_model = embedding_model
 
     def _cosine_for_qcodes(self, claim_vec: np.ndarray, qcodes: list[str]):
@@ -130,16 +151,17 @@ class IptcEmbeddingTree:
 
     def embed_claim(self, text: str) -> np.ndarray:
             try:
-                resp = self.client.embeddings.create(
+                resp = self.client.models.embed_content(
                     model=self.embedding_model,
-                    input=text,
+                    contents=[text],
+                    config=EmbedContentConfig(task_type="RETRIEVAL_QUERY"),
                 )
-                vec = np.array(resp.data[0].embedding, dtype="float32")
+                vec = np.array(resp.embeddings[0].values, dtype="float32")
                 return vec
             except Exception as e:
                 print(f"Erro ao gerar embedding: {e}")
                 # Retorna vetor de zeros para não travar o fluxo
-                return np.zeros(1536, dtype="float32")
+                return np.zeros(768, dtype="float32")
 
     def classify_claim(
         self,
@@ -147,7 +169,7 @@ class IptcEmbeddingTree:
         max_depth: int = 5,
         top_k_concepts: int = 5,
         rerank_with_llm: bool = False,
-        llm_model: str = "gpt-4.1-mini",
+        llm_model: str = "gemini-2.5-flash-lite",
     ) -> dict:
         """
         classifica um claim retornando a categoria vencedora com suas subcategorias.
@@ -332,7 +354,7 @@ class IptcEmbeddingTree:
         self,
         claim_text: str,
         candidate_paths: list[dict],
-        model: str = "gpt-4.1-mini",
+        model: str = "gemini-2.5-flash-lite",
     ) -> int:
         """
         usa uma llm para escolher o melhor caminho entre os candidatos.
@@ -359,16 +381,16 @@ class IptcEmbeddingTree:
             "Responda apenas com JSON, por exemplo: {\"index\": 1}"
         )
 
-        resp = self.client.chat.completions.create(
+        resp = self.client.models.generate_content(
             model=model,
-            temperature=0,
-            messages=[
-                {"role": "system", "content": system_msg},
-                {"role": "user", "content": user_msg},
-            ],
+            contents=user_msg,
+            config={
+                "system_instruction": system_msg,
+                "temperature": 0,
+            },
         )
 
-        content = resp.choices[0].message.content or ""
+        content = resp.text or ""
         content = content.strip()
 
         try:

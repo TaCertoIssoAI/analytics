@@ -62,7 +62,7 @@ app = FastAPI(
 
     1. Bot envia análise via POST (PascalCase)
     2. API transforma para formato novo (snake_case)
-    3. Classifica tópicos com IPTC + OpenAI
+    3. Classifica tópicos com IPTC + Gemini
     4. Calcula veredito geral
     5. Salva no BigQuery
     6. Frontend busca via GET e exibe
