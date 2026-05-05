@@ -1,4 +1,3 @@
-import os
 import json
 from pathlib import Path
 
@@ -6,8 +5,9 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 from dotenv import load_dotenv
-from google import genai
 from google.genai.types import EmbedContentConfig
+
+from app.services.vertex_client import get_vertex_client
 
 load_dotenv()
 
@@ -72,13 +72,7 @@ def generate_embeddings_for_topics(
     gera embeddings de todos os topicos usando a api do gemini
     retorna (lista_de_qcodes, matriz_de_embeddings)
     """
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "defina a variavel de ambiente GEMINI_API_KEY com sua chave do gemini"
-        )
-
-    client = genai.Client(api_key=api_key)
+    client = get_vertex_client()
 
     # monta lista de qcodes e textos de forma deterministica
     qcodes_list: List[str] = sorted(concepts_by_qcode.keys())
@@ -136,23 +130,7 @@ def main():
         default=100,
         help="tamanho do batch para chamadas de embedding",
     )
-    parser.add_argument(
-        "--no-ssl-verify",
-        action="store_true",
-        help="desabilita verificacao SSL (para ambientes corporativos com proxy)",
-    )
     args = parser.parse_args()
-
-    if args.no_ssl_verify:
-        import httpx
-        _original_init = httpx.Client.__init__
-
-        def _patched_init(self, *a, **kw):
-            kw.setdefault("verify", False)
-            _original_init(self, *a, **kw)
-
-        httpx.Client.__init__ = _patched_init
-        print("⚠️  SSL verification desabilitada")
 
     json_path = Path(args.input_json)
     if not json_path.exists():

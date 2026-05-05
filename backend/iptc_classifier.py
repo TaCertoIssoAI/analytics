@@ -1,28 +1,11 @@
-import os
 import json
 from pathlib import Path
 from collections import deque
 
-import httpx
 import numpy as np
-from google import genai
 from google.genai.types import EmbedContentConfig
 
-_ssl_patched = False
-
-
-def _patch_ssl_if_needed():
-    global _ssl_patched
-    if _ssl_patched or not os.getenv("DISABLE_SSL_VERIFY"):
-        return
-    _original = httpx.Client.__init__
-
-    def _patched(self, *a, **kw):
-        kw.setdefault("verify", False)
-        _original(self, *a, **kw)
-
-    httpx.Client.__init__ = _patched
-    _ssl_patched = True
+from app.services.vertex_client import get_vertex_client
 
 
 def load_taxonomy(json_path: Path):
@@ -119,9 +102,7 @@ class IptcEmbeddingTree:
         self.qcode_to_idx = {q: i for i, q in enumerate(self.qcodes)}
 
         # cliente gemini para embedding + llm
-        _patch_ssl_if_needed()
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        self.client = genai.Client(api_key=api_key)
+        self.client = get_vertex_client()
         self.embedding_model = embedding_model
 
     def _cosine_for_qcodes(self, claim_vec: np.ndarray, qcodes: list[str]):

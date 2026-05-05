@@ -13,8 +13,9 @@ services:
       - DEBUG=false
       - PORT=8000
       
-      # AI Services (será sobrescrito por .env se existir)
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Vertex AI
+      - VERTEX_PROJECT_ID=${VERTEX_PROJECT_ID:-sitegrupysanca}
+      - VERTEX_LOCATION=${VERTEX_LOCATION:-us-central1}
       
       # Web Scraping (Apify)
       - APIFY_TOKEN=${APIFY_TOKEN:-}
