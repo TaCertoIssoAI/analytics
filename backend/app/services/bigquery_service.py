@@ -5,10 +5,10 @@ from typing import Optional, Dict, Any, List, Tuple
 from google.cloud import bigquery
 from google.api_core import exceptions
 from datetime import datetime
-from google import genai
 from google.genai.types import EmbedContentConfig
 
 from app.config import settings
+from app.services.vertex_client import get_vertex_client
 from app.models.new_format import AnaliseNewFormat
 
 
@@ -29,15 +29,7 @@ class BigQueryService:
         self.table_id = settings.TABLE_ID
         self.full_table_id = f"{settings.PROJECT_ID}.{settings.DATASET_ID}.{settings.TABLE_ID}"
 
-        api_key = os.getenv("GEMINI_API_KEY")
-        if api_key is None:
-            api_key = os.getenv("GOOGLE_API_KEY")
-            if api_key is None:
-                raise RuntimeError("Need Gemini API Key to instantiate client")
-        
-        self.google_genai_client = genai.Client(
-            api_key=api_key,
-        )
+        self.google_genai_client = get_vertex_client()
 
         # Small in-memory embedding cache to speed up repeated queries
         self._embedding_cache: Dict[str, list[float]] = {}

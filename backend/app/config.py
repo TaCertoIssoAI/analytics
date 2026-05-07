@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     FIRESTORE_ANALISES: str = os.getenv("FIRESTORE_ANALISES", "analises")
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
-    # Gemini
-    GEMINI_API_KEY: Optional[str] = None
+    # Vertex AI
+    VERTEX_PROJECT_ID: str = os.getenv("VERTEX_PROJECT_ID", "sitegrupysanca")
+    VERTEX_LOCATION: str = os.getenv("VERTEX_LOCATION", "us-central1")
 
     # Bot
     BOT_API_KEY: Optional[str] = None

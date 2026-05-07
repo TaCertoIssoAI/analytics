@@ -1,37 +1,11 @@
-import os
-
-import httpx
-from google import genai
-from app.config import settings
-
-_ssl_patched = False
-
-
-def _patch_ssl_if_needed():
-    global _ssl_patched
-    if _ssl_patched or not os.getenv("DISABLE_SSL_VERIFY"):
-        return
-    _original = httpx.Client.__init__
-
-    def _patched(self, *a, **kw):
-        kw.setdefault("verify", False)
-        _original(self, *a, **kw)
-
-    httpx.Client.__init__ = _patched
-    _ssl_patched = True
+from app.services.vertex_client import get_vertex_client
 
 
 class LLMService:
     """Serviço para interagir com LLMs (Gemini)"""
 
     def __init__(self):
-        _patch_ssl_if_needed()
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        if api_key:
-            self.client = genai.Client(api_key=api_key)
-        else:
-            self.client = None
-            print("⚠️ GEMINI_API_KEY não configurada. Funcionalidades de LLM estarão indisponíveis.")
+        self.client = get_vertex_client()
 
     def generate_title(self, text: str) -> str:
         """
@@ -43,9 +17,6 @@ class LLMService:
         Returns:
             Título gerado ou string vazia se falhar.
         """
-        if not self.client:
-            return "Análise sem título"
-
         try:
             # Limita o texto para não estourar tokens/custo
             truncated_text = text[:2000]
