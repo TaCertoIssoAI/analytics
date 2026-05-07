@@ -15,6 +15,7 @@ Plataforma de analytics e verificação de fatos para o bot de WhatsApp "Tá Cer
 - [🔧 Backend](./docs/backend.md) - API, endpoints, serviços e deploy
 - [💻 Frontend](./docs/frontend.md) - Páginas, componentes e integração
 - [✨ Funcionalidades](./docs/funcionalidades.md) - Lista completa de features
+- [🗃 Schema BigQuery](./docs/schema-bigquery.md) - Esquema detalhado da tabela de análises no BigQuery
 
 
 
