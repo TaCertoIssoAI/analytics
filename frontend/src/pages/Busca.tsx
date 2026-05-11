@@ -482,30 +482,38 @@ const Busca = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="container py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Search className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold">Busca</h1>
+      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container py-12 md:py-16">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Search className="h-6 w-6 text-primary" />
             </div>
-            <Button
-              onClick={handleForceRefresh}
-              disabled={isRefreshing}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? "Atualizando..." : "Atualizar"}
-            </Button>
+            <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
+              Explorar verificações
+            </span>
           </div>
-          <p className="text-muted-foreground ml-[52px] mt-2">
-            Explore e filtre as verificações realizadas pela plataforma
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+            Encontre o que foi <span className="text-primary">verificado</span> pela plataforma
+          </h1>
+          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+            Filtre por data, tipo de mensagem, score de verdade e mais para mergulhar nas análises
+            realizadas pela nossa IA.
           </p>
+        </div>
+      </section>
+
+      <div className="container py-8">
+        <div className="mb-6 flex justify-end">
+          <Button
+            onClick={handleForceRefresh}
+            disabled={isRefreshing}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? "Atualizando..." : "Atualizar"}
+          </Button>
         </div>
 
         {/* Filtros */}

@@ -145,20 +145,29 @@ const Community = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container py-8">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold">Comunidade</h1>
+
+      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container py-12 md:py-16">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Users className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-muted-foreground ml-[52px]">
-              Conheça os revisores que fazem parte da plataforma
-            </p>
+            <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
+              Quem faz acontecer
+            </span>
           </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+            Conheça a <span className="text-primary">comunidade</span> que revisa o Brasil
+          </h1>
+          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+            Pessoas reais avaliando as análises da IA e elevando o padrão de fact-checking na
+            plataforma.
+          </p>
+        </div>
+      </section>
+
+      <div className="container py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 mb-8">
           <div className="flex items-center gap-2">
             <Button
               onClick={handleForceRefresh}

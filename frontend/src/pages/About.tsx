@@ -33,31 +33,37 @@ const About = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
+      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container py-12 md:py-16">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Info className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
+              Sobre o projeto
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+            Combatendo desinformação com <span className="text-primary">inteligência artificial</span>
+          </h1>
+          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+            Conheça a história, a equipe e os valores por trás do Tá Certo Isso AI?
+          </p>
+        </div>
+      </section>
+
       <div className="container py-8">
         <div className="space-y-10">
-          {/* Hero Section */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Info className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold">Sobre o Projeto</h1>
-            </div>
-            <p className="text-muted-foreground ml-[52px]">
-              Combatendo desinformação com inteligência artificial
-            </p>
-            {/* Vídeo explicativo incorporado abaixo do subtítulo */}
-            <div className="flex justify-center py-4">
-              <div className="relative w-full max-w-2xl aspect-[16/9] overflow-hidden rounded-lg ">
-                <iframe
-                  className="absolute inset-0 h-full w-full rounded-lg"
-                  src="https://www.youtube.com/embed/15tRUpSGfhI?cc_load_policy=1&cc_lang_pref=pt"
-                  title="Demonstração Tá Certo Isso AI"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-2xl aspect-[16/9] overflow-hidden rounded-lg">
+              <iframe
+                className="absolute inset-0 h-full w-full rounded-lg"
+                src="https://www.youtube.com/embed/15tRUpSGfhI?cc_load_policy=1&cc_lang_pref=pt"
+                title="Demonstração Tá Certo Isso AI"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           </div>
 

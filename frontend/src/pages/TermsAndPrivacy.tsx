@@ -7,20 +7,27 @@ const TermsAndPrivacy = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
+      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container py-12 md:py-16">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
+              Termos e privacidade
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+            Transparência sobre seus <span className="text-primary">dados</span> e nosso serviço
+          </h1>
+          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+            Saiba como processamos informações, quais regras aplicamos e seus direitos como usuário.
+          </p>
+        </div>
+      </section>
+
       <div className="container py-8">
         <div className="space-y-8">
-          {/* Hero Section */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold">Termos de Uso e Política de Privacidade</h1>
-            </div>
-            <p className="text-muted-foreground ml-[52px]">
-              Transparência sobre como processamos seus dados
-            </p>
-          </div>
 
           {/* Content */}
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-8">
