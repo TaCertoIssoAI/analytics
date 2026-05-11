@@ -224,32 +224,32 @@ const Apoie = () => {
       <Header />
 
       <section className="bg-gradient-to-br from-primary/10 via-background to-background">
-        <div className="container pt-10 md:pt-14 pb-6 md:pb-8">
+        <div className="container px-4 sm:px-6 lg:px-8 pt-8 md:pt-14 pb-6 md:pb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-full bg-primary/10">
+            <div className="shrink-0 p-2 rounded-full bg-primary/10">
               <Heart className="h-6 w-6 text-primary" />
             </div>
             <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
               Apoie o projeto
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
             Ajude a manter o <span className="text-primary">Tá Certo Isso AI?</span> no ar
           </h1>
-          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+          <p className="text-base sm:text-lg text-muted-foreground mt-4 max-w-3xl">
             Combatemos desinformação no WhatsApp brasileiro - de forma independente, sem patrocínio.
             Sua contribuição mantém o projeto vivo até as eleições de 2026.
           </p>
         </div>
       </section>
 
-      <section className="container pt-4 pb-10">
+      <section className="container px-4 sm:px-6 lg:px-8 pt-4 pb-10">
         <Tabs value={tab} onValueChange={onTabChange} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="apoiar" className="gap-2">
+          <TabsList className="grid h-auto min-h-10 w-full max-w-md grid-cols-2">
+            <TabsTrigger value="apoiar" className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
               <Heart className="h-4 w-4" /> Apoiar
             </TabsTrigger>
-            <TabsTrigger value="transparencia" className="gap-2">
+            <TabsTrigger value="transparencia" className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
               <ShieldCheck className="h-4 w-4" /> Transparência
             </TabsTrigger>
           </TabsList>
@@ -294,15 +294,15 @@ const Apoie = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
                       Chave Pix (e-mail)
                     </div>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 truncate rounded-md bg-muted px-3 py-2 text-sm">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-3 py-2 text-sm">
                         {PIX_KEY}
                       </code>
-                      <Button onClick={copyPix} variant="outline" size="sm" className="gap-2">
+                      <Button onClick={copyPix} variant="outline" size="sm" className="w-full gap-2 sm:w-auto">
                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                         {copied ? "Copiado" : "Copiar"}
                       </Button>
@@ -316,7 +316,7 @@ const Apoie = () => {
                     <img
                       src="/pix-tacertoissoai.JPG"
                       alt="QR Code Pix Tá Certo Isso AI"
-                      className="w-64 h-64 object-contain rounded-lg border bg-white p-2"
+                      className="h-auto w-full max-w-64 object-contain rounded-lg border bg-white p-2"
                     />
                   </div>
 
@@ -332,16 +332,16 @@ const Apoie = () => {
           <TabsContent value="transparencia" className="mt-8 space-y-6">
             <Card>
               <CardContent className="py-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+                  <div className="min-w-0">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground">
                       Total Arrecadado
                     </div>
-                    <div className="text-3xl md:text-4xl font-bold text-primary mt-1">
+                    <div className="mt-1 break-words text-2xl font-bold text-primary sm:text-3xl md:text-4xl">
                       {totalDisplay}
                     </div>
                   </div>
-                  <div className="md:border-l md:pl-6">
+                  <div className="min-w-0 border-t pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground">
                       Dias com lançamento
                     </div>
@@ -349,11 +349,11 @@ const Apoie = () => {
                       {stats?.days_count ?? 0}
                     </div>
                   </div>
-                  <div className="md:border-l md:pl-6">
+                  <div className="min-w-0 border-t pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground">
                       Última atualização
                     </div>
-                    <div className="text-sm mt-1">{formatTimestamp(stats?.last_update ?? null)}</div>
+                    <div className="mt-1 break-words text-sm">{formatTimestamp(stats?.last_update ?? null)}</div>
                   </div>
                 </div>
               </CardContent>
@@ -362,14 +362,14 @@ const Apoie = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-5 w-5 shrink-0" />
                   Filtrar diário de bordo
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row md:items-end gap-3">
-                  <div className="flex-1">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                  <div className="min-w-0 space-y-1">
+                    <label className="block text-xs uppercase tracking-wider text-muted-foreground">
                       Início
                     </label>
                     <Input
@@ -378,8 +378,8 @@ const Apoie = () => {
                       onChange={(e) => setStartDate(e.target.value)}
                     />
                   </div>
-                  <div className="flex-1">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <div className="min-w-0 space-y-1">
+                    <label className="block text-xs uppercase tracking-wider text-muted-foreground">
                       Fim
                     </label>
                     <Input
@@ -388,11 +388,11 @@ const Apoie = () => {
                       onChange={(e) => setEndDate(e.target.value)}
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={applyFilter} disabled={loading}>
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:w-full lg:w-auto">
+                    <Button onClick={applyFilter} disabled={loading} className="w-full sm:w-auto">
                       Filtrar
                     </Button>
-                    <Button onClick={clearFilter} variant="outline" disabled={loading}>
+                    <Button onClick={clearFilter} variant="outline" disabled={loading} className="w-full sm:w-auto">
                       Limpar
                     </Button>
                   </div>
@@ -419,12 +419,12 @@ const Apoie = () => {
                     return (
                       <Card key={log.date}>
                         <CardContent className="py-4">
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
                               <div className="text-sm text-muted-foreground">
                                 {formatDatePtBr(log.date)}
                               </div>
-                              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                              <div className="break-words text-xl font-bold text-green-600 dark:text-green-400 sm:text-2xl">
                                 {formatBRL(log.amount_brl)}
                               </div>
                             </div>
@@ -432,7 +432,7 @@ const Apoie = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => toggleExpanded(log.date)}
-                              className="gap-1"
+                              className="w-full justify-center gap-1 sm:w-auto"
                             >
                               {isOpen ? "Ocultar nota" : "Ver nota fiscal"}
                               {isOpen ? (
@@ -443,7 +443,7 @@ const Apoie = () => {
                             </Button>
                           </div>
                           {isOpen && (
-                            <div className="mt-4 border-t pt-4 text-sm">
+                            <div className="mt-4 overflow-hidden border-t pt-4 text-sm">
                               <ReactMarkdown components={markdownComponents}>
                                 {log.markdown}
                               </ReactMarkdown>
@@ -460,6 +460,7 @@ const Apoie = () => {
                         variant="outline"
                         onClick={loadMore}
                         disabled={loadingMore}
+                        className="w-full sm:w-auto"
                       >
                         {loadingMore ? "Carregando…" : "Carregar mais"}
                       </Button>
