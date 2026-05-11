@@ -1,4 +1,4 @@
-import { User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear, Users } from "lucide-react";
+import { User, MessageCircle, Menu, Home, Search, Info, Palette, Moon, Sun, Eye, Ear, Users, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -140,6 +140,12 @@ export const Header = () => {
             <NavLink to="/sobre" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Sobre</NavLink>
             <NavLink to="/termos-e-privacidade" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground" activeClassName="text-primary font-semibold border-b-2 border-primary pb-0.5">Termos</NavLink>
           </nav>
+          <Button size="sm" className="gap-2" asChild>
+            <Link to="/apoie">
+              <Heart className="h-4 w-4" />
+              Apoie
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" className="gap-2" asChild>
             <a href="https://wa.me/553584248271" target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon className="h-4 w-4" />
@@ -268,13 +274,21 @@ export const Header = () => {
                     <Info className="h-5 w-5" />
                     Sobre
                   </NavLink>
-                  <NavLink 
-                    to="/termos-e-privacidade" 
+                  <NavLink
+                    to="/termos-e-privacidade"
                     className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                     activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                   >
                     <Info className="h-5 w-5" />
                     Termos e Privacidade
+                  </NavLink>
+                  <NavLink
+                    to="/apoie"
+                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
+                    activeClassName="ring-2 ring-primary ring-offset-2"
+                  >
+                    <Heart className="h-5 w-5" />
+                    Apoie o projeto
                   </NavLink>
                 </nav>
                 

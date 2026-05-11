@@ -24,6 +24,7 @@ class FirestoreService:
             self.client = firestore.Client(project=settings.PROJECT_ID, database='tacertoissoai')
             self.analises_collection = self.client.collection(settings.FIRESTORE_ANALISES)
             self.users_collection = self.client.collection("users")
+            self.donation_logs_collection = self.client.collection("donation_logs")
 
             # Top reviewers cache (TTL-based in-memory)
             self._top_reviewers_cache: Optional[Dict[str, Any]] = None
@@ -1354,6 +1355,125 @@ class FirestoreService:
             elapsed = time.perf_counter() - t0
             print(f"❌ backfill_review_counts() failed in {elapsed:.4f}s: {e}")
             return {}
+
+    # ============================================================
+    # Donation Logs (Vaquinha — Diário de Bordo)
+    # ============================================================
+
+    def save_donation_log(
+        self,
+        date: str,
+        amount_brl: float,
+        markdown: str,
+        uid: str,
+    ) -> bool:
+        """
+        Cria ou atualiza (upsert) o log de doação do dia.
+        Doc ID = `date` (YYYY-MM-DD), garantindo 1 entrada por dia.
+        """
+        if not self.client:
+            return False
+        try:
+            doc_ref = self.donation_logs_collection.document(date)
+            existing = doc_ref.get()
+            now = datetime.utcnow().isoformat()
+            data = {
+                "date": date,
+                "amount_brl": float(amount_brl),
+                "markdown": markdown,
+                "updated_at": now,
+                "updated_by": uid,
+            }
+            if existing.exists:
+                doc_ref.update(data)
+            else:
+                data["created_at"] = now
+                data["created_by"] = uid
+                doc_ref.set(data)
+            print(f"✅ donation_log {date} salvo (R$ {amount_brl:.2f})")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao salvar donation_log {date}: {e}")
+            return False
+
+    def list_donation_logs(
+        self,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        limit: int = 30,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
+        """
+        Lista logs de doação ordenados por data desc, com filtro opcional por intervalo.
+        """
+        if not self.client:
+            return {"items": [], "total": 0, "limit": limit, "offset": offset}
+        try:
+            q = self.donation_logs_collection
+            if start:
+                q = q.where("date", ">=", start)
+            if end:
+                q = q.where("date", "<=", end)
+
+            count_q = q
+            count_agg = count_q.count(alias="total")
+            count_result = count_agg.get()
+            total = count_result[0][0].value
+
+            q = q.order_by("date", direction=firestore.Query.DESCENDING).offset(offset).limit(limit)
+            docs = list(q.stream())
+            items = [doc.to_dict() for doc in docs]
+            return {"items": items, "total": total, "limit": limit, "offset": offset}
+        except Exception as e:
+            print(f"❌ Erro ao listar donation_logs: {e}")
+            return {"items": [], "total": 0, "limit": limit, "offset": offset}
+
+    def get_donation_log(self, date: str) -> Optional[Dict[str, Any]]:
+        if not self.client:
+            return None
+        try:
+            doc = self.donation_logs_collection.document(date).get()
+            return doc.to_dict() if doc.exists else None
+        except Exception as e:
+            print(f"❌ Erro ao buscar donation_log {date}: {e}")
+            return None
+
+    def get_donation_stats(self) -> Dict[str, Any]:
+        """
+        Retorna total acumulado, número de dias e data da última atualização.
+        """
+        if not self.client:
+            return {"total_brl": 0.0, "days_count": 0, "last_update": None}
+        try:
+            docs = list(self.donation_logs_collection.stream())
+            total = 0.0
+            last_update: Optional[str] = None
+            for doc in docs:
+                d = doc.to_dict()
+                total += float(d.get("amount_brl", 0) or 0)
+                upd = d.get("updated_at") or d.get("created_at")
+                if upd and (last_update is None or upd > last_update):
+                    last_update = upd
+            return {
+                "total_brl": round(total, 2),
+                "days_count": len(docs),
+                "last_update": last_update,
+            }
+        except Exception as e:
+            print(f"❌ Erro ao calcular donation_stats: {e}")
+            return {"total_brl": 0.0, "days_count": 0, "last_update": None}
+
+    def delete_donation_log(self, date: str) -> bool:
+        if not self.client:
+            return False
+        try:
+            self.donation_logs_collection.document(date).delete()
+            print(f"✅ donation_log {date} removido")
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao deletar donation_log {date}: {e}")
+            return False
+
 
 # Instância global
 firestore_service = FirestoreService()

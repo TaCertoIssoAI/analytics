@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, Trophy, BadgeCheck, RefreshCw } from "lucide-react";
+import { Database, Trophy, BadgeCheck, RefreshCw, Heart, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTopReviewers, TopReviewersResponse } from "@/auth/userService";
 import { useEffect, useState, useCallback } from "react";
@@ -306,6 +306,43 @@ const Index = () => {
           </div>
         </div>
 
+      </section>
+
+      {/* Support / Vaquinha CTA */}
+      <section className="border-y border-border bg-primary/5">
+        <div className="container py-10 md:py-12">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-2 mb-2 text-primary">
+                <Heart className="h-5 w-5" />
+                <span className="text-xs uppercase tracking-wider font-semibold">
+                  Ajude a manter o projeto no ar
+                </span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Apoie o Tá Certo Isso AI? rumo às eleições de 2026
+              </h2>
+              <p className="text-muted-foreground mt-2">
+                Funcionamos de forma independente. Sua contribuição via Pix mantém a operação viva
+                e nos ajuda a escalar o compromisso com a verdade num ano decisivo para o Brasil.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
+              <Button size="lg" className="gap-2" asChild>
+                <Link to="/apoie">
+                  <Heart className="h-5 w-5" />
+                  Apoiar agora
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="gap-2" asChild>
+                <Link to="/apoie?tab=transparencia">
+                  <ShieldCheck className="h-5 w-5" />
+                  Ver transparência
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Results Section */}

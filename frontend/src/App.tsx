@@ -19,6 +19,7 @@ import Methodology from "./pages/Methodology";
 import TermsAndPrivacy from "./pages/TermsAndPrivacy";
 import Admin from "./pages/Admin";
 import Community from "./pages/Community";
+import Apoie from "./pages/Apoie";
 import { AuthProvider } from "./auth";
 import { AdminRoute } from "./auth/AdminRoute";
 
@@ -57,6 +58,7 @@ const App = () => {
               <Route path="/seja-um-revisor" element={<JoinReviewers />} />
               <Route path="/metodologia" element={<Methodology />} />
               <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
+              <Route path="/apoie" element={<Apoie />} />
               <Route path="/nao-autorizado" element={<Unauthorized />} />
               <Route path="/admin" element={
                 <AdminRoute>

@@ -50,6 +50,8 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getValidPhotoUrl } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import { Heart } from "lucide-react";
 
 const Admin = () => {
   const { getToken, currentUser } = useAuth();
@@ -110,6 +112,18 @@ const Admin = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
+  // Donation logs (Vaquinha) State
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [donationDate, setDonationDate] = useState<string>(todayIso);
+  const [donationAmount, setDonationAmount] = useState<string>("");
+  const [donationMarkdown, setDonationMarkdown] = useState<string>("");
+  const [donationLogs, setDonationLogs] = useState<any[]>([]);
+  const [donationLoading, setDonationLoading] = useState(false);
+  const [donationSaving, setDonationSaving] = useState(false);
+  const [donationEditing, setDonationEditing] = useState<boolean>(false);
+  const [donationDeleting, setDonationDeleting] = useState<string | null>(null);
+
   // Reviews State
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -126,7 +140,111 @@ const Admin = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchDonationLogs();
   }, []);
+
+  const fetchDonationLogs = async () => {
+    setDonationLoading(true);
+    try {
+      const r = await fetch(`${apiUrl}/donations/logs?limit=20&offset=0`);
+      const j = await r.json();
+      if (j?.success && j.data) {
+        setDonationLogs(j.data.items || []);
+      }
+    } catch (e) {
+      console.error("Erro ao listar donation logs:", e);
+    } finally {
+      setDonationLoading(false);
+    }
+  };
+
+  const resetDonationForm = () => {
+    setDonationDate(new Date().toISOString().slice(0, 10));
+    setDonationAmount("");
+    setDonationMarkdown("");
+    setDonationEditing(false);
+  };
+
+  const handleSaveDonationLog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!donationDate || donationAmount === "" || !donationMarkdown.trim()) {
+      toast.error("Preencha data, valor e a nota fiscal.");
+      return;
+    }
+    const amount = parseFloat(donationAmount);
+    if (Number.isNaN(amount) || amount < 0) {
+      toast.error("Valor inválido.");
+      return;
+    }
+    setDonationSaving(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Sessão expirada.");
+        return;
+      }
+      const url = donationEditing
+        ? `${apiUrl}/donations/logs/${donationDate}`
+        : `${apiUrl}/donations/logs`;
+      const method = donationEditing ? "PUT" : "POST";
+      const body = donationEditing
+        ? { amount_brl: amount, markdown: donationMarkdown }
+        : { date: donationDate, amount_brl: amount, markdown: donationMarkdown };
+      const r = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const txt = await r.text();
+        throw new Error(txt || `HTTP ${r.status}`);
+      }
+      toast.success(donationEditing ? "Lançamento atualizado." : "Lançamento salvo.");
+      resetDonationForm();
+      fetchDonationLogs();
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao salvar lançamento.");
+    } finally {
+      setDonationSaving(false);
+    }
+  };
+
+  const handleEditDonationLog = (log: any) => {
+    setDonationEditing(true);
+    setDonationDate(log.date);
+    setDonationAmount(String(log.amount_brl ?? ""));
+    setDonationMarkdown(log.markdown ?? "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteDonationLog = async (date: string) => {
+    if (!confirm(`Deletar o lançamento de ${date}?`)) return;
+    setDonationDeleting(date);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Sessão expirada.");
+        return;
+      }
+      const r = await fetch(`${apiUrl}/donations/logs/${date}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      toast.success("Lançamento removido.");
+      if (donationEditing && donationDate === date) resetDonationForm();
+      fetchDonationLogs();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao deletar lançamento.");
+    } finally {
+      setDonationDeleting(null);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -1191,6 +1309,148 @@ const Admin = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              Vaquinha — Diário de Bordo
+              {donationEditing && (
+                <Badge variant="outline" className="ml-2">Editando {donationDate}</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSaveDonationLog} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="don-date">Data</Label>
+                    <Input
+                      id="don-date"
+                      type="date"
+                      value={donationDate}
+                      onChange={(e) => setDonationDate(e.target.value)}
+                      disabled={donationEditing}
+                    />
+                    {donationEditing && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Para mudar a data, cancele e crie um novo lançamento.
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="don-amount">Valor do dia (R$)</Label>
+                    <Input
+                      id="don-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={donationAmount}
+                      onChange={(e) => setDonationAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="don-md">Nota fiscal (markdown)</Label>
+                  <Textarea
+                    id="don-md"
+                    rows={10}
+                    placeholder={"## Lançamento do dia\n\n- Doadores: ...\n- Comentários: ..."}
+                    value={donationMarkdown}
+                    onChange={(e) => setDonationMarkdown(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={donationSaving}>
+                    {donationSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    {donationEditing ? "Atualizar lançamento" : "Salvar lançamento do dia"}
+                  </Button>
+                  {donationEditing && (
+                    <Button type="button" variant="outline" onClick={resetDonationForm}>
+                      Cancelar
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label>Pré-visualização</Label>
+                <div className="border rounded-md p-4 bg-card min-h-[300px] text-sm overflow-auto">
+                  {donationMarkdown.trim() ? (
+                    <ReactMarkdown>{donationMarkdown}</ReactMarkdown>
+                  ) : (
+                    <p className="text-muted-foreground italic">
+                      A pré-visualização aparece aqui conforme você digita.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </form>
+
+            <div className="mt-8">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Últimos lançamentos
+              </h3>
+              {donationLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+                </div>
+              ) : donationLogs.length === 0 ? (
+                <p className="text-muted-foreground text-sm">Nenhum lançamento ainda.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Valor (R$)</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {donationLogs.map((log) => (
+                      <TableRow key={log.date}>
+                        <TableCell className="font-medium">{log.date}</TableCell>
+                        <TableCell>
+                          {Number(log.amount_brl || 0).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="inline-flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditDonationLog(log)}
+                            >
+                              <Pencil className="h-4 w-4 mr-1" /> Editar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={donationDeleting === log.date}
+                              onClick={() => handleDeleteDonationLog(log.date)}
+                            >
+                              {donationDeleting === log.date ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
