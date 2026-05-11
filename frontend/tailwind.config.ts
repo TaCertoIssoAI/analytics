@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       screens: {
-        "nav": "975px",
+        "nav": "1080px",
       },
       colors: {
         border: "hsl(var(--border))",
