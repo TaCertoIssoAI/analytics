@@ -7,8 +7,8 @@ const TermsAndPrivacy = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background">
-        <div className="container py-12 md:py-16">
+      <section className="bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container pt-10 md:pt-14 pb-6 md:pb-8">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-full bg-primary/10">
               <Shield className="h-6 w-6 text-primary" />
@@ -26,7 +26,7 @@ const TermsAndPrivacy = () => {
         </div>
       </section>
 
-      <div className="container py-8">
+      <div className="container pt-4 pb-8">
         <div className="space-y-8">
 
           {/* Content */}
