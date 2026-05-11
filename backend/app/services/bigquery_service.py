@@ -53,7 +53,7 @@ class BigQueryService:
         self._sources_cache_max: int = 50
         self._sources_cache_ttl: float = 300.0  # 5 minutes
 
-        # Recommendations cache (LRU + TTL) — IPTC topics are stable
+        # Recommendations cache (LRU + TTL) - IPTC topics are stable
         self._recommendations_cache: Dict[str, Tuple[List, float]] = {}
         self._recommendations_cache_order: List[str] = []
         self._recommendations_cache_max: int = 50
@@ -451,7 +451,7 @@ class BigQueryService:
 
         return " AND ".join(clauses) if clauses else "1=1"
 
-    # Columns to project in list queries — excludes embedding (3072 floats),
+    # Columns to project in list queries - excludes embedding (3072 floats),
     # scraped_links (large arrays) and full_combined_text (long text).
     _BQ_LIST_COLUMNS = (
         "document_id, processed_at, source_type, analysis_title, "
@@ -588,7 +588,7 @@ class BigQueryService:
 
             elapsed = time.perf_counter() - t0
             path_label = "VECTOR_SEARCH" if has_search else "WHERE (single query)"
-            print(f"⏱️ list_analises() {path_label} in {elapsed:.4f}s — {len(items)} items, total={total}")
+            print(f"⏱️ list_analises() {path_label} in {elapsed:.4f}s - {len(items)} items, total={total}")
             return response
 
         except Exception as e:

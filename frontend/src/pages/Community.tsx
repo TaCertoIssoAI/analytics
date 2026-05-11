@@ -112,7 +112,7 @@ const Community = () => {
     return () => clearTimeout(debounce);
   }, [searchQuery, fetchMembers]);
 
-  // Fetch when page changes (but not on search — that resets to 1)
+  // Fetch when page changes (but not on search - that resets to 1)
   const goToPage = (page: number) => {
     setCurrentPage(page);
     fetchMembers(searchQuery, page);

@@ -1314,7 +1314,7 @@ const Admin = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="h-5 w-5 text-primary" />
-              Vaquinha — Diário de Bordo
+              Vaquinha - Diário de Bordo
               {donationEditing && (
                 <Badge variant="outline" className="ml-2">Editando {donationDate}</Badge>
               )}

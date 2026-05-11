@@ -36,7 +36,7 @@ class FirestoreService:
             self._community_cache_time: float = 0.0
             self._community_cache_ttl: float = 300.0  # 5 minutes
 
-            # Analise cache (LRU + TTL) — analyses are immutable after publication
+            # Analise cache (LRU + TTL) - analyses are immutable after publication
             self._analise_cache: Dict[str, tuple] = {}  # {doc_id: (timestamp, data)}
             self._analise_cache_order: List[str] = []
             self._analise_cache_ttl: float = 1800.0  # 30 minutes
@@ -223,7 +223,7 @@ class FirestoreService:
                 items = [doc.to_dict() for doc in docs]
 
                 elapsed = time.perf_counter() - t0
-                print(f"⚡ list_analises() NO-FILTER FAST PATH in {elapsed:.4f}s — {len(items)} items, total={total}")
+                print(f"⚡ list_analises() NO-FILTER FAST PATH in {elapsed:.4f}s - {len(items)} items, total={total}")
 
                 return {
                     "items": items,
@@ -291,7 +291,7 @@ class FirestoreService:
 
                 elapsed = time.perf_counter() - t0
                 label = filter_class.upper().replace("_", "-")
-                print(f"⚡ list_analises() {label} FAST PATH in {elapsed:.4f}s — {len(items)} items, total={total}")
+                print(f"⚡ list_analises() {label} FAST PATH in {elapsed:.4f}s - {len(items)} items, total={total}")
 
                 return {
                     "items": items,
@@ -417,7 +417,7 @@ class FirestoreService:
             paginated_items = items[offset : offset + limit]
 
             elapsed = time.perf_counter() - t0
-            print(f"⏱️ list_analises() COMPLEX FILTERED PATH in {elapsed:.4f}s — scanned={scanned}, matched={total_filtered}, returned={len(paginated_items)}")
+            print(f"⏱️ list_analises() COMPLEX FILTERED PATH in {elapsed:.4f}s - scanned={scanned}, matched={total_filtered}, returned={len(paginated_items)}")
 
             return {
                 "items": paginated_items,
@@ -615,7 +615,7 @@ class FirestoreService:
             paginated_users = users[offset : offset + limit]
 
             elapsed = time.perf_counter() - t0
-            print(f"⚡ list_users(search='{search}', offset={offset}, limit={limit}) in {elapsed:.4f}s — {total} total, {len(paginated_users)} returned")
+            print(f"⚡ list_users(search='{search}', offset={offset}, limit={limit}) in {elapsed:.4f}s - {total} total, {len(paginated_users)} returned")
 
             return {
                 "users": paginated_users,
@@ -630,7 +630,7 @@ class FirestoreService:
 
     def list_users_admin(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
         """
-        Lista usuários para admin — sem projeção, retorna todos os campos.
+        Lista usuários para admin - sem projeção, retorna todos os campos.
         Não utiliza o cache da comunidade (que é projetado).
         """
         if not self.client: return {"users": [], "total": 0, "limit": limit, "offset": offset}
@@ -1026,7 +1026,7 @@ class FirestoreService:
             interactions.sort(key=lambda x: x.get("processed_at", ""), reverse=True)
 
             elapsed = time.perf_counter() - t0
-            print(f"⚡ get_user_interactions({uid}) in {elapsed:.4f}s — {len(interactions)} interactions (projected, capped at 200/type)")
+            print(f"⚡ get_user_interactions({uid}) in {elapsed:.4f}s - {len(interactions)} interactions (projected, capped at 200/type)")
 
             return interactions
         except Exception as e:
@@ -1124,7 +1124,7 @@ class FirestoreService:
     def _get_all_time_top_reviewers(self, limit: int = 5) -> List[Dict[str, Any]]:
         """
         Retorna os top revisores de todos os tempos usando o campo desnormalizado review_count.
-        Query direta na collection users ordenada por review_count desc — zero scans em analises.
+        Query direta na collection users ordenada por review_count desc - zero scans em analises.
         """
         if not self.client: return []
         t0 = time.perf_counter()
@@ -1312,7 +1312,7 @@ class FirestoreService:
         t0 = time.perf_counter()
 
         try:
-            # Scan with projection — only need interaction arrays
+            # Scan with projection - only need interaction arrays
             docs = self.analises_collection.select(["liked_by", "disliked_by", "neutral_by"]).stream()
 
             user_counts: Dict[str, set] = {}  # uid -> set of doc IDs (distinct analyses)
@@ -1348,7 +1348,7 @@ class FirestoreService:
                 batch.commit()
 
             elapsed = time.perf_counter() - t0
-            print(f"✅ backfill_review_counts() completed in {elapsed:.4f}s — {len(final_counts)} users updated")
+            print(f"✅ backfill_review_counts() completed in {elapsed:.4f}s - {len(final_counts)} users updated")
             return final_counts
 
         except Exception as e:
@@ -1357,7 +1357,7 @@ class FirestoreService:
             return {}
 
     # ============================================================
-    # Donation Logs (Vaquinha — Diário de Bordo)
+    # Donation Logs (Vaquinha - Diário de Bordo)
     # ============================================================
 
     def save_donation_log(

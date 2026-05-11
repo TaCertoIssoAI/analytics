@@ -709,7 +709,7 @@ const Verification = () => {
                 {allClaimsUnverified && currentUser ? (
                   userNeutral ? (
                     <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 gap-1 py-1.5 px-3">
-                      <Lightbulb className="h-3.5 w-3.5" /> Neutro — sugerindo fontes
+                      <Lightbulb className="h-3.5 w-3.5" /> Neutro - sugerindo fontes
                     </Badge>
                   ) : (
                     <Button

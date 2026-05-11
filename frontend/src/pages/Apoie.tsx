@@ -62,7 +62,7 @@ const formatDatePtBr = (isoDate: string) => {
 };
 
 const formatTimestamp = (iso: string | null) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleString("pt-BR");
   } catch {
@@ -237,7 +237,7 @@ const Apoie = () => {
             Ajude a manter o <span className="text-primary">Tá Certo Isso AI?</span> no ar
           </h1>
           <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
-            Combatemos desinformação no WhatsApp brasileiro — de forma independente, sem patrocínio.
+            Combatemos desinformação no WhatsApp brasileiro - de forma independente, sem patrocínio.
             Sua contribuição mantém o projeto vivo até as eleições de 2026.
           </p>
         </div>
@@ -261,7 +261,7 @@ const Apoie = () => {
                 <p>
                   O <strong>Tá Certo Isso AI?</strong> é um projeto <strong>independente</strong>{" "}
                   que combate desinformação no WhatsApp brasileiro. Hoje funcionamos sem
-                  patrocínio — e precisamos da sua ajuda para continuar no ar.
+                  patrocínio - e precisamos da sua ajuda para continuar no ar.
                 </p>
                 <p>
                   Estamos buscando outras formas estáveis de financiamento e parcerias, mas, neste
@@ -270,7 +270,7 @@ const Apoie = () => {
                 </p>
                 <p>
                   Nosso objetivo é <strong>escalar a operação para reforçar o compromisso com a
-                  verdade nas eleições de 2026</strong> — um ano decisivo para o futuro do nosso
+                  verdade nas eleições de 2026</strong> - um ano decisivo para o futuro do nosso
                   país. Cada apoio nos aproxima desse objetivo.
                 </p>
                 <p className="text-sm text-muted-foreground">

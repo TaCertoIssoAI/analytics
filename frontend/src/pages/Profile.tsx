@@ -467,7 +467,7 @@ const Profile = () => {
       <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
 
         {/* ========================================= */}
-        {/* 1. PROFILE HEADER — Horizontal, Read-Only */}
+        {/* 1. PROFILE HEADER - Horizontal, Read-Only */}
         {/* ========================================= */}
         <Card className="overflow-hidden">
           {/* ── Gradient banner ── */}
@@ -480,7 +480,7 @@ const Profile = () => {
             {/* ── Avatar + Name/Occupation row ── */}
             <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-16">
 
-              {/* Avatar — overlaps banner, dark border for clean cutout */}
+              {/* Avatar - overlaps banner, dark border for clean cutout */}
               <div className="flex justify-center md:justify-start flex-shrink-0">
                 <Avatar className="h-28 w-28 md:h-32 md:w-32 border-4 border-[#121212] shadow-xl">
                   <AvatarImage src={getValidPhotoUrl(profile.photoURL)} alt={profile.displayName || "User"} className="object-cover" />
@@ -490,7 +490,7 @@ const Profile = () => {
                 </Avatar>
               </div>
 
-              {/* Name + badges + occupation — aligned beside avatar */}
+              {/* Name + badges + occupation - aligned beside avatar */}
               <div className="flex-1 text-center md:text-left pb-1 min-w-0">
                 {/* Name row */}
                 <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
@@ -514,7 +514,7 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* ── Bio — extra vertical spacing from avatar+name block ── */}
+            {/* ── Bio - extra vertical spacing from avatar+name block ── */}
             {profile.bio && (
               <p className="text-sm text-muted-foreground mt-6 mb-2 leading-relaxed whitespace-normal break-words" style={{ overflowWrap: "anywhere" }}>
                 {profile.bio}
@@ -578,7 +578,7 @@ const Profile = () => {
         </Card>
 
         {/* ===================================== */}
-        {/* 2. STATS DASHBOARD — 4 Mini Cards     */}
+        {/* 2. STATS DASHBOARD - 4 Mini Cards     */}
         {/* ===================================== */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Card className="border shadow-sm">
