@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BadgeCheck, Brain, LineChart, Mail, ShieldCheck, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CtaBanner } from "@/components/CtaBanner";
 
 const JoinReviewers = () => {
   return (
@@ -128,48 +129,30 @@ const JoinReviewers = () => {
 
       {/* CTA Section */}
       <section className="container py-20 border-t">
-        <div className="bg-primary text-primary-foreground rounded-3xl p-8 md:p-16 relative overflow-hidden">
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-2 mb-2 text-primary-foreground/90">
-                <Users className="h-5 w-5" />
-                <span className="text-xs uppercase tracking-wider font-semibold">
-                  Faça parte da comunidade
-                </span>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Quer ser um revisor?
-              </h2>
-              <p className="text-primary-foreground/85 mt-2">
-                Para garantir a qualidade e segurança da nossa rede de revisores, o cadastro é feito mediante verificação.
-                Envie um email para <strong>tacertoissoai@gmail.com</strong> solicitando seu acesso.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
-              <Button size="lg" variant="secondary" className="gap-2" asChild>
-                <a href="mailto:tacertoissoai@gmail.com?subject=Solicitação de Cadastro de Revisor">
-                  <Mail className="h-5 w-5" />
-                  Enviar Email
-                </a>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="gap-2 border-2 border-primary-foreground/40 bg-transparent font-semibold text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-                asChild
-              >
-                <Link to="/">
-                  <ShieldCheck className="h-5 w-5" />
-                  Conhecer o projeto
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Decorative circles */}
-          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        </div>
+        <CtaBanner
+          icon={<Users className="h-5 w-5" />}
+          label="Faça parte da comunidade"
+          title="Quer ser um revisor?"
+          description={<>Para garantir a qualidade e segurança da nossa rede de revisores, o cadastro é feito mediante verificação. Envie um email para <strong>tacertoissoai@gmail.com</strong> solicitando seu acesso.</>}
+        >
+          <Button size="lg" variant="secondary" className="gap-2" asChild>
+            <a href="mailto:tacertoissoai@gmail.com?subject=Solicitação de Cadastro de Revisor">
+              <Mail className="h-5 w-5" />
+              Enviar Email
+            </a>
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="gap-2 border-2 border-primary-foreground/40 bg-transparent font-semibold text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            asChild
+          >
+            <Link to="/">
+              <ShieldCheck className="h-5 w-5" />
+              Conhecer o projeto
+            </Link>
+          </Button>
+        </CtaBanner>
       </section>
     </div>
   );

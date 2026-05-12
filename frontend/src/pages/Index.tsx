@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
 import { Database, Trophy, BadgeCheck, RefreshCw, Heart, ShieldCheck } from "lucide-react";
+import { CtaBanner } from "@/components/CtaBanner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTopReviewers, TopReviewersResponse } from "@/auth/userService";
 import { useEffect, useState, useCallback } from "react";
@@ -178,48 +179,30 @@ const Index = () => {
       <section className="bg-gradient-to-br from-primary/10 via-background to-background">
         {/* Support / Vaquinha CTA */}
         <div className="container pt-6 pb-2 md:pt-8 md:pb-4">
-          <div className="bg-primary text-primary-foreground rounded-3xl p-8 md:p-16 relative overflow-hidden">
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-2 mb-2 text-primary-foreground/90">
-                  <Heart className="h-5 w-5" />
-                  <span className="text-xs uppercase tracking-wider font-semibold">
-                    Ajude a manter o projeto no ar
-                  </span>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                  Apoie o Tá Certo Isso AI? rumo às eleições de 2026
-                </h2>
-                <p className="text-primary-foreground/85 mt-2">
-                  Funcionamos de forma independente. Sua contribuição via Pix mantém a operação viva
-                  e nos ajuda a escalar o compromisso com a verdade num ano decisivo para o Brasil.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
-                <Button size="lg" variant="secondary" className="gap-2" asChild>
-                  <Link to="/apoie">
-                    <Heart className="h-5 w-5" />
-                    Apoiar agora
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="gap-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-                  asChild
-                >
-                  <Link to="/apoie?tab=transparencia">
-                    <ShieldCheck className="h-5 w-5" />
-                    Ver transparência
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-          </div>
+          <CtaBanner
+            icon={<Heart className="h-5 w-5" />}
+            label="Ajude a manter o projeto no ar"
+            title="Apoie o Tá Certo Isso AI? rumo às eleições de 2026"
+            description="Funcionamos de forma independente. Sua contribuição via Pix mantém a operação viva e nos ajuda a escalar o compromisso com a verdade num ano decisivo para o Brasil."
+          >
+            <Button size="lg" variant="secondary" className="gap-2" asChild>
+              <Link to="/apoie">
+                <Heart className="h-5 w-5" />
+                Apoiar agora
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="gap-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              asChild
+            >
+              <Link to="/apoie?tab=transparencia">
+                <ShieldCheck className="h-5 w-5" />
+                Ver transparência
+              </Link>
+            </Button>
+          </CtaBanner>
         </div>
 
         {/* Hero */}
