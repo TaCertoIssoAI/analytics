@@ -234,112 +234,117 @@ export const Header = () => {
                 <span className="sr-only">Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <SheetHeader className="text-left border-b pb-4 mb-6">
-                <SheetTitle className="text-2xl font-bold">Menu</SheetTitle>
+            <SheetContent
+              side="right"
+              className="flex h-[100dvh] max-h-[100dvh] w-[min(86vw,22rem)] flex-col overflow-hidden p-0 sm:w-[400px]"
+            >
+              <SheetHeader className="shrink-0 border-b px-6 pb-4 pt-6 text-left">
+                <SheetTitle className="pr-12 text-2xl font-bold">Menu</SheetTitle>
                 <SheetDescription className="sr-only">Menu de navegação principal</SheetDescription>
               </SheetHeader>
-              <div className="flex flex-col gap-6">
-                <nav className="flex flex-col gap-2">
-                  <NavLink 
-                    to="/" 
-                    end
-                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
-                  >
-                    <Home className="h-5 w-5" />
-                    Início
-                  </NavLink>
-                  <NavLink 
-                    to="/busca" 
-                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
-                  >
-                    <Search className="h-5 w-5" />
-                    Busca
-                  </NavLink>
-                  <NavLink 
-                    to="/comunidade" 
-                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
-                  >
-                    <Users className="h-5 w-5" />
-                    Comunidade
-                  </NavLink>
-                  <NavLink 
-                    to="/sobre" 
-                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
-                  >
-                    <Info className="h-5 w-5" />
-                    Sobre
-                  </NavLink>
-                  <NavLink
-                    to="/termos-e-privacidade"
-                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                    activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
-                  >
-                    <Info className="h-5 w-5" />
-                    Termos e Privacidade
-                  </NavLink>
-                  <NavLink
-                    to="/apoie"
-                    className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
-                    activeClassName="ring-2 ring-primary ring-offset-2"
-                  >
-                    <Heart className="h-5 w-5" />
-                    Apoie o projeto
-                  </NavLink>
-                </nav>
-                
-                <div className="border-t pt-6 flex flex-col gap-2">
-                   <button
-                     onClick={toggleTheme}
-                     className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                   >
-                     <span className="flex items-center gap-3">
-                       <Palette className="h-5 w-5" />
-                       Tema
-                     </span>
-                     {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                   </button>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6 [scrollbar-gutter:stable]">
+                <div className="flex flex-col gap-6">
+                  <nav className="flex flex-col gap-2">
+                    <NavLink 
+                      to="/" 
+                      end
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
+                    >
+                      <Home className="h-5 w-5" />
+                      Início
+                    </NavLink>
+                    <NavLink 
+                      to="/busca" 
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
+                    >
+                      <Search className="h-5 w-5" />
+                      Busca
+                    </NavLink>
+                    <NavLink 
+                      to="/comunidade" 
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
+                    >
+                      <Users className="h-5 w-5" />
+                      Comunidade
+                    </NavLink>
+                    <NavLink 
+                      to="/sobre" 
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
+                    >
+                      <Info className="h-5 w-5" />
+                      Sobre
+                    </NavLink>
+                    <NavLink
+                      to="/termos-e-privacidade"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
+                    >
+                      <Info className="h-5 w-5" />
+                      Termos e Privacidade
+                    </NavLink>
+                    <NavLink
+                      to="/apoie"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
+                      activeClassName="ring-2 ring-primary ring-offset-2"
+                    >
+                      <Heart className="h-5 w-5" />
+                      Apoie o projeto
+                    </NavLink>
+                  </nav>
+                  
+                  <div className="border-t pt-6 flex flex-col gap-2">
+                    <button
+                      onClick={toggleTheme}
+                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Palette className="h-5 w-5" />
+                        Tema
+                      </span>
+                      {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                    </button>
 
-                   <button
-                     onClick={toggleHighContrast}
-                     className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                   >
-                     <span className="flex items-center gap-3">
-                       <Eye className="h-5 w-5" />
-                       Alto Contraste
-                     </span>
-                     <div className={`h-4 w-4 rounded-full border ${highContrast ? "bg-primary border-primary" : "border-foreground"}`} />
-                   </button>
+                    <button
+                      onClick={toggleHighContrast}
+                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Eye className="h-5 w-5" />
+                        Alto Contraste
+                      </span>
+                      <div className={`h-4 w-4 rounded-full border ${highContrast ? "bg-primary border-primary" : "border-foreground"}`} />
+                    </button>
 
-                   <button
-                     onClick={toggleVLibras}
-                     className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                   >
-                     <span className="flex items-center gap-3">
-                       <Ear className="h-5 w-5" />
-                       VLibras
-                     </span>
-                     <div className={`h-4 w-4 rounded-full border ${vlibrasEnabled ? "bg-primary border-primary" : "border-foreground"}`} />
-                   </button>
+                    <button
+                      onClick={toggleVLibras}
+                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Ear className="h-5 w-5" />
+                        VLibras
+                      </span>
+                      <div className={`h-4 w-4 rounded-full border ${vlibrasEnabled ? "bg-primary border-primary" : "border-foreground"}`} />
+                    </button>
                    
-                   <button
+                    <button
                       onClick={handleUserClick}
                       className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left ${isAvatarActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
-                   >
-                     <Avatar className={`h-7 w-7 ${isAvatarActive ? "border-2 border-primary" : ""}`}>
-                       {userPhotoURL ? (
-                         <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
-                       ) : null}
-                       <AvatarFallback className="text-xs">
-                         {currentUser?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
-                       </AvatarFallback>
-                     </Avatar>
-                     <span>{currentUser ? "Meu Perfil" : "Entrar"}</span>
-                   </button>
+                    >
+                      <Avatar className={`h-7 w-7 ${isAvatarActive ? "border-2 border-primary" : ""}`}>
+                        {userPhotoURL ? (
+                          <AvatarImage src={getValidPhotoUrl(userPhotoURL)} alt={currentUser?.displayName || "User"} />
+                        ) : null}
+                        <AvatarFallback className="text-xs">
+                          {currentUser?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{currentUser ? "Meu Perfil" : "Entrar"}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </SheetContent>

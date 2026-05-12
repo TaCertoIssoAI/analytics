@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Proposta - Caipyra 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            600: '#0284c7', // Primary Blue
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            500: '#f97316', // Orange highlight
+                            600: '#ea580c',
+                        },
+                        neutral: {
+                            900: '#111827',
+                            800: '#1f2937',
+                            700: '#374151',
+                            100: '#f3f4f6',
+                            50: '#f9fafb',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f9fafb;
+            color: #374151;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .custom-bullet li::before {
+            content: '•';
+            color: #0284c7;
+            font-weight: bold;
+            display: inline-block; 
+            width: 1em;
+            margin-left: -1em;
+        }
+        .section-transition {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section-transition:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="font-sans leading-relaxed">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white font-display font-extrabold text-xl">C</div>
+                <span class="font-display font-bold text-xl tracking-tight text-brand-900 hidden sm:block">Caipyra 2026</span>
+            </div>
+            <h1 class="text-sm sm:text-base font-semibold text-neutral-700 uppercase tracking-widest">Confirmação de Proposta</h1>
+            <div class="w-10 sm:w-auto"></div> <!-- Spacer -->
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-12 sm:py-20">
+        
+        <!-- Confirmation Hero -->
+        <div class="text-center mb-16 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 text-green-600 rounded-full mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h2 class="text-4xl font-display font-extrabold text-neutral-900 mb-4 tracking-tight">Tudo pronto!</h2>
+            <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+                Sua proposta para o <strong>Caipyra 2026</strong> foi recebida com sucesso. Nossa equipe de curadoria analisará o conteúdo e entrará em contato em breve.
+            </p>
+        </div>
+
+        <!-- Section 1: Refined Proposal -->
+        <section class="mb-16">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="h-px flex-1 bg-gray-200"></span>
+                <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand-600">Sua Proposta Refinada</h2>
+                <span class="h-px flex-1 bg-gray-200"></span>
+            </div>
+
+            <div class="glass-card rounded-3xl p-8 sm:p-12 section-transition">
+                <h1 class="text-3xl sm:text-4xl font-display font-extrabold text-neutral-900 mb-4 leading-tight">
+                    Python for the Commons: Scaling Fact-Checking and Community Building through Socially Responsible AI
+                </h1>
+                
+                <div class="flex flex-wrap items-center gap-3 mb-10 text-brand-700 font-medium">
+                    <span class="bg-brand-50 px-3 py-1 rounded-full border border-brand-100 text-sm">Proponente Principal</span>
+                    <span class="text-neutral-400">•</span>
+                    <span>Equipe RAIA & CodeLab (ICMC-USP)</span>
+                </div>
+
+                <div class="space-y-6 text-neutral-700 leading-relaxed text-lg">
+                    <p>
+                        In an era dominated by information overload and the rapid spread of misinformation, the Python ecosystem serves as a vital bridge between high-level academic research and practical, socially impactful applications. This talk explores the journey of two flagship projects originating from the Institute of Mathematical and Computer Sciences (ICMC-USP) in São Carlos: <span class="font-semibold text-neutral-900">"Tá Certo Isso AI?"</span> and <span class="font-semibold text-neutral-900">"Folki."</span> Both initiatives demonstrate how Python-driven development can solve localized community challenges while scaling to national recognition.
+                    </p>
+                    <p>
+                        <span class="italic">"Tá Certo Isso AI?"</span> is a multimodal AI chatbot designed to combat "fake news" directly within WhatsApp. We will dive into its technical architecture, discussing the implementation of Retrieval-Augmented Generation (RAG) to cross-reference user queries against trusted sources. We will explore how the team utilizes Python (FastAPI) and LLM frameworks like LangChain/LangGraph to process text, audio, and images, providing users with evidence-grounded responses.
+                    </p>
+                    <p>
+                        Complementing this, <span class="italic">"Folki"</span> represents the power of collaborative intelligence. Built to centralize fragmented academic data, it transforms the student experience through crowdsourced schedules and automated absence tracking. This portion focuses on building community-driven software, maintaining data integrity, and the supervised application of data mining techniques to improve user productivity.
+                    </p>
+                </div>
+
+                <div class="mt-12 pt-10 border-t border-gray-100">
+                    <h4 class="font-display font-bold text-neutral-900 text-xl mb-6">Key Takeaways</h4>
+                    <ul class="grid grid-cols-1 gap-4 custom-bullet pl-5 text-neutral-700">
+                        <li><strong>Multimodal RAG Architectures:</strong> Understanding how to build fact-checking layers using Python, FastAPI, and LLMs.</li>
+                        <li><strong>Socially Responsible AI Design:</strong> Learning how to implement source citation and evidence-based grounding.</li>
+                        <li><strong>Community-Driven Development:</strong> Strategies for scaling open-source projects from single-campus tools to multi-institutional platforms.</li>
+                        <li><strong>Python for Social Good:</strong> Practical insights into leveraging university extension groups to create award-winning technology.</li>
+                        <li><strong>Low-Barrier Integration:</strong> Techniques for deploying complex AI tools into accessible interfaces like WhatsApp.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Original Data -->
+        <section class="mb-16">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="h-px flex-1 bg-gray-200"></span>
+                <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">Detalhes da Submissão Original</h2>
+                <span class="h-px flex-1 bg-gray-200"></span>
+            </div>
+
+            <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden">
+                <dl class="divide-y divide-gray-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 p-6 hover:bg-gray-50 transition-colors">
+                        <dt class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-1 sm:mb-0">Tipo de Atividade</dt>
+                        <dd class="sm:col-span-2 text-neutral-900 font-medium">Palestra / Talk</dd>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 p-6 hover:bg-gray-50 transition-colors">
+                        <dt class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-1 sm:mb-0">Título Original</dt>
+                        <dd class="sm:col-span-2 text-neutral-900 font-medium">Python for the Commons: AI e Comunidade no ICMC</dd>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 p-6 hover:bg-gray-50 transition-colors">
+                        <dt class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-1 sm:mb-0">Duração Estimada</dt>
+                        <dd class="sm:col-span-2 text-neutral-900 font-medium">40 minutos</dd>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 p-6 hover:bg-gray-50 transition-colors">
+                        <dt class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-1 sm:mb-0">Público-Alvo</dt>
+                        <dd class="sm:col-span-2 text-neutral-900 font-medium">Desenvolvedores, Estudantes e Entusiastas de IA Social</dd>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 p-6 hover:bg-gray-50 transition-colors">
+                        <dt class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-1 sm:mb-0">Proponente</dt>
+                        <dd class="sm:col-span-2 text-neutral-900 font-medium">Representante Institucional ICMC-USP</dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="bg-neutral-900 rounded-[2rem] p-8 sm:p-12 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-600 rounded-full opacity-20 blur-3xl"></div>
+            <div class="relative z-10">
+                <h3 class="text-2xl font-display font-bold mb-6">Próximos Passos</h3>
+                <div class="space-y-4 text-neutral-300 text-lg">
+                    <p>
+                        A equipe do Caipyra enviará um e-mail formal de confirmação de seleção até o final do período de submissões. Caso sua proposta seja aceita, solicitaremos informações adicionais para o guia de programação oficial.
+                    </p>
+                    <p>
+                        Enquanto isso, convidamos você a ler nosso <a href="https://2026.caipyra.python.org.br" target="_blank" class="text-brand-100 hover:text-white underline decoration-brand-600 underline-offset-4 font-medium transition-colors">Código de Conduta</a> e se familiarizar com as diretrizes do evento.
+                    </p>
+                </div>
+                <div class="mt-10">
+                    <a href="https://2026.caipyra.python.org.br" target="_blank" class="inline-flex items-center justify-center px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-brand-900/50">
+                        Voltar para o site oficial
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Simple animation trigger for content entry
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section, .animate-fade-in');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                section.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                section.style.transitionDelay = `${index * 0.1}s`;
+                
+                setTimeout(() => {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

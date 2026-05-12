@@ -366,37 +366,55 @@ const Apoie = () => {
                   Filtrar diário de bordo
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-                  <div className="min-w-0 space-y-1">
-                    <label className="block text-xs uppercase tracking-wider text-muted-foreground">
-                      Início
-                    </label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
+              <CardContent className="px-4 sm:px-6">
+                <form
+                  className="min-w-0 space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    applyFilter();
+                  }}
+                >
+                  <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
+                    <div className="min-w-0 rounded-md border bg-background p-3">
+                      <label
+                        htmlFor="donation-start-date"
+                        className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                      >
+                        Início
+                      </label>
+                      <Input
+                        id="donation-start-date"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="min-w-0 max-w-full appearance-none text-base [min-inline-size:0]"
+                      />
+                    </div>
+                    <div className="min-w-0 rounded-md border bg-background p-3">
+                      <label
+                        htmlFor="donation-end-date"
+                        className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                      >
+                        Fim
+                      </label>
+                      <Input
+                        id="donation-end-date"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="min-w-0 max-w-full appearance-none text-base [min-inline-size:0]"
+                      />
+                    </div>
+                    <div className="grid min-w-0 grid-cols-2 gap-2 md:col-span-2 xl:col-span-1 xl:w-auto">
+                      <Button type="submit" disabled={loading} className="w-full">
+                        Filtrar
+                      </Button>
+                      <Button type="button" onClick={clearFilter} variant="outline" disabled={loading} className="w-full">
+                        Limpar
+                      </Button>
+                    </div>
                   </div>
-                  <div className="min-w-0 space-y-1">
-                    <label className="block text-xs uppercase tracking-wider text-muted-foreground">
-                      Fim
-                    </label>
-                    <Input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:flex sm:w-full lg:w-auto">
-                    <Button onClick={applyFilter} disabled={loading} className="w-full sm:w-auto">
-                      Filtrar
-                    </Button>
-                    <Button onClick={clearFilter} variant="outline" disabled={loading} className="w-full sm:w-auto">
-                      Limpar
-                    </Button>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
