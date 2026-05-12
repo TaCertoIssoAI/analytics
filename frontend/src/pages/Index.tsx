@@ -185,41 +185,45 @@ const Index = () => {
               Analytics contra desinformação
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
-            Combatendo desinformação com <span className="text-primary">inteligência artificial</span>
-          </h1>
-          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
-            Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações
-            de fact-checking realizadas pelo nosso bot de WhatsApp.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button size="lg" className="gap-2" asChild>
-              <Link to="/busca">
-                <Database className="h-5 w-5" />
-                Explorar Dados
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="gap-2" asChild>
-              <Link to="/sobre">
-                Sobre o Projeto
-              </Link>
-            </Button>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                Combatendo desinformação com <span className="text-primary">inteligência artificial</span>
+              </h1>
+              <p className="text-lg text-muted-foreground mt-4">
+                Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações
+                de fact-checking realizadas pelo nosso bot de WhatsApp.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+              <Button size="lg" className="gap-2" asChild>
+                <Link to="/busca">
+                  <Database className="h-5 w-5" />
+                  Explorar Dados
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="gap-2" asChild>
+                <Link to="/sobre">
+                  Sobre o Projeto
+                </Link>
+              </Button>
+            </div>
           </div>
 
-          <div className="mt-8 grid max-w-3xl grid-cols-1 gap-4 border-t pt-6 sm:grid-cols-3">
-            <div className="min-w-0">
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="min-w-0 rounded-lg border bg-card/80 p-5 text-center shadow-sm ring-1 ring-primary/5">
               <div className="text-2xl font-bold text-primary">
                 {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
               </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Verificações</div>
             </div>
-            <div className="min-w-0 border-t pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+            <div className="min-w-0 rounded-lg border bg-card/80 p-5 text-center shadow-sm ring-1 ring-primary/5">
               <div className="text-2xl font-bold text-primary">
                 {!stats ? "..." : stats.total_afirmacoes.toLocaleString('pt-BR')}
               </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Afirmações</div>
             </div>
-            <div className="min-w-0 border-t pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+            <div className="min-w-0 rounded-lg border bg-card/80 p-5 text-center shadow-sm ring-1 ring-primary/5">
               <div className="text-2xl font-bold text-primary">
                 {!stats ? "..." : `${stats.percentual_falso}%`}
               </div>
@@ -301,11 +305,11 @@ const Index = () => {
       </section>
 
       {/* Support / Vaquinha CTA */}
-      <section className="border-y border-border bg-primary/5">
+      <section className="bg-primary text-primary-foreground">
         <div className="container py-10 md:py-12">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="max-w-2xl">
-              <div className="flex items-center gap-2 mb-2 text-primary">
+              <div className="flex items-center gap-2 mb-2 text-primary-foreground/90">
                 <Heart className="h-5 w-5" />
                 <span className="text-xs uppercase tracking-wider font-semibold">
                   Ajude a manter o projeto no ar
@@ -314,19 +318,24 @@ const Index = () => {
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                 Apoie o Tá Certo Isso AI? rumo às eleições de 2026
               </h2>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-primary-foreground/85 mt-2">
                 Funcionamos de forma independente. Sua contribuição via Pix mantém a operação viva
                 e nos ajuda a escalar o compromisso com a verdade num ano decisivo para o Brasil.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
-              <Button size="lg" className="gap-2" asChild>
+              <Button size="lg" variant="secondary" className="gap-2" asChild>
                 <Link to="/apoie">
                   <Heart className="h-5 w-5" />
                   Apoiar agora
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="gap-2" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                asChild
+              >
                 <Link to="/apoie?tab=transparencia">
                   <ShieldCheck className="h-5 w-5" />
                   Ver transparência

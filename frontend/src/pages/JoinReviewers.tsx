@@ -10,25 +10,23 @@ const JoinReviewers = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32 bg-muted/30">
-        <div className="container relative z-10">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 mb-4">
-              Programa Beta Aberto
+      <section className="bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container pt-10 md:pt-14 pb-6 md:pb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Users className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Ajude a Promover a <span className="text-primary">Verdade</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Junte-se à nossa comunidade de especialistas e ajude a treinar a próxima geração de IA para combater a desinformação.
-            </p>
+            <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
+              Programa beta aberto
+            </span>
           </div>
-        </div>
-        
-        {/* Background Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-20">
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+            Ajude a promover a <span className="text-primary">verdade</span>
+          </h1>
+          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+            Junte-se à nossa comunidade de especialistas e ajude a treinar a próxima geração de IA
+            para combater a desinformação.
+          </p>
         </div>
       </section>
 
