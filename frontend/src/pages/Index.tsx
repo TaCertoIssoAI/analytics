@@ -210,7 +210,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="min-w-0 rounded-lg border bg-card/80 p-5 text-center shadow-sm ring-1 ring-primary/5">
               <div className="text-2xl font-bold text-primary">
                 {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
@@ -234,7 +234,7 @@ const Index = () => {
       </section>
 
       {/* Top Reviewers */}
-      <section className="container pt-8 pb-12">
+      <section className="container pt-14 pb-12">
         <div className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -255,24 +255,20 @@ const Index = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-3">
             {topReviewersData.reviewers.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground lg:col-span-3">
+              <div className="py-8 text-center text-muted-foreground col-span-3">
                 Carregando ranking...
               </div>
             ) : (
               topReviewersData.reviewers.slice(0, 3).map((reviewer, index) => (
-                <Link 
-                  key={reviewer.user.uid} 
+                <Link
+                  key={reviewer.user.uid}
                   to={`/perfil/${reviewer.user.uid}`}
-                  className="flex items-center gap-4 rounded-md border bg-background p-3 transition-colors hover:bg-accent/50 group"
+                  className="flex flex-col items-center gap-2 rounded-lg border bg-background p-4 transition-colors hover:bg-accent/50 group text-center lg:flex-row lg:text-left lg:gap-4 lg:p-3"
                 >
-                  <div className="flex-shrink-0 font-bold text-muted-foreground w-6 text-center">
-                    #{index + 1}
-                  </div>
-                  
                   <div className="relative">
-                    <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                    <Avatar className="h-14 w-14 lg:h-10 lg:w-10 border-2 border-background shadow-sm">
                       <AvatarImage src={getValidPhotoUrl(reviewer.user.photoURL)} alt={reviewer.user.displayName || "User"} />
                       <AvatarFallback>{reviewer.user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
@@ -281,20 +277,20 @@ const Index = () => {
                     </div>
                   </div>
 
-                  <div className="flex-1 min-w-0">
+                  <div className="flex flex-col items-center lg:items-start lg:flex-1 lg:min-w-0">
                     <div className="flex items-center gap-1">
-                      <span className="font-semibold truncate group-hover:text-primary transition-colors">
+                      <span className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors lg:truncate">
                         {reviewer.user.displayName}
                       </span>
-                      <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                      <BadgeCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 hidden lg:block lg:truncate">
                       {reviewer.user.occupation || "Membro da comunidade"}
                     </p>
                   </div>
 
-                  <div className="text-right">
-                    <div className="font-bold text-primary">{reviewer.count}</div>
+                  <div className="lg:text-right">
+                    <div className="font-bold text-primary text-lg lg:text-base">{reviewer.count}</div>
                     <div className="text-[10px] text-muted-foreground uppercase">Avaliações</div>
                   </div>
                 </Link>
