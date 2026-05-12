@@ -202,7 +202,7 @@ const Index = () => {
                   Explorar Dados
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="gap-2" asChild>
+              <Button size="lg" variant="outline" className="gap-2 border-2 font-semibold" asChild>
                 <Link to="/sobre">
                   Sobre o Projeto
                 </Link>

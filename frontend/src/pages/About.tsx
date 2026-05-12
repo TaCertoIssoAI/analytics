@@ -27,6 +27,12 @@ const About = () => {
       linkedin: "https://www.linkedin.com/in/pedrohfsilva2/",
       github: "https://github.com/pedrohfsilva",
     },
+    {
+      name: "Matheu Alves",
+      role: "Marketing/Comunicação",
+      photo: "https://media.licdn.com/dms/image/v2/D4D03AQF8ux_GFeRcww/profile-displayphoto-crop_800_800/B4DZpLCybUIkAI-/0/1762195615672?e=1779926400&v=beta&t=xuMGABtHywUKAu91--XG-_mbMm9-ygP-F7pfyANr1ds",
+      linkedin: "https://www.linkedin.com/in/matheu-alves/",
+    },
   ];
 
   return (
@@ -132,7 +138,7 @@ const About = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {team.map((member, index) => (
                 <Card key={index} className="overflow-hidden">
                   <CardContent className="p-6">
@@ -164,19 +170,21 @@ const About = () => {
                             <Linkedin className="h-4 w-4" />
                           </a>
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          asChild
-                        >
-                          <a
-                            href={member.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        {member.github && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            asChild
                           >
-                            <Github className="h-4 w-4" />
-                          </a>
-                        </Button>
+                            <a
+                              href={member.github}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Github className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
