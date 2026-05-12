@@ -305,9 +305,9 @@ const Index = () => {
       </section>
 
       {/* Support / Vaquinha CTA */}
-      <section className="bg-primary text-primary-foreground">
-        <div className="container py-10 md:py-12">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <section className="container py-10 md:py-12">
+        <div className="bg-primary text-primary-foreground rounded-3xl p-8 md:p-16 relative overflow-hidden">
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 mb-2 text-primary-foreground/90">
                 <Heart className="h-5 w-5" />
@@ -343,6 +343,10 @@ const Index = () => {
               </Button>
             </div>
           </div>
+
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         </div>
       </section>
 
