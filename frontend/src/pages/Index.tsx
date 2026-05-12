@@ -277,14 +277,14 @@ const Index = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center lg:items-start lg:flex-1 lg:min-w-0">
-                    <div className="flex items-center gap-0.5 lg:gap-1">
-                      <span className="font-semibold text-xs leading-tight group-hover:text-primary transition-colors lg:text-sm lg:truncate">
+                  <div className="hidden lg:flex flex-col items-start flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors truncate">
                         {reviewer.user.displayName}
                       </span>
-                      <BadgeCheck className="h-3 w-3 text-primary flex-shrink-0 lg:h-3.5 lg:w-3.5" />
+                      <BadgeCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 hidden lg:block lg:truncate">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
                       {reviewer.user.occupation || "Membro da comunidade"}
                     </p>
                   </div>

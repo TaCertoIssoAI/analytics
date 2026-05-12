@@ -61,14 +61,14 @@ classDef green fill:#16b552,stroke:#000,stroke-width:2px,color:#fff
 classDef red fill:#ed2633,stroke:#000,stroke-width:2px,color:#fff
 classDef magenta fill:magenta,stroke:#000,stroke-width:2px,color:#fff
 
-A(IMG):::green ===> P[Separação por Modalidade]:::default
-AA(IMG + Texto):::green ===> P[Separação por Modalidade]:::default
-AAAAAA(Texto):::green ===> P[Separação por Modalidade]:::default
-AAAA(Áudio):::green ===> P[Separação por Modalidade]:::default
-AAAAAAAA(Vídeo):::green ===> P[Separação por Modalidade]:::default
-AAA(Vídeo + Texto):::green ===> P[Separação por Modalidade]:::default
+P[Separação por Modalidade]
 
-
+A(IMG):::green ==> P
+AA(IMG + Texto):::green ==> P
+AAAAAA(Texto):::green ==> P
+AAAA(Áudio):::green ==> P
+AAAAAAAA(Vídeo):::green ==> P
+AAA(Vídeo + Texto):::green ==> P
 
 %% 1,2,3,4 %%
 P ---o ALEK(Texto Original)
@@ -76,16 +76,17 @@ P ---o ALEKI(Imagem)
 P ---o ALEKII(Transcri. Áudio)
 P ---o ALEKIII(Vídeo?)
 
-ALEK ---o |Contexto de Links|PD(Extrator de Afirmações<br>Afirmação 1<br>Afirmação 2<br>...<br>Afirmação n<br>):::orange
+ALEK ---o |Contexto de Links|PD(Extrator de Afirmações<br/>Afirmação 1<br/>Afirmação 2<br/>...<br/>Afirmação n):::orange
 ALEK ---o |Texto Original|PD
 ALEKI ---o PD
 ALEKII ---o PD
 ALEKIII ---o PD
-PD --- MT([APIs de fact-checking<br>Busca na Web]):::blue
-MT --- |Contexto Externo| ZOIO(Lista de Afirmações<br>enriquecidas) 
-ZOIO ----  OV(Julgamento Final - Contexto de todas afirmações e LLM):::red ---> Whatsapp{Whatsapp}:::green
+PD --- MT([APIs de fact-checking<br/>Busca na Web]):::blue
+MT --- |Contexto Externo| ZOIO(Lista de Afirmações<br/>enriquecidas)
+ZOIO --- OV(Julgamento Final - Contexto de todas afirmações e LLM):::red
+OV --> Whatsapp{Whatsapp}:::green
 
-OV --- |Cada entrada do dataset é<br>por afirmação, mas apenas ingerida após<br> o julgamento final| IC[(Analytics)]:::blue
+OV --- |Cada entrada do dataset é<br/>por afirmação, mas apenas ingerida após<br/>o julgamento final| IC[(Analytics)]:::blue
 `;
 
   return (

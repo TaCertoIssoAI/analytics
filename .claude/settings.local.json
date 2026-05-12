@@ -4,7 +4,9 @@
       "Bash(python:*)",
       "Bash(source:*)",
       "Bash(npx tsc *)",
-      "Bash(node_modules/.bin/tsc --noEmit)"
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "WebFetch(domain:mermaid.js.org)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
