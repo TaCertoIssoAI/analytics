@@ -175,137 +175,129 @@ const Index = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="border-b border-border bg-gradient-to-br from-background via-muted/30 to-background overflow-hidden relative">
-        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
-        
-        <div className="container py-16 md:py-24 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Left Column: Text & Stats */}
-            <div className="space-y-8">
-              <div className="space-y-6">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                  Combatendo Desinformação com{" "}
-                  <span className="text-primary">Inteligência Artificial</span>
-                </h1>
-                <p className="text-lg text-muted-foreground">
-                  Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações de fact-checking realizadas pelo nosso bot de WhatsApp.
-                </p>
-                <div className="flex flex-wrap gap-4 justify-center pt-4">
-                  <Button size="lg" className="gap-2" asChild>
-                    <Link to="/busca">
-                      <Database className="h-5 w-5" />
-                      Explorar Dados
-                    </Link>
-                  </Button>
-                  <Button size="lg" variant="outline" className="gap-2" asChild>
-                    <Link to="/sobre">
-                      Sobre o Projeto
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Mini Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 pt-8 border-t">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
-                  </div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Verificações</div>
-                </div>
-                <div className="text-center border-l border-r">
-                  <div className="text-2xl font-bold text-primary">
-                    {!stats ? "..." : stats.total_afirmacoes.toLocaleString('pt-BR')}
-                  </div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Afirmações</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {!stats ? "..." : `${stats.percentual_falso}%`}
-                  </div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Fake News</div>
-                </div>
-              </div>
+      <section className="bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container pt-10 md:pt-14 pb-6 md:pb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <ShieldCheck className="h-6 w-6 text-primary" />
             </div>
+            <span className="text-sm uppercase tracking-wider text-muted-foreground font-medium">
+              Analytics contra desinformação
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-3xl">
+            Combatendo desinformação com <span className="text-primary">inteligência artificial</span>
+          </h1>
+          <p className="text-lg text-muted-foreground mt-4 max-w-3xl">
+            Plataforma de analytics para pesquisadores e jornalistas acessarem dados de verificações
+            de fact-checking realizadas pelo nosso bot de WhatsApp.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button size="lg" className="gap-2" asChild>
+              <Link to="/busca">
+                <Database className="h-5 w-5" />
+                Explorar Dados
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="gap-2" asChild>
+              <Link to="/sobre">
+                Sobre o Projeto
+              </Link>
+            </Button>
+          </div>
 
-            {/* Right Column: Top Reviewers */}
-            <div className="lg:pl-12">
-              <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-primary/10 rounded-full">
-                    <Trophy className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">
-                      {topReviewersData.period === 'week' ? 'Top Revisores da Semana' : 'Top Revisores de Todos os Tempos'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {topReviewersData.period === 'week' ? 'Quem mais contribuiu esta semana' : 'Os maiores contribuidores da plataforma'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {topReviewersData.reviewers.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Carregando ranking...
-                    </div>
-                  ) : (
-                    topReviewersData.reviewers.map((reviewer, index) => (
-                      <Link 
-                        key={reviewer.user.uid} 
-                        to={`/perfil/${reviewer.user.uid}`}
-                        className="flex items-center gap-4 p-3 rounded-xl hover:bg-accent/50 transition-colors group"
-                      >
-                        <div className="flex-shrink-0 font-bold text-muted-foreground w-6 text-center">
-                          #{index + 1}
-                        </div>
-                        
-                        <div className="relative">
-                          <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                            <AvatarImage src={getValidPhotoUrl(reviewer.user.photoURL)} alt={reviewer.user.displayName || "User"} />
-                            <AvatarFallback>{reviewer.user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          {index < 3 && (
-                            <div className="absolute -top-1 -right-1 bg-yellow-400 text-[10px] font-bold text-yellow-950 px-1 rounded-full shadow-sm border border-white">
-                              {index + 1}º
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span className="font-semibold truncate group-hover:text-primary transition-colors">
-                              {reviewer.user.displayName}
-                            </span>
-                            <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {reviewer.user.occupation || "Membro da comunidade"}
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="font-bold text-primary">{reviewer.count}</div>
-                          <div className="text-[10px] text-muted-foreground uppercase">Avaliações</div>
-                        </div>
-                      </Link>
-                    ))
-                  )}
-                </div>
-                
-                <div className="mt-6 pt-4 border-t text-center">
-                  <Link to="/seja-um-revisor" className="text-sm text-primary hover:underline font-medium">
-                    Junte-se aos revisores ⮕
-                  </Link>
-                </div>
+          <div className="mt-8 grid max-w-3xl grid-cols-1 gap-4 border-t pt-6 sm:grid-cols-3">
+            <div className="min-w-0">
+              <div className="text-2xl font-bold text-primary">
+                {!stats ? "..." : stats.total_verificacoes.toLocaleString('pt-BR')}
               </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Verificações</div>
             </div>
-
+            <div className="min-w-0 border-t pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+              <div className="text-2xl font-bold text-primary">
+                {!stats ? "..." : stats.total_afirmacoes.toLocaleString('pt-BR')}
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Afirmações</div>
+            </div>
+            <div className="min-w-0 border-t pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+              <div className="text-2xl font-bold text-primary">
+                {!stats ? "..." : `${stats.percentual_falso}%`}
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Fake News</div>
+            </div>
           </div>
         </div>
+      </section>
 
+      {/* Top Reviewers */}
+      <section className="container pt-8 pb-12">
+        <div className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Trophy className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">
+                  {topReviewersData.period === 'week' ? 'Top Revisores da Semana' : 'Top Revisores de Todos os Tempos'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {topReviewersData.period === 'week' ? 'Quem mais contribuiu esta semana' : 'Os maiores contribuidores da plataforma'}
+                </p>
+              </div>
+            </div>
+            <Link to="/seja-um-revisor" className="text-sm text-primary hover:underline font-medium">
+              Junte-se aos revisores
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {topReviewersData.reviewers.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground lg:col-span-3">
+                Carregando ranking...
+              </div>
+            ) : (
+              topReviewersData.reviewers.slice(0, 3).map((reviewer, index) => (
+                <Link 
+                  key={reviewer.user.uid} 
+                  to={`/perfil/${reviewer.user.uid}`}
+                  className="flex items-center gap-4 rounded-md border bg-background p-3 transition-colors hover:bg-accent/50 group"
+                >
+                  <div className="flex-shrink-0 font-bold text-muted-foreground w-6 text-center">
+                    #{index + 1}
+                  </div>
+                  
+                  <div className="relative">
+                    <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                      <AvatarImage src={getValidPhotoUrl(reviewer.user.photoURL)} alt={reviewer.user.displayName || "User"} />
+                      <AvatarFallback>{reviewer.user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -top-1 -right-1 bg-yellow-400 text-[10px] font-bold text-yellow-950 px-1 rounded-full shadow-sm border border-white">
+                      {index + 1}º
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold truncate group-hover:text-primary transition-colors">
+                        {reviewer.user.displayName}
+                      </span>
+                      <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {reviewer.user.occupation || "Membro da comunidade"}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-bold text-primary">{reviewer.count}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Avaliações</div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
       </section>
 
       {/* Support / Vaquinha CTA */}
