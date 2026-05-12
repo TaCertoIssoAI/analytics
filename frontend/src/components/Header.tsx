@@ -248,7 +248,7 @@ export const Header = () => {
                     <NavLink 
                       to="/" 
                       end
-                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                       activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                     >
                       <Home className="h-5 w-5" />
@@ -256,7 +256,7 @@ export const Header = () => {
                     </NavLink>
                     <NavLink 
                       to="/busca" 
-                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                       activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                     >
                       <Search className="h-5 w-5" />
@@ -264,7 +264,7 @@ export const Header = () => {
                     </NavLink>
                     <NavLink 
                       to="/comunidade" 
-                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                       activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                     >
                       <Users className="h-5 w-5" />
@@ -272,7 +272,7 @@ export const Header = () => {
                     </NavLink>
                     <NavLink 
                       to="/sobre" 
-                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                       activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                     >
                       <Info className="h-5 w-5" />
@@ -280,7 +280,7 @@ export const Header = () => {
                     </NavLink>
                     <NavLink
                       to="/termos-e-privacidade"
-                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                       activeClassName="bg-primary/10 text-primary border-l-4 border-primary"
                     >
                       <Info className="h-5 w-5" />
@@ -299,7 +299,7 @@ export const Header = () => {
                   <div className="border-t pt-6 flex flex-col gap-2">
                     <button
                       onClick={toggleTheme}
-                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                     >
                       <span className="flex items-center gap-3">
                         <Palette className="h-5 w-5" />
@@ -310,7 +310,7 @@ export const Header = () => {
 
                     <button
                       onClick={toggleHighContrast}
-                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                     >
                       <span className="flex items-center gap-3">
                         <Eye className="h-5 w-5" />
@@ -321,7 +321,7 @@ export const Header = () => {
 
                     <button
                       onClick={toggleVLibras}
-                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="flex items-center justify-between px-2 py-3 w-full text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors"
                     >
                       <span className="flex items-center gap-3">
                         <Ear className="h-5 w-5" />
@@ -332,7 +332,7 @@ export const Header = () => {
                    
                     <button
                       onClick={handleUserClick}
-                      className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left ${isAvatarActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
+                      className={`flex items-center gap-3 px-2 py-3 text-lg font-medium rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-colors w-full text-left ${isAvatarActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}`}
                     >
                       <Avatar className={`h-7 w-7 ${isAvatarActive ? "border-2 border-primary" : ""}`}>
                         {userPhotoURL ? (
