@@ -255,7 +255,7 @@ const Index = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 lg:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 lg:grid-cols-3 lg:gap-3">
             {topReviewersData.reviewers.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground col-span-3">
                 Carregando ranking...
@@ -265,10 +265,10 @@ const Index = () => {
                 <Link
                   key={reviewer.user.uid}
                   to={`/perfil/${reviewer.user.uid}`}
-                  className="flex flex-col items-center gap-2 rounded-lg border bg-background p-4 transition-colors hover:bg-accent/50 group text-center lg:flex-row lg:text-left lg:gap-4 lg:p-3"
+                  className="flex flex-col items-center gap-1.5 p-3 text-center group transition-transform hover:scale-105 lg:flex-row lg:rounded-lg lg:border lg:bg-background lg:p-3 lg:text-left lg:gap-4 lg:hover:scale-100 lg:hover:bg-accent/50"
                 >
                   <div className="relative">
-                    <Avatar className="h-14 w-14 lg:h-10 lg:w-10 border-2 border-background shadow-sm">
+                    <Avatar className="h-16 w-16 ring-2 ring-primary/40 shadow-lg shadow-primary/20 lg:h-10 lg:w-10 lg:ring-0 lg:shadow-sm">
                       <AvatarImage src={getValidPhotoUrl(reviewer.user.photoURL)} alt={reviewer.user.displayName || "User"} />
                       <AvatarFallback>{reviewer.user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
@@ -278,11 +278,11 @@ const Index = () => {
                   </div>
 
                   <div className="flex flex-col items-center lg:items-start lg:flex-1 lg:min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors lg:truncate">
+                    <div className="flex items-center gap-0.5 lg:gap-1">
+                      <span className="font-semibold text-xs leading-tight group-hover:text-primary transition-colors lg:text-sm lg:truncate">
                         {reviewer.user.displayName}
                       </span>
-                      <BadgeCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <BadgeCheck className="h-3 w-3 text-primary flex-shrink-0 lg:h-3.5 lg:w-3.5" />
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5 hidden lg:block lg:truncate">
                       {reviewer.user.occupation || "Membro da comunidade"}
@@ -290,8 +290,8 @@ const Index = () => {
                   </div>
 
                   <div className="lg:text-right">
-                    <div className="font-bold text-primary text-lg lg:text-base">{reviewer.count}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Avaliações</div>
+                    <div className="font-bold text-primary text-2xl lg:text-base">{reviewer.count}</div>
+                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider lg:text-[10px]">Avaliações</div>
                   </div>
                 </Link>
               ))
