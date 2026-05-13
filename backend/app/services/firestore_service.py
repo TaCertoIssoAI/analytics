@@ -1,10 +1,13 @@
 import os
 import time
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from google.cloud import firestore
 from app.config import settings
 from app.models.new_format import AnaliseNewFormat
+
+BRASILIA_TZ = ZoneInfo("America/Sao_Paulo")
 
 class FirestoreService:
     """
@@ -1052,9 +1055,7 @@ class FirestoreService:
                 print(f"⚡ get_top_reviewers() served from cache in {elapsed:.4f}s")
                 return self._top_reviewers_cache
 
-            from datetime import datetime, timedelta
-
-            cutoff_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+            cutoff_date = (datetime.now(BRASILIA_TZ) - timedelta(days=days)).isoformat()
 
             # Step 4b: Apply projection - only fetch interaction arrays
             query = (self.analises_collection
@@ -1376,7 +1377,7 @@ class FirestoreService:
         try:
             doc_ref = self.donation_logs_collection.document(date)
             existing = doc_ref.get()
-            now = datetime.utcnow().isoformat()
+            now = datetime.now(BRASILIA_TZ).isoformat()
             data = {
                 "date": date,
                 "amount_brl": float(amount_brl),
@@ -1473,6 +1474,48 @@ class FirestoreService:
         except Exception as e:
             print(f"❌ Erro ao deletar donation_log {date}: {e}")
             return False
+
+    def migrate_donation_logs_to_brasilia(self) -> Dict[str, Any]:
+        """
+        Converte timestamps UTC existentes (created_at, updated_at)
+        para o horário de Brasília (UTC-3).
+        """
+        if not self.client:
+            return {"migrated": 0, "errors": []}
+        from datetime import timezone as tz
+        UTC = tz.utc
+        migrated = 0
+        errors = []
+        try:
+            docs = list(self.donation_logs_collection.stream())
+            for doc in docs:
+                d = doc.to_dict()
+                updates = {}
+                for field in ("created_at", "updated_at"):
+                    val = d.get(field)
+                    if not val:
+                        continue
+                    try:
+                        dt = datetime.fromisoformat(val)
+                        # Se já tem timezone info de Brasília, pular
+                        if dt.tzinfo is not None and dt.utcoffset() == BRASILIA_TZ.utcoffset(dt):
+                            continue
+                        # Assume UTC se não tem timezone
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=UTC)
+                        # Converte para Brasília
+                        dt_brasilia = dt.astimezone(BRASILIA_TZ)
+                        updates[field] = dt_brasilia.isoformat()
+                    except Exception as e:
+                        errors.append(f"{doc.id}/{field}: {e}")
+                if updates:
+                    doc.reference.update(updates)
+                    migrated += 1
+                    print(f"✅ Migrado {doc.id}: {updates}")
+            return {"migrated": migrated, "total": len(docs), "errors": errors}
+        except Exception as e:
+            print(f"❌ Erro na migração: {e}")
+            return {"migrated": migrated, "errors": errors + [str(e)]}
 
 
 # Instância global

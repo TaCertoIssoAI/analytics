@@ -152,6 +152,14 @@ async def update_donation_log(
     return {"success": True, "data": firestore_service.get_donation_log(log_date)}
 
 
+@router.post("/logs/migrate-timezone", summary="Migrar timestamps UTC para Brasília (admin)")
+async def migrate_donation_logs_timezone(
+    _: dict = Depends(verify_admin),
+) -> Dict[str, Any]:
+    result = firestore_service.migrate_donation_logs_to_brasilia()
+    return {"success": True, "data": result}
+
+
 @router.delete("/logs/{log_date}", summary="Deletar log do dia (admin)")
 async def delete_donation_log(
     log_date: str,
