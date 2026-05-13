@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import {
   Heart,
@@ -93,6 +94,20 @@ const markdownComponents = {
       rel="noopener noreferrer"
       {...props}
     />
+  ),
+  table: (props: any) => (
+    <div className="overflow-x-auto mb-3">
+      <table className="w-full border-collapse text-sm" {...props} />
+    </div>
+  ),
+  thead: (props: any) => <thead className="bg-muted/50" {...props} />,
+  tbody: (props: any) => <tbody {...props} />,
+  tr: (props: any) => <tr className="border-b border-border" {...props} />,
+  th: (props: any) => (
+    <th className="border border-border px-3 py-2 text-left font-semibold" {...props} />
+  ),
+  td: (props: any) => (
+    <td className="border border-border px-3 py-2" {...props} />
   ),
 };
 
@@ -462,7 +477,7 @@ const Apoie = () => {
                           </div>
                           {isOpen && (
                             <div className="mt-4 overflow-hidden border-t pt-4 text-sm">
-                              <ReactMarkdown components={markdownComponents}>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                                 {log.markdown}
                               </ReactMarkdown>
                             </div>

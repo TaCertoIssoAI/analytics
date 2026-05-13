@@ -194,7 +194,7 @@ const Index = () => {
             <Button
               size="lg"
               variant="outline"
-              className="gap-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="gap-2 border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
               asChild
             >
               <Link to="/apoie?tab=transparencia">

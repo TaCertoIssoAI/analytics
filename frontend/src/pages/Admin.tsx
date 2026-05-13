@@ -51,7 +51,48 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getValidPhotoUrl } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Heart } from "lucide-react";
+
+const markdownComponents = {
+  h1: (props: any) => <h3 className="text-base font-semibold mt-2" {...props} />,
+  h2: (props: any) => <h4 className="text-sm font-semibold mt-2" {...props} />,
+  h3: (props: any) => <h5 className="text-sm font-semibold mt-2" {...props} />,
+  p: (props: any) => <p className="leading-relaxed mb-2" {...props} />,
+  ul: (props: any) => <ul className="list-disc pl-5 space-y-1 mb-2" {...props} />,
+  ol: (props: any) => <ol className="list-decimal pl-5 space-y-1 mb-2" {...props} />,
+  li: (props: any) => <li className="leading-relaxed" {...props} />,
+  strong: (props: any) => <strong className="font-semibold" {...props} />,
+  em: (props: any) => <em className="italic" {...props} />,
+  code: (props: any) => (
+    <code className="rounded bg-muted px-1 py-0.5 text-xs" {...props} />
+  ),
+  pre: (props: any) => (
+    <pre className="overflow-x-auto rounded bg-muted p-3 text-xs" {...props} />
+  ),
+  a: (props: any) => (
+    <a
+      className="text-primary underline underline-offset-2"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  table: (props: any) => (
+    <div className="overflow-x-auto mb-3">
+      <table className="w-full border-collapse text-sm" {...props} />
+    </div>
+  ),
+  thead: (props: any) => <thead className="bg-muted/50" {...props} />,
+  tbody: (props: any) => <tbody {...props} />,
+  tr: (props: any) => <tr className="border-b border-border" {...props} />,
+  th: (props: any) => (
+    <th className="border border-border px-3 py-2 text-left font-semibold" {...props} />
+  ),
+  td: (props: any) => (
+    <td className="border border-border px-3 py-2" {...props} />
+  ),
+};
 
 const Admin = () => {
   const { getToken, currentUser } = useAuth();
@@ -1381,7 +1422,7 @@ const Admin = () => {
                 <Label>Pré-visualização</Label>
                 <div className="border rounded-md p-4 bg-card min-h-[300px] text-sm overflow-auto">
                   {donationMarkdown.trim() ? (
-                    <ReactMarkdown>{donationMarkdown}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{donationMarkdown}</ReactMarkdown>
                   ) : (
                     <p className="text-muted-foreground italic">
                       A pré-visualização aparece aqui conforme você digita.

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  overflow-y: scroll;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -279,6 +283,32 @@ All colors MUST be HSL.
 
 .prose a:hover {
   text-decoration: none;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.prose thead {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.prose tr {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.prose th,
+.prose td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose th {
+  font-weight: 600;
 }
 
 /* Dark mode adjustments */
