@@ -65,7 +65,9 @@ const formatDatePtBr = (isoDate: string) => {
 const formatTimestamp = (iso: string | null) => {
   if (!iso) return "Sem registro";
   try {
-    return new Date(iso).toLocaleString("pt-BR");
+    return new Date(iso).toLocaleString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+    });
   } catch {
     return iso;
   }
