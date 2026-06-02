@@ -30,7 +30,7 @@ const About = () => {
     {
       name: "Matheu Alves",
       role: "Marketing/Comunicação",
-      photo: "https://media.licdn.com/dms/image/v2/D4D03AQF8ux_GFeRcww/profile-displayphoto-crop_800_800/B4DZpLCybUIkAI-/0/1762195615672?e=1779926400&v=beta&t=xuMGABtHywUKAu91--XG-_mbMm9-ygP-F7pfyANr1ds",
+      photo: "https://media.licdn.com/dms/image/v2/D4D03AQF8ux_GFeRcww/profile-displayphoto-crop_800_800/B4DZpLCybUIkAI-/0/1762195615672?e=1781740800&v=beta&t=-JXjzGeTPNdW5MupXgeP55C7TGioCjkLoFOsmbiwf6E",
       linkedin: "https://www.linkedin.com/in/matheu-alves/",
     },
   ];
