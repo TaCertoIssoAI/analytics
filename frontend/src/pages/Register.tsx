@@ -65,10 +65,10 @@ const Register = () => {
             Por favor, envie um email solicitando seu cadastro para:
           </p>
           <div className="p-4 bg-muted rounded-lg font-medium text-lg select-all">
-            tacertoissoai@gmail.com
+            contato@tacertoissoai.com.br
           </div>
           <Button className="w-full" asChild>
-            <a href="mailto:tacertoissoai@gmail.com?subject=Solicitação de Cadastro de Revisor">
+            <a href="mailto:contato@tacertoissoai.com.br?subject=Solicitação de Cadastro de Revisor">
               Enviar Email Agora
             </a>
           </Button>

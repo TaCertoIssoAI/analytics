@@ -133,10 +133,10 @@ const JoinReviewers = () => {
           icon={<Users className="h-5 w-5" />}
           label="Faça parte da comunidade"
           title="Quer ser um revisor?"
-          description={<>Para garantir a qualidade e segurança da nossa rede de revisores, o cadastro é feito mediante verificação. Envie um email para <strong>tacertoissoai@gmail.com</strong> solicitando seu acesso.</>}
+          description={<>Para garantir a qualidade e segurança da nossa rede de revisores, o cadastro é feito mediante verificação. Envie um email para <strong>contato@tacertoissoai.com.br</strong> solicitando seu acesso.</>}
         >
           <Button size="lg" variant="secondary" className="gap-2" asChild>
-            <a href="mailto:tacertoissoai@gmail.com?subject=Solicitação de Cadastro de Revisor">
+            <a href="mailto:contato@tacertoissoai.com.br?subject=Solicitação de Cadastro de Revisor">
               <Mail className="h-5 w-5" />
               Enviar Email
             </a>

@@ -46,7 +46,7 @@ interface LogsResponse {
   has_more: boolean;
 }
 
-const PIX_KEY = "tacertoissoai@gmail.com";
+const PIX_KEY = "financeiro@tacertoissoai.com.br";
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
