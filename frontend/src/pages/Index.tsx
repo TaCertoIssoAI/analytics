@@ -1,8 +1,7 @@
 import { Header } from "@/components/Header";
 import { VerificationCard, Tag } from "@/components/VerificationCard";
 import { Button } from "@/components/ui/button";
-import { Database, Trophy, BadgeCheck, RefreshCw, Heart, ShieldCheck } from "lucide-react";
-import { CtaBanner } from "@/components/CtaBanner";
+import { Database, Trophy, BadgeCheck, RefreshCw, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTopReviewers, TopReviewersResponse } from "@/auth/userService";
 import { useEffect, useState, useCallback } from "react";
@@ -175,36 +174,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Support CTA + Hero Section — unified gradient background */}
+      {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-background">
-        {/* Support / Vaquinha CTA */}
-        <div className="container pt-6 pb-2 md:pt-8 md:pb-4">
-          <CtaBanner
-            icon={<Heart className="h-5 w-5" />}
-            label="Ajude a manter o projeto no ar"
-            title="Apoie o Tá Certo Isso AI? rumo às eleições de 2026"
-            description="Funcionamos de forma independente. Sua contribuição via Pix mantém a operação viva e nos ajuda a escalar o compromisso com a verdade num ano decisivo para o Brasil."
-          >
-            <Button size="lg" variant="secondary" className="gap-2" asChild>
-              <Link to="/apoie">
-                <Heart className="h-5 w-5" />
-                Apoiar agora
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              asChild
-            >
-              <Link to="/apoie?tab=transparencia">
-                <ShieldCheck className="h-5 w-5" />
-                Ver transparência
-              </Link>
-            </Button>
-          </CtaBanner>
-        </div>
-
         {/* Hero */}
         <div className="container pt-10 md:pt-14 pb-6 md:pb-8">
           <div className="flex items-center gap-3 mb-3">
