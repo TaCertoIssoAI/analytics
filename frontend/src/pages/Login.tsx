@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
+import { IS_MOCK_MODE } from "@/mocks/config";
+import { DEMO_ACCOUNTS } from "@/mocks/mockAuth";
+import { ShieldCheck, UserCheck } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -37,6 +40,26 @@ const Login = () => {
     }
   };
 
+  const handleDemoLogin = async (kind: "reviewer" | "admin") => {
+    setIsLoading(true);
+    try {
+      const account = DEMO_ACCOUNTS[kind];
+      await signInWithEmail(account.email, "demo-password");
+      toast({
+        title: kind === "admin" ? "Acesso Admin Demo ativo" : "Acesso Revisor Demo ativo",
+        description: "Sessão demonstrativa salva localmente no navegador.",
+      });
+      navigate(kind === "admin" ? "/admin" : "/");
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Falha no login demo",
+        description: "Não foi possível iniciar a sessão demonstrativa.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,7 +72,7 @@ const Login = () => {
             Digite seu email e senha para acessar sua conta
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -76,6 +99,38 @@ const Login = () => {
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
+
+          {IS_MOCK_MODE && (
+            <div className="border-t pt-5 space-y-3">
+              <p className="text-xs text-muted-foreground text-center">
+                Acesso demonstrativo (salvo apenas no seu navegador)
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => handleDemoLogin("reviewer")}
+                  className="gap-2"
+                >
+                  <UserCheck className="h-4 w-4" />
+                  Revisor Demo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => handleDemoLogin("admin")}
+                  className="gap-2"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Admin Demo
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">

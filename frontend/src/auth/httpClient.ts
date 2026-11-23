@@ -7,6 +7,8 @@
  */
 
 import { auth } from './firebaseConfig';
+import { IS_MOCK_MODE } from '@/mocks/config';
+import { getCurrentMockUser } from '@/mocks/mockAuth';
 
 
 /**
@@ -14,6 +16,10 @@ import { auth } from './firebaseConfig';
  */
 export const getAuthToken = async (): Promise<string | null> => {
   try {
+    if (IS_MOCK_MODE) {
+      const mockUser = getCurrentMockUser();
+      return mockUser ? await mockUser.getIdToken() : null;
+    }
     if (auth?.currentUser) {
       return await auth.currentUser.getIdToken();
     }

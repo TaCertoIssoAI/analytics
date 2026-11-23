@@ -8,35 +8,38 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-// Initialize Firebase
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let googleProvider: GoogleAuthProvider;
+import { IS_MOCK_MODE } from '@/mocks/config';
 
-// Firebase configuration from environment variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+// Initialize Firebase (skipped completely in mock mode to avoid external calls)
+let app: FirebaseApp = null as unknown as FirebaseApp;
+let auth: Auth = null as unknown as Auth;
+let db: Firestore = null as unknown as Firestore;
+let googleProvider: GoogleAuthProvider = null as unknown as GoogleAuthProvider;
 
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app, 'tacertoissoai');
-  googleProvider = new GoogleAuthProvider();
+if (!IS_MOCK_MODE) {
+  const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  };
 
-  // Optional: Configure Google provider
-  googleProvider.setCustomParameters({
-    prompt: 'select_account'
-  });
-} catch (error) {
-  console.error("Error initializing Firebase:", error);
-  throw error;
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app, 'tacertoissoai');
+    googleProvider = new GoogleAuthProvider();
+
+    // Optional: Configure Google provider
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
+  } catch (error) {
+    console.error("Error initializing Firebase:", error);
+    throw error;
+  }
 }
 
 export { auth, db, googleProvider };
