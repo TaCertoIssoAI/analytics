@@ -161,6 +161,25 @@ let donationsPromise: Promise<MockDonationsFile> | null = null;
 let recentAnalysesPromise: Promise<MockAnalysis[]> | null = null;
 let allAnalysesPromise: Promise<MockAnalysis[]> | null = null;
 let scrapedTextsPromise: Promise<Record<string, ScrapedLink[]>> | null = null;
+let prefetchScheduled = false;
+
+function scheduleAllAnalysesPrefetch(): void {
+  if (prefetchScheduled || allAnalysesPromise) return;
+  prefetchScheduled = true;
+  const trigger = () => {
+    loadAllAnalysesBase().catch(() => {
+      // Ignore background prefetch errors; explicit loads will retry
+    });
+  };
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback(
+      trigger,
+      { timeout: 2500 }
+    );
+  } else {
+    setTimeout(trigger, 1500);
+  }
+}
 
 export function loadStatsFile(): Promise<MockStatsFile> {
   if (!statsPromise) {
@@ -195,7 +214,12 @@ export function loadRecentAnalysesBase(): Promise<MockAnalysis[]> {
     return allAnalysesPromise.then((all) => all.slice(0, 25));
   }
   if (!recentAnalysesPromise) {
-    recentAnalysesPromise = fetchJson<MockAnalysis[]>("/mock-data/recent-analyses.json");
+    recentAnalysesPromise = fetchJson<MockAnalysis[]>("/mock-data/recent-analyses.json").then(
+      (items) => {
+        scheduleAllAnalysesPrefetch();
+        return items;
+      }
+    );
   }
   return recentAnalysesPromise;
 }

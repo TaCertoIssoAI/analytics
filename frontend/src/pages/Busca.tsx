@@ -59,6 +59,15 @@ const Busca = () => {
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
+  const [selectedSourceCount, setSelectedSourceCount] = useState<number>(0);
+  const [selectedSourceCitations, setSelectedSourceCitations] = useState<
+    Array<{
+      analysis: Analysis & { fileId: string };
+      claimId: string;
+      claimText: string;
+      result: string;
+    }>
+  >([]);
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -417,9 +426,39 @@ const Busca = () => {
     setDialogOpen(true);
   };
 
-  const handleSourceClick = (source: string) => {
+  const handleSourceClick = async (source: string, count: number) => {
     setSelectedSource(source);
+    setSelectedSourceCount(count);
+    setSelectedSourceCitations([]);
     setSourceDialogOpen(true);
+
+    try {
+      const res = await fetch(
+        `${apiUrl}/analises/sources/citations?url=${encodeURIComponent(source)}`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data?.citations)) {
+          setSelectedSourceCitations(json.data.citations);
+        }
+      }
+    } catch {
+      // Silently keep empty list if backend does not implement this route
+    }
+  };
+
+  const handleClearAllFilters = () => {
+    setActiveSearchTerm("");
+  };
+
+  const handleExportActiveTab = () => {
+    if (activeTab === "messages") {
+      handleExportMessages();
+    } else if (activeTab === "sources") {
+      handleExportSources();
+    } else {
+      handleExportDashboard();
+    }
   };
 
   // Dados para os gráficos (vindos do backend)
@@ -526,6 +565,8 @@ const Busca = () => {
             onSearch={handleSearch}
             dateFilter={dateFilter}
             onDateFilterChange={setDateFilter}
+            onClearFilters={handleClearAllFilters}
+            onExport={handleExportActiveTab}
           />
         </div>
 
@@ -910,7 +951,7 @@ const Busca = () => {
                           <TableRow
                             key={source}
                             className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => handleSourceClick(source)}
+                            onClick={() => handleSourceClick(source, count)}
                           >
                             <TableCell>
                               <div className="flex items-center gap-2">
@@ -974,8 +1015,8 @@ const Busca = () => {
 
       <SourceDetailDialog
         source={selectedSource}
-        citations={[]} // TODO: Implementar busca de citações por fonte se necessário, ou passar dados se já tivermos
-        totalCitations={0} // Placeholder
+        citations={selectedSourceCitations}
+        totalCitations={selectedSourceCount}
         open={sourceDialogOpen}
         onOpenChange={setSourceDialogOpen}
       />

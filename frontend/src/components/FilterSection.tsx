@@ -34,6 +34,8 @@ interface FilterSectionProps {
   onSearch?: () => void;
   dateFilter?: DateFilterValue;
   onDateFilterChange?: (value: DateFilterValue) => void;
+  onClearFilters?: () => void;
+  onExport?: () => void;
 }
 
 export const FilterSection = ({
@@ -44,6 +46,8 @@ export const FilterSection = ({
   onSearch,
   dateFilter,
   onDateFilterChange,
+  onClearFilters,
+  onExport,
 }: FilterSectionProps) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -107,6 +111,10 @@ export const FilterSection = ({
     if (onSearchChange) {
       onSearchChange("");
     }
+    if (onDateFilterChange) {
+      onDateFilterChange({ mode: "all", startDate: undefined, endDate: undefined });
+    }
+    onClearFilters?.();
   };
 
   return (
@@ -491,10 +499,12 @@ export const FilterSection = ({
           <Button variant="outline" onClick={handleClearFilters}>
             Limpar Filtros
           </Button>
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar Dados
-          </Button>
+          {onExport && (
+            <Button variant="outline" className="gap-2" onClick={onExport}>
+              <Download className="h-4 w-4" />
+              Exportar Dados
+            </Button>
+          )}
         </div>
       )}
     </Card>

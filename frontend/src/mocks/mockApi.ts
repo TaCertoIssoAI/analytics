@@ -471,6 +471,42 @@ export async function handleMockApiRequest(url: URL, init?: RequestInit): Promis
     return jsonResponse({ success: true, data: computeDashboardFromItems(filtered) });
   }
 
+  if (pathname === "/analises/sources/citations" && method === "GET") {
+    const targetUrl = (params.get("url") || "").trim();
+    if (!targetUrl) {
+      return jsonResponse({ success: true, data: { citations: [], total: 0 } });
+    }
+    const all = await getMergedAllAnalyses();
+    const citations: Array<{
+      analysis: MockAnalysis & { fileId: string };
+      claimId: string;
+      claimText: string;
+      result: string;
+    }> = [];
+
+    for (const analysis of all) {
+      for (const claim of analysis.claims || []) {
+        const matched = (claim.sources || []).some((s) => (s.url || "").trim() === targetUrl);
+        if (matched) {
+          citations.push({
+            analysis: { ...analysis, fileId: analysis.document_id },
+            claimId: claim.claim_id,
+            claimText: claim.text,
+            result: claim.verdict,
+          });
+        }
+      }
+    }
+
+    return jsonResponse({
+      success: true,
+      data: {
+        citations: citations.slice(0, 50),
+        total: citations.length,
+      },
+    });
+  }
+
   if (pathname === "/analises/sources" && method === "GET") {
     const limit = parseIntParam(params, "limit", 10);
     const offset = parseIntParam(params, "offset", 0);
